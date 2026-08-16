@@ -47,3 +47,6 @@
 - [x] Validar o painel simplificado e publicar a alteração.
 - [x] Salvar novo checkpoint após remover o cartão de pedidos pendentes.
 - [ ] Confirmar no domínio público que o painel mostra apenas vendas e mesas abertas.
+- [x] Reforçar a publicação do painel simplificado caso o domínio ainda sirva a versão anterior.
+- [x] Salvar checkpoint após adicionar a marca estática de versão do painel simplificado.
+- [ ] Confirmar novamente no domínio público que só aparecem vendas e mesas abertas após a republicação reforçada.
