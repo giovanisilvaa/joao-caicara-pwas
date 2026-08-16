@@ -6,4 +6,5 @@
 - [ ] Garantir rollback no envio do garçom quando a gravação da mesa falhar.
 - [ ] Executar validação funcional publicada e criar checkpoint após os testes finais.
 - [ ] Quando o quadro de funcionários for definido, cadastrar nomes, funções e PINs individuais de 4 dígitos.
-- [ ] Auditar publicação, Firebase, sincronização e compatibilidade dos PWAs em dispositivos e redes diferentes.
+- [x] Auditar publicação, Firebase, sincronização e compatibilidade dos PWAs em dispositivos e redes diferentes.
+- [x] Verificar responsividade dos PWAs em celular, tablet e computador e corrigir eventuais cortes ou sobreposições.

@@ -140,6 +140,39 @@
            ======================================================== */
         #cupom-caixa, #cupom-producao, #cupom-relatorio { display: none; }
 
+        @media (max-width: 1100px) {
+            body { height: auto; min-height: 100vh; overflow-x: hidden; overflow-y: auto; }
+            .header { flex-wrap: wrap; gap: 10px; padding: 10px 14px; }
+            .header-logo-container { min-width: 0; }
+            .header h1 { font-size: 1.35rem; }
+            .header-actions { width: 100%; justify-content: flex-start; flex-wrap: wrap; gap: 8px; }
+            .main-container { flex-direction: column; overflow: visible; }
+            .tables-panel, .menu-panel, .order-panel { width: 100%; min-width: 0; }
+            .tables-panel { max-height: none; padding: 12px; }
+            .tables-grid { grid-template-columns: repeat(8, minmax(34px, 1fr)); }
+            .menu-panel { min-height: 520px; padding: 14px; overflow: visible; }
+            .order-panel { min-height: 520px; border-left: 0; border-top: 1px solid var(--border); }
+            .order-items { min-height: 180px; }
+            #producao-painel { top: 112px; right: 12px; }
+        }
+        @media (max-width: 600px) {
+            .header-logo-container img { height: 44px !important; }
+            .header h1 { font-size: 1.05rem; }
+            .header-actions .btn-history { flex: 1 1 auto; padding: 8px 9px; font-size: .72rem; }
+            .header-actions #status-conexao, .header-actions #relogio { font-size: .7rem !important; }
+            .tables-grid { grid-template-columns: repeat(5, minmax(42px, 1fr)); gap: 6px; }
+            .table-btn { padding: 9px 3px; font-size: .78rem; }
+            .tabs { flex-wrap: nowrap; overflow-x: auto; margin-bottom: 12px; padding-bottom: 4px; }
+            .tab { flex: 0 0 auto; padding: 8px 11px; font-size: .78rem; white-space: nowrap; }
+            .products-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
+            .product-card { padding: 10px; }
+            .product-card h4 { font-size: .82rem; }
+            .product-card p { font-size: .95rem; }
+            .total-display { font-size: 1.25rem; }
+            .btn { padding: 11px 8px; font-size: .72rem; }
+            #producao-painel { top: 118px; right: 8px; width: calc(100vw - 16px); }
+        }
+
         @media print {
             @page { margin: 0; }
             body > *:not(.print-container) { display: none !important; }
