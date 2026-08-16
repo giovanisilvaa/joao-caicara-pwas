@@ -15,3 +15,4 @@
 - [x] Substituir o PIN único do garçom por autenticação individual administrada pelo PDV.
 - [x] Aplicar auditoria e permissões por função ao novo login.
 - [x] Usar o PIN atual do caixa para autorizar o cadastro de funcionários e permitir alteração confirmada desse PIN.
+- [x] Adicionar botão Sair nos PWAs, limpar sessão local, limpar a interface operacional e registrar logout na auditoria.

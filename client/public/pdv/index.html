@@ -230,6 +230,7 @@
         <div class="header-actions">
             <button class="btn-history" onclick="abrirModalHistorico()">📜 Relatório e Histórico</button>
             <button class="btn-history" onclick="toggleProducao()">📦 Produção <span id="producao-pendente-count">0</span></button>
+            <button id="btn-sair-pdv" class="btn-history" style="display:none; background:var(--danger);" onclick="sairPdv()">Sair</button>
             <span id="status-conexao" style="font-size: 0.75rem; color: var(--bg); opacity:0.8; margin-right: 8px;">conectando...</span>
             <span id="relogio" style="font-weight: bold; color: var(--bg); font-size: 1.1rem;"></span>
         </div>
@@ -567,6 +568,7 @@
             if (autorizado) {
                 document.getElementById('tela-pin').style.display = 'none';
                 document.getElementById('pin-erro').style.display = 'none';
+                document.getElementById('btn-sair-pdv').style.display = 'inline-block';
                 registrarAuditoriaPdv('login', {});
             } else {
                 document.getElementById('pin-erro').style.display = 'block';
@@ -666,6 +668,21 @@
         });
 
         const producaoCache = {};
+        function sairPdv() {
+            registrarAuditoriaPdv('logout', {});
+            mesaAtualSelecionada = null;
+            document.querySelectorAll('.table-btn.active').forEach(btn => btn.classList.remove('active'));
+            document.getElementById('menu-panel').classList.remove('active');
+            document.getElementById('nome-cliente').value = '';
+            document.getElementById('order-items').innerHTML = '<p style="text-align:center; color:#999; margin-top:20px;">Nenhuma mesa selecionada.</p>';
+            document.getElementById('total-valor').innerText = formatarMoeda(0);
+            document.getElementById('producao-painel').style.display = 'none';
+            document.getElementById('btn-sair-pdv').style.display = 'none';
+            document.getElementById('tela-pin').style.display = 'flex';
+            document.getElementById('pin-input').value = '';
+            gerarMesas();
+            fecharModais();
+        }
         function toggleProducao() {
             const painel = document.getElementById('producao-painel');
             painel.style.display = painel.style.display === 'block' ? 'none' : 'block';

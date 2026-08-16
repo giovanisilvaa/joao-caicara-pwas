@@ -109,6 +109,7 @@
         <h1 id="header-titulo">Selecione a mesa</h1>
         <span class="status" id="status-conexao">conectando...</span>
         <button class="btn-voltar" id="btn-voltar" style="display:none;" onclick="voltarParaMesas()">← Mesas</button>
+        <button id="btn-sair-g" style="display:none; background:var(--danger); color:#fff; border:0; border-radius:6px; padding:7px 10px; font-weight:bold;" onclick="sairGarcom()">Sair</button>
     </div>
 
     <div id="tela-mesas">
@@ -192,6 +193,10 @@
             }
             telaPin.style.display = 'none';
             pinErro.style.display = 'none';
+            document.getElementById('btn-sair-g').style.display = 'inline-block';
+            document.getElementById('tela-mesas').style.display = 'block';
+            document.getElementById('tela-pedido').style.display = 'none';
+            document.getElementById('header-titulo').innerText = 'Selecione a mesa';
             pinInput.blur();
             registrarAuditoriaGarcom('login', { login });
         } catch (erro) {
@@ -370,6 +375,20 @@
         renderizarTabsG();
         filtrarCardapioG('favoritos');
         renderizarComandaG();
+    }
+
+    function sairGarcom() {
+        const sessao = sessaoGarcomAtual() || {};
+        db.ref('auditoria').push({ acao: 'logout', origem: 'garcom', funcionario: sessao.login || 'desconhecido', nome: sessao.nome || '', criadoEm: Date.now() });
+        localStorage.removeItem('garcom_sessao');
+        mesaSelecionada = null;
+        document.getElementById('tela-pedido').style.display = 'none';
+        document.getElementById('tela-mesas').style.display = 'none';
+        document.getElementById('btn-voltar').style.display = 'none';
+        document.getElementById('btn-sair-g').style.display = 'none';
+        document.getElementById('tela-pin').style.display = 'flex';
+        document.getElementById('login-input').value = '';
+        document.getElementById('pin-input').value = '';
     }
 
     function voltarParaMesas() {
