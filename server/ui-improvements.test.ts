@@ -122,6 +122,18 @@ describe("melhorias operacionais dos PWAs", () => {
     expect(elementos.get("producao-resumo")?.innerText).toContain("1 pedido(s)");
   });
 
+  it("mantém backup, fechamento de caixa e auditoria consultável no PDV", () => {
+    const html = readPwa("pdv");
+    expect(html).toContain("abrirModalBackup");
+    expect(html).toContain("exportarBackupFirebase");
+    expect(html).toContain("restaurarBackupFirebase");
+    expect(html).toContain("registrarFechamentoCaixa");
+    expect(html).toContain("abrirModalAuditoria");
+    expect(html).toContain("renderizarAuditoria");
+    expect(html).toContain("fechamentosCaixa");
+    expect(html).toContain("CAMINHOS_BACKUP_PDV");
+  });
+
   it("mantém no PDV os filtros de produção e a identificação do operador", () => {
     const html = readPwa("pdv");
     expect(html).toContain("usuario-logado-pdv");

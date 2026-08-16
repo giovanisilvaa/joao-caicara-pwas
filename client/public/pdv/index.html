@@ -254,6 +254,8 @@
         </div>
         <div class="header-actions">
             <button class="btn-history" onclick="abrirModalHistorico()">📜 Relatório e Histórico</button>
+            <button class="btn-history" onclick="abrirModalAuditoria()">🛡️ Auditoria</button>
+            <button class="btn-history" onclick="abrirModalBackup()">💾 Backup</button>
             <button id="btn-sair-pdv" class="btn-history" style="display:none; background:var(--danger);" onclick="sairPdv()">Sair</button>
             <span id="usuario-logado-pdv">Não identificado</span>
             <span id="status-conexao" class="status-conexao-pdv sync-pending">🟠 conectando Firebase</span>
@@ -349,11 +351,11 @@
     <div class="modal-overlay no-print" id="modal-historico">
         <div class="modal modal-large">
             <h3>Fechamento de Caixa e Relatório</h3>
-            <p style="margin-bottom: 15px; font-size: 0.9rem; color: #555;">Balanço das entradas por forma de pagamento e histórico de auditoria.</p>
+            <p style="margin-bottom: 15px; font-size: 0.9rem; color: #555;">Balanço das entradas de hoje por forma de pagamento e histórico de vendas.</p>
             
             <div class="report-box">
                 <h4>
-                    <span>📊 Resumo de Entradas no Período</span>
+                    <span>📊 Resumo de Entradas de Hoje</span>
                     <button class="btn" style="background: var(--info); padding: 5px 10px; font-size: 0.8rem;" onclick="imprimirRelatorioCaixa()">🖨️ Imprimir Fechamento</button>
                 </h4>
                 <div class="report-grid">
@@ -378,8 +380,43 @@
 
             <div class="modal-btns">
                 <button class="btn" style="background: var(--danger);" onclick="limparHistoricoGeral()">Zerar Caixa / Histórico</button>
+                <button class="btn" style="background: var(--warning); color:#333;" onclick="registrarFechamentoCaixa()">Registrar Fechamento</button>
                 <button class="btn" style="background: var(--primary);" onclick="fecharModais()">Fechar Janela</button>
             </div>
+        </div>
+    </div>
+
+    <!-- MODAL AUDITORIA CONSULTÁVEL -->
+    <div class="modal-overlay no-print" id="modal-auditoria">
+        <div class="modal modal-large">
+            <h3>🛡️ Auditoria operacional</h3>
+            <p style="margin-bottom:12px; font-size:.85rem; color:#555;">Registros de operações críticas do garçom e do PDV.</p>
+            <div style="display:grid; grid-template-columns:repeat(auto-fit,minmax(140px,1fr)); gap:8px; margin-bottom:10px;">
+                <input type="date" id="auditoria-data-inicio" onchange="renderizarAuditoria()">
+                <input type="date" id="auditoria-data-fim" onchange="renderizarAuditoria()">
+                <select id="auditoria-filtro-origem" onchange="renderizarAuditoria()" style="padding:10px; border:1px solid var(--border); border-radius:6px;"><option value="todos">Todas as origens</option><option value="pdv">PDV</option><option value="garcom">Garçom</option></select>
+                <select id="auditoria-filtro-funcionario" onchange="renderizarAuditoria()" style="padding:10px; border:1px solid var(--border); border-radius:6px;"><option value="todos">Todos os funcionários</option></select>
+                <input type="text" id="auditoria-filtro-acao" placeholder="Filtrar operação" oninput="renderizarAuditoria()">
+            </div>
+            <div id="lista-auditoria" class="history-list" style="max-height:420px; text-align:left;"></div>
+            <div class="modal-btns"><button class="btn" style="background:var(--primary);" onclick="fecharModais()">Fechar</button></div>
+        </div>
+    </div>
+
+    <!-- MODAL BACKUP E RESTAURAÇÃO -->
+    <div class="modal-overlay no-print" id="modal-backup">
+        <div class="modal modal-large">
+            <h3>💾 Backup e restauração</h3>
+            <p style="margin-bottom:12px; font-size:.85rem; color:#555;">Exporta uma cópia operacional do Firebase. A restauração substitui somente os conjuntos selecionados e exige confirmação do administrador.</p>
+            <div class="report-box" style="font-size:.85rem;">
+                <strong>Incluído:</strong> mesas, vendas, pedidos de produção, funcionários, cardápio, configurações, auditoria, cancelamentos e fechamentos de caixa.
+            </div>
+            <div class="modal-btns">
+                <button class="btn" style="background:var(--success);" onclick="exportarBackupFirebase()">Exportar backup</button>
+                <label class="btn" style="background:var(--info); cursor:pointer;">Selecionar arquivo<input id="arquivo-backup" type="file" accept="application/json" onchange="restaurarBackupFirebase(this.files[0])" style="display:none;"></label>
+            </div>
+            <p id="backup-status" style="margin-top:12px; font-size:.8rem; color:#666;"></p>
+            <div class="modal-btns"><button class="btn" style="background:var(--primary);" onclick="fecharModais()">Fechar</button></div>
         </div>
     </div>
 
@@ -1707,6 +1744,8 @@
             document.getElementById('modal-historico').style.display = 'none';
             document.getElementById('modal-cardapio').style.display = 'none';
             document.getElementById('modal-funcionarios').style.display = 'none';
+            document.getElementById('modal-auditoria').style.display = 'none';
+            document.getElementById('modal-backup').style.display = 'none';
         }
 
         function salvarVendaNoHistorico(mesaId, cliente, itens, total, pagamentos, troco, dataHora, subtotal, taxa) {
@@ -1737,10 +1776,123 @@
             document.getElementById('modal-historico').style.display = 'flex';
         }
 
+        async function registrarFechamentoCaixa() {
+            if (!(await autorizarAdministracao())) return;
+            const vendasHoje = vendasCacheDiario.filter(vendaEhDeHoje);
+            const totais = vendasHoje.reduce((acc, venda) => {
+                const pagamentos = venda.pagamentos || {};
+                acc.dinheiro += Number(pagamentos.dinheiro) || 0;
+                acc.pix += Number(pagamentos.pix) || 0;
+                acc.credito += Number(pagamentos.credito) || 0;
+                acc.debito += Number(pagamentos.debito) || 0;
+                acc.total += Number(venda.total) || 0;
+                acc.troco += Number(venda.troco) || 0;
+                return acc;
+            }, { dinheiro: 0, pix: 0, credito: 0, debito: 0, total: 0, troco: 0 });
+            if (!vendasHoje.length) return alert('Não há vendas registradas hoje para fechar o caixa.');
+            const contado = Number(prompt(`Dinheiro esperado: ${formatarMoeda(totais.dinheiro)}\\nInforme o dinheiro contado no caixa:`));
+            if (!Number.isFinite(contado) || contado < 0) return alert('Informe um valor contado válido.');
+            const fechamento = { id: `fechamento-${Date.now()}`, fechadoEm: Date.now(), data: chaveDataPainel(new Date()), funcionario: 'caixa', vendas: vendasHoje.length, totais, dinheiroContado: contado, diferencaDinheiro: contado - totais.dinheiro };
+            await db.ref(`fechamentosCaixa/${fechamento.id}`).set(fechamento);
+            await registrarAuditoriaPdv('fechar_caixa', { id: fechamento.id, vendas: fechamento.vendas, diferencaDinheiro: fechamento.diferencaDinheiro });
+            alert(`Fechamento registrado.\\nDiferença em dinheiro: ${formatarMoeda(fechamento.diferencaDinheiro)}.`);
+        }
+
+        async function abrirModalAuditoria() {
+            if (!(await autorizarAdministracao())) return;
+            const hoje = new Date().toISOString().slice(0, 10);
+            document.getElementById('auditoria-data-inicio').value = hoje;
+            document.getElementById('auditoria-data-fim').value = hoje;
+            document.getElementById('modal-auditoria').style.display = 'flex';
+            await renderizarAuditoria();
+        }
+
+        function escaparHtmlPdv(valor) {
+            return String(valor ?? '').replace(/[&<>"']/g, caractere => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;' }[caractere]));
+        }
+
+        async function renderizarAuditoria() {
+            const lista = document.getElementById('lista-auditoria');
+            if (!lista) return;
+            lista.innerHTML = '<p style="padding:12px; color:#777;">Carregando auditoria...</p>';
+            const snapshot = await db.ref('auditoria').once('value');
+            const registros = [];
+            snapshot.forEach(child => { if (child.val()) registros.push({ chave: child.key, ...child.val() }); });
+            const inicio = document.getElementById('auditoria-data-inicio').value;
+            const fim = document.getElementById('auditoria-data-fim').value;
+            const origem = document.getElementById('auditoria-filtro-origem').value;
+            const funcionario = document.getElementById('auditoria-filtro-funcionario').value;
+            const acao = document.getElementById('auditoria-filtro-acao').value.trim().toLowerCase();
+            const funcionarios = [...new Set(registros.map(registro => registro.nome || registro.funcionario).filter(Boolean))].sort((a, b) => String(a).localeCompare(String(b), 'pt-BR'));
+            const seletorFuncionario = document.getElementById('auditoria-filtro-funcionario');
+            if (seletorFuncionario && seletorFuncionario.options.length <= 1) seletorFuncionario.innerHTML = '<option value="todos">Todos os funcionários</option>' + funcionarios.map(nome => `<option value="${escaparHtmlPdv(nome)}">${escaparHtmlPdv(nome)}</option>`).join('');
+            const limiteInicio = inicio ? new Date(`${inicio}T00:00:00`).getTime() : 0;
+            const limiteFim = fim ? new Date(`${fim}T23:59:59.999`).getTime() : Number.MAX_SAFE_INTEGER;
+            const filtrados = registros.filter(registro => {
+                const criadoEm = Number(registro.criadoEm) || 0;
+                const nomeRegistro = registro.nome || registro.funcionario || '';
+                return criadoEm >= limiteInicio && criadoEm <= limiteFim && (origem === 'todos' || registro.origem === origem) && (funcionario === 'todos' || nomeRegistro === funcionario) && (!acao || String(registro.acao || '').toLowerCase().includes(acao));
+            }).sort((a, b) => (Number(b.criadoEm) || 0) - (Number(a.criadoEm) || 0));
+            lista.innerHTML = filtrados.length ? filtrados.map(registro => `<div class="history-card"><header><span>${escaparHtmlPdv(registro.acao || 'operação')}</span><span>${new Date(registro.criadoEm || 0).toLocaleString('pt-BR')}</span></header><div><strong>Origem:</strong> ${escaparHtmlPdv(registro.origem || '—')} · <strong>Usuário:</strong> ${escaparHtmlPdv(registro.nome || registro.funcionario || '—')}</div><div style="margin-top:5px;color:#555;word-break:break-word;"><strong>Detalhes:</strong> ${escaparHtmlPdv(JSON.stringify(registro.detalhes || {}))}</div></div>`).join('') : '<p style="padding:12px; color:#777; text-align:center;">Nenhum registro encontrado para os filtros.</p>';
+        }
+
+        async function abrirModalBackup() {
+            if (!(await autorizarAdministracao())) return;
+            document.getElementById('backup-status').innerText = 'Pronto para exportar ou restaurar.';
+            document.getElementById('modal-backup').style.display = 'flex';
+        }
+
+        const CAMINHOS_BACKUP_PDV = ['mesas', 'vendas', 'pedidosProducao', 'funcionarios', 'cardapio', 'configuracoes', 'auditoria', 'cancelamentos', 'fechamentosCaixa'];
+        async function exportarBackupFirebase() {
+            const status = document.getElementById('backup-status');
+            status.innerText = 'Lendo dados do Firebase...';
+            try {
+                const entradas = await Promise.all(CAMINHOS_BACKUP_PDV.map(async caminho => [caminho, (await db.ref(caminho).once('value')).val()]));
+                const pacote = { tipo: 'joao-caicara-firebase-backup', versao: 1, exportadoEm: new Date().toISOString(), caminhos: Object.fromEntries(entradas) };
+                const blob = new Blob([JSON.stringify(pacote, null, 2)], { type: 'application/json' });
+                const url = URL.createObjectURL(blob);
+                const link = document.createElement('a');
+                link.href = url;
+                link.download = `joao-caicara-backup-${new Date().toISOString().slice(0, 10)}.json`;
+                link.click();
+                URL.revokeObjectURL(url);
+                await registrarAuditoriaPdv('exportar_backup', { caminhos: CAMINHOS_BACKUP_PDV });
+                status.innerText = 'Backup exportado. Guarde o arquivo em local seguro.';
+            } catch (erro) {
+                console.error(erro);
+                status.innerText = 'Não foi possível exportar o backup.';
+            }
+        }
+
+        async function restaurarBackupFirebase(arquivo) {
+            if (!arquivo) return;
+            if (!(await autorizarAdministracao())) return;
+            if (!confirm('A restauração substituirá os conjuntos presentes no arquivo. Confirma somente se este backup estiver correto?')) return;
+            const status = document.getElementById('backup-status');
+            status.innerText = 'Validando arquivo...';
+            try {
+                const pacote = JSON.parse(await arquivo.text());
+                if (pacote?.tipo !== 'joao-caicara-firebase-backup' || !pacote.caminhos || typeof pacote.caminhos !== 'object') throw new Error('Formato de backup inválido');
+                const atualizacoes = {};
+                CAMINHOS_BACKUP_PDV.forEach(caminho => { if (Object.prototype.hasOwnProperty.call(pacote.caminhos, caminho)) atualizacoes[caminho] = pacote.caminhos[caminho]; });
+                await db.ref('/').update(atualizacoes);
+                await registrarAuditoriaPdv('restaurar_backup', { caminhos: Object.keys(atualizacoes), exportadoEm: pacote.exportadoEm || null });
+                status.innerText = 'Restauração concluída. Recarregue o PDV para atualizar a tela.';
+            } catch (erro) {
+                console.error(erro);
+                status.innerText = `Falha na restauração: ${erro.message}`;
+            }
+        }
+
+        function obterVendasDoDiaPdv() {
+            const fonte = vendasCacheDiario.length ? vendasCacheDiario : (JSON.parse(localStorage.getItem('historico_vendas_caicara')) || []);
+            return fonte.filter(vendaEhDeHoje);
+        }
+
         function renderizarHistorico() {
             const listaDiv = document.getElementById('lista-historico');
             const filtro = document.getElementById('filtro-historico').value.toLowerCase();
-            let historico = JSON.parse(localStorage.getItem('historico_vendas_caicara')) || [];
+            let historico = obterVendasDoDiaPdv();
 
             let totalDinheiro = 0;
             let totalPix = 0;
@@ -1813,7 +1965,7 @@
         }
 
         function imprimirRelatorioCaixa() {
-            let historico = JSON.parse(localStorage.getItem('historico_vendas_caicara')) || [];
+            let historico = obterVendasDoDiaPdv();
             let totalDinheiro = 0, totalPix = 0, totalCredito = 0, totalDebito = 0, totalGeral = 0, totalTrocos = 0, totalTaxaServico = 0;
 
             historico.forEach(reg => {
