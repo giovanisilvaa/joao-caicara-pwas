@@ -56,7 +56,7 @@
         .btn-history:hover { filter: brightness(1.1); }
 
         /* LAYOUT PRINCIPAL */
-        #painel-diario { display:grid; grid-template-columns:1.1fr 1fr 1fr; gap:10px; padding:12px 20px; background:rgba(249,246,240,.96); border-bottom:1px solid var(--border); flex-shrink:0; }
+        #painel-diario { display:grid; grid-template-columns:1fr 1fr; gap:10px; padding:12px 20px; background:rgba(249,246,240,.96); border-bottom:1px solid var(--border); flex-shrink:0; }
         .painel-diario-titulo { grid-column:1/-1; display:flex; align-items:baseline; justify-content:space-between; gap:10px; color:var(--primary); }
         .painel-diario-titulo strong { font-family:Georgia,serif; font-size:1.05rem; }
         .painel-diario-titulo span { font-size:.76rem; color:#6d7b7d; }
@@ -65,7 +65,6 @@
         .indicador-diario strong { display:block; color:var(--primary); font-family:Georgia,serif; font-size:1.45rem; margin-top:3px; }
         .indicador-diario.vendas { border-left:5px solid var(--success); }
         .indicador-diario.mesas { border-left:5px solid var(--wood); }
-        .indicador-diario.pedidos { border-left:5px solid var(--accent); }
         .main-container { display: flex; flex: 1; overflow: hidden; }
 
         /* PAINEL DE MESAS */
@@ -178,7 +177,7 @@
             .header h1 { font-size: 1.05rem; }
             .header-actions .btn-history { flex: 1 1 auto; padding: 8px 9px; font-size: .72rem; }
             .header-actions #status-conexao, .header-actions #relogio { font-size: .7rem !important; }
-            #painel-diario { grid-template-columns:1fr 1fr 1fr; gap:6px; padding:8px; }
+            #painel-diario { grid-template-columns:1fr 1fr; gap:6px; padding:8px; }
             .painel-diario-titulo strong { font-size:.92rem; }
             .painel-diario-titulo span { font-size:.65rem; }
             .indicador-diario { padding:8px; }
@@ -262,7 +261,6 @@
         <div class="painel-diario-titulo"><strong>Resumo de hoje</strong><span id="painel-diario-data">--</span></div>
         <div class="indicador-diario vendas"><small>Total de vendas</small><strong id="indicador-vendas">R$ 0,00</strong></div>
         <div class="indicador-diario mesas"><small>Mesas abertas</small><strong id="indicador-mesas">0</strong></div>
-        <div class="indicador-diario pedidos"><small>Pedidos pendentes</small><strong id="indicador-pedidos">0</strong></div>
     </section>
 
     <div id="producao-painel" class="no-print">
@@ -1031,15 +1029,12 @@
             const vendasHoje = vendasCacheDiario.filter(vendaEhDeHoje);
             const totalVendas = vendasHoje.reduce((total, venda) => total + (Number(venda.total) || 0), 0);
             const mesasAbertas = Object.values(mesas).filter(mesa => Array.isArray(mesa?.itens) && mesa.itens.length > 0).length;
-            const pedidosPendentes = Object.values(producaoCache).filter(pedido => pedido && !['entregue', 'cancelado'].includes(pedido.status)).length;
             const dataEl = document.getElementById('painel-diario-data');
             if (dataEl) dataEl.innerText = formatarDataPainel(new Date());
             const vendasEl = document.getElementById('indicador-vendas');
             const mesasEl = document.getElementById('indicador-mesas');
-            const pedidosEl = document.getElementById('indicador-pedidos');
             if (vendasEl) vendasEl.innerText = formatarMoeda(totalVendas);
             if (mesasEl) mesasEl.innerText = String(mesasAbertas);
-            if (pedidosEl) pedidosEl.innerText = String(pedidosPendentes);
         }
 
         function salvarMesas() {

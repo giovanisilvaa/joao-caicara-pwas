@@ -50,7 +50,7 @@ describe("melhorias operacionais dos PWAs", () => {
     expect(html).toContain("painel-diario");
     expect(html).toContain("indicador-vendas");
     expect(html).toContain("indicador-mesas");
-    expect(html).toContain("indicador-pedidos");
+    expect(html).not.toContain("indicador-pedidos");
     expect(html).toContain("vendaEhDeHoje");
     expect(html).toContain("if (contadorProducao) contadorProducao.innerText = pendentes;");
   });

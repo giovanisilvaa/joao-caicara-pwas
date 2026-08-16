@@ -43,3 +43,7 @@
 - [x] Salvar novo checkpoint da remoção do botão Produção.
 - [x] Remover ou proteger a referência ao contador Produção removido no renderizador do painel.
 - [x] Revalidar os listeners de produção e os indicadores do painel diário após a correção.
+- [x] Remover o cartão de pedidos pendentes do painel diário do PDV.
+- [x] Validar o painel simplificado e publicar a alteração.
+- [x] Salvar novo checkpoint após remover o cartão de pedidos pendentes.
+- [ ] Confirmar no domínio público que o painel mostra apenas vendas e mesas abertas.
