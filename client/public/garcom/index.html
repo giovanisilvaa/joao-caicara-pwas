@@ -30,7 +30,13 @@
     /* ===== CABEÇALHO ===== */
     .header { background: var(--primary); color: #fff; padding: 12px 15px; display: flex; align-items: center; justify-content: space-between; border-bottom: 3px solid var(--accent); flex-shrink: 0; }
     .header h1 { font-size: 1.1rem; font-family: 'Georgia', serif; }
-    .header .status { font-size: 0.7rem; opacity: 0.8; }
+    .header .status { font-size: 0.7rem; opacity: 0.9; }
+    .header-meta-g { display:flex; align-items:center; gap:8px; margin-left:auto; margin-right:8px; }
+    #usuario-logado-g { font-size:.72rem; background:rgba(255,255,255,.12); padding:6px 8px; border-radius:999px; white-space:nowrap; }
+    #status-conexao { padding:6px 8px; border-radius:999px; background:rgba(255,255,255,.1); white-space:nowrap; }
+    #status-conexao.sync-ok { color:#b8f1df; background:rgba(42,157,143,.25); }
+    #status-conexao.sync-pending { color:#ffe0a3; background:rgba(243,156,18,.22); }
+    #status-conexao.sync-error { color:#ffd0c7; background:rgba(231,111,81,.28); }
     .btn-voltar { background: var(--wood); color: #333; border: none; padding: 8px 12px; border-radius: 6px; font-weight: bold; font-size: 0.85rem; }
 
     /* ===== TELA 1: ESCOLHER MESA ===== */
@@ -65,7 +71,11 @@
     .qty-ctrl-g { display: flex; align-items: center; gap: 6px; }
     .qty-ctrl-g button { width: 28px; height: 28px; border-radius: 50%; border: none; background: var(--primary); color: #fff; font-size: 1rem; }
     .acoes-comanda-g { display:flex; gap:8px; padding:8px 10px; background:#fff; border-top:1px solid var(--border); }
-    .acoes-comanda-g button { flex:1; border:none; border-radius:6px; padding:9px 6px; font-weight:bold; color:#fff; font-size:.78rem; }
+    .acoes-comanda-g button { flex:1; border:none; border-radius:8px; padding:11px 6px; font-weight:bold; color:#fff; font-size:.78rem; min-height:44px; transition:transform .16s ease, filter .16s ease, box-shadow .16s ease; }
+    .acoes-comanda-g button:active { transform:scale(.97); }
+    .btn-enviar-g { background:var(--info); border:2px solid #2d627e !important; box-shadow:0 4px 0 #2d627e, 0 8px 16px rgba(69,123,157,.2); }
+    .btn-enviar-g.has-new { background:var(--accent); border-color:#b94528 !important; box-shadow:0 4px 0 #8e341f, 0 8px 16px rgba(217,93,57,.24); }
+    .btn-enviar-g.is-sending { opacity:.7; pointer-events:none; }
     .btn-fechar-g { background:var(--success); }
     .btn-limpar-g { background:var(--danger); }
     #modal-fechar-g { display:none; position:fixed; inset:0; z-index:1000; background:rgba(15,76,92,.8); align-items:center; justify-content:center; padding:18px; }
@@ -78,6 +88,11 @@
     .msg-vazio { text-align: center; color: #999; padding: 30px; grid-column: 1/-1; }
     /* Maré Operacional: sinalização tátil de mesa, status claros e coral reservado para atenção. */
     .secao-titulo { font-family: Georgia, serif; font-size: .95rem; letter-spacing: .14em; }
+    .legenda-mesas-g { display:flex; flex-wrap:wrap; gap:6px; margin:0 0 12px; }
+    .legenda-mesas-g span { display:inline-flex; align-items:center; gap:5px; background:rgba(255,255,255,.78); border:1px solid var(--border); border-radius:999px; padding:5px 8px; font-size:.68rem; color:var(--secondary); }
+    .legenda-mesas-g i { width:10px; height:10px; border-radius:50%; display:inline-block; background:var(--wood); }
+    .legenda-mesas-g .ocupada i { background:var(--primary); }
+    .legenda-mesas-g .nova i { background:var(--accent); }
     .grid-mesas { gap: 10px; }
     .mesa-btn { min-height: 64px; border-radius: 14px 14px 8px 8px; border: 2px solid rgba(15,76,92,.08); box-shadow: 0 4px 0 rgba(15,76,92,.08), 0 8px 18px rgba(15,76,92,.06); transition: transform .16s ease, box-shadow .16s ease, background .16s ease; }
     .mesa-btn::before { content: 'LIVRE'; display:block; font-size:.55rem; letter-spacing:.12em; opacity:.6; margin-bottom:3px; }
@@ -88,6 +103,15 @@
     .mesa-btn.novo-pedido { background: #D95D39; border-color:#b94528; box-shadow:0 4px 0 #8e341f, 0 10px 20px rgba(217,93,57,.22); }
     .header h1 { font-size:1.2rem; }
     #comanda-toggle { font-family:Georgia,serif; letter-spacing:.02em; }
+    @media (max-width: 600px) {
+        .header { flex-wrap:wrap; gap:6px; }
+        .header h1 { max-width:38%; font-size:1rem; }
+        .header-meta-g { gap:4px; margin-right:0; }
+        #usuario-logado-g { max-width:116px; overflow:hidden; text-overflow:ellipsis; }
+        .acoes-comanda-g { flex-wrap:wrap; }
+        .acoes-comanda-g button { flex:1 1 30%; }
+        .acoes-comanda-g .btn-enviar-g { flex-basis:100%; order:-1; }
+    }
     @media (prefers-reduced-motion: reduce) { .mesa-btn { transition:none; animation:none; } }
 </style>
 <link rel="manifest" href="/garcom/manifest.json">
@@ -107,12 +131,16 @@
 
     <div class="header">
         <h1 id="header-titulo">Selecione a mesa</h1>
-        <span class="status" id="status-conexao">conectando...</span>
+        <div class="header-meta-g">
+            <span id="usuario-logado-g">Não identificado</span>
+            <span class="status" id="status-conexao">conectando...</span>
+        </div>
         <button class="btn-voltar" id="btn-voltar" style="display:none;" onclick="voltarParaMesas()">← Mesas</button>
         <button id="btn-sair-g" style="display:none; background:var(--danger); color:#fff; border:0; border-radius:6px; padding:7px 10px; font-weight:bold;" onclick="sairGarcom()">Sair</button>
     </div>
 
     <div id="tela-mesas">
+        <div class="legenda-mesas-g" aria-label="Legenda dos estados das mesas"><span><i></i> Livre</span><span class="ocupada"><i></i> Ocupada</span><span class="nova"><i></i> Pedido novo</span></div>
         <div class="secao-titulo">🍽️ Salão</div>
         <div class="grid-mesas" id="grid-salao-g"></div>
         <div class="secao-titulo">🏖️ Deck / Praia</div>
@@ -130,7 +158,7 @@
         <div id="comanda-sheet"></div>
         <div class="acoes-comanda-g">
             <button class="btn-limpar-g" onclick="limparComandaG()">Limpar</button>
-            <button style="background:var(--info)" onclick="enviarProducaoG()">Enviar cozinha/bar</button>
+            <button id="btn-enviar-g" class="btn-enviar-g" onclick="enviarProducaoG()">Enviar cozinha/bar</button>
             <button class="btn-fechar-g" onclick="abrirFechamentoG()">Fechar conta</button>
         </div>
     </div>
@@ -203,6 +231,8 @@
             }
             telaPin.style.display = 'none';
             pinErro.style.display = 'none';
+            const sessaoLogada = sessaoGarcomAtual();
+            document.getElementById('usuario-logado-g').innerText = sessaoLogada ? `${sessaoLogada.nome} · ${sessaoLogada.funcao}` : 'Sessão ativa';
             document.getElementById('btn-sair-g').style.display = 'inline-block';
             document.getElementById('tela-mesas').style.display = 'block';
             document.getElementById('tela-pedido').style.display = 'none';
@@ -259,8 +289,18 @@
         document.getElementById('status-conexao').innerText = 'erro de login';
     });
 
+    function atualizarStatusConexaoG(texto, estado = '') {
+        const el = document.getElementById('status-conexao');
+        if (!el) return;
+        el.innerText = texto;
+        el.classList.remove('sync-ok', 'sync-pending', 'sync-error');
+        if (estado) el.classList.add(estado);
+    }
     firebase.auth().onAuthStateChanged((user) => {
-        document.getElementById('status-conexao').innerText = user ? '🟢 online' : '🔴 sem login';
+        atualizarStatusConexaoG(user ? '🟢 online' : '🔴 sem login', user ? 'sync-ok' : 'sync-error');
+    });
+    db.ref('.info/connected').on('value', snap => {
+        atualizarStatusConexaoG(snap.val() ? '🟢 online' : '🟠 offline', snap.val() ? 'sync-ok' : 'sync-pending');
     });
 
     const categoriasCardapio = [
@@ -561,6 +601,12 @@
 
         document.getElementById('qtd-itens-comanda').innerText = qtdTotal;
         document.getElementById('total-comanda-g').innerText = formatarMoeda(total);
+        const botaoEnviar = document.getElementById('btn-enviar-g');
+        const temNovos = dadosMesa.itens.some(item => item.enviado === false);
+        if (botaoEnviar) {
+            botaoEnviar.classList.toggle('has-new', temNovos);
+            botaoEnviar.innerText = temNovos ? `Enviar ${dadosMesa.itens.filter(item => item.enviado === false).length} novo(s)` : 'Tudo enviado';
+        }
     }
 
     function toggleComanda() {
@@ -609,8 +655,11 @@
         if (!exigirFuncaoGarcom(['garcom', 'caixa', 'gerente'])) return;
         if (!mesaSelecionada || !mesas[mesaSelecionada]) return;
         const dadosMesa = mesas[mesaSelecionada];
+        const botaoEnviar = document.getElementById('btn-enviar-g');
         const itensNovos = dadosMesa.itens.filter(item => item.enviado === false);
         if (itensNovos.length === 0) return alert('Não há itens novos para enviar.');
+        if (botaoEnviar) { botaoEnviar.classList.add('is-sending'); botaoEnviar.innerText = 'Enviando...'; }
+        atualizarStatusConexaoG('🟠 sincronizando', 'sync-pending');
         const porSetor = { cozinha: [], bar: [] };
         itensNovos.forEach(item => (item.setor === 'bar' ? porSetor.bar : porSetor.cozinha).push(item));
         const agora = Date.now();
@@ -629,10 +678,14 @@
             renderizarComandaG();
             renderizarMesasG();
             registrarAuditoriaGarcom('enviar_producao', { mesa: mesaSelecionada, setores: Object.keys(porSetor).filter(setor => porSetor[setor].length) });
+            atualizarStatusConexaoG('🟢 sincronizado', 'sync-ok');
+            if (botaoEnviar) botaoEnviar.classList.remove('is-sending');
             alert(`Pedido enviado para ${porSetor.cozinha.length ? 'cozinha' : ''}${porSetor.cozinha.length && porSetor.bar.length ? ' e ' : ''}${porSetor.bar.length ? 'bar' : ''}.`);
         }).catch((erro) => {
             console.error('Falha ao enviar produção:', erro);
             itensNovos.forEach(item => { item.enviado = false; });
+            if (botaoEnviar) botaoEnviar.classList.remove('is-sending');
+            atualizarStatusConexaoG('🔴 falha ao sincronizar', 'sync-error');
             renderizarComandaG();
             renderizarMesasG();
             return Promise.all(refsCriadas.map(ref => ref.remove()))

@@ -18,9 +18,16 @@
 - [x] Adicionar botão Sair nos PWAs, limpar sessão local, limpar a interface operacional e registrar logout na auditoria.
 - [x] Auditar login do garçom e cadastro de funcionários no PDV, incluindo validação, sessão, PIN, bloqueio, permissões e usabilidade.
 - [x] Corrigir melhorias encontradas no login e cadastro e validar os fluxos antes de publicar.
-- [ ] Executar teste funcional controlado no Firebase para cadastro, login do garçom e inativação com logout automático.
-- [ ] Validar no navegador publicado a redefinição do PIN do funcionário e a alteração do PIN do caixa.
-- [ ] Confirmar que as validações usam os PWAs atuais em `client/public`, não apenas os HTML antigos de upload.
-- [ ] Executar no navegador publicado o cadastro temporário, login do garçom, inativação e retorno automático ao login.
-- [ ] Validar no PDV publicado o modal de funcionários, redefinição de PIN e alteração do PIN do caixa com confirmação.
-- [ ] Registrar evidência fim a fim antes de marcar esses testes como concluídos.
+- [ ] Executar teste fim a fim publicado: cadastrar funcionário temporário, autenticar no garçom, inativar no PDV e confirmar retorno automático ao login; comportamento confirmado manualmente pelo usuário, evidência automatizada pendente.
+- [ ] Validar no PDV publicado a redefinição de PIN do funcionário e a alteração do PIN do caixa com confirmação do novo valor; comportamento confirmado manualmente pelo usuário, evidência automatizada pendente.
+- [x] Confirmar que as validações usam os PWAs atuais em `client/public`, não apenas os HTML antigos de upload.
+- [ ] Registrar evidência direta no navegador publicado do cadastro temporário, login do garçom, inativação e retorno automático ao login; confirmação textual recebida, captura direta pendente.
+- [ ] Registrar evidência direta no navegador publicado do modal de funcionários, redefinição de PIN e alteração do PIN do caixa; captura direta pendente.
+- [ ] Registrar evidência específica dos fluxos publicados antes de concluir a auditoria fim a fim.
+- [x] Melhorar a legenda e os estados visuais das mesas no garçom.
+- [x] Destacar envio para cozinha/bar e indicador de sincronização no garçom.
+- [x] Mostrar funcionário logado e melhorar ações fixas no atendimento.
+- [x] Adicionar filtros de setor/status no painel de produção do PDV.
+- [x] Validar responsividade, build e publicação das melhorias de interface.
+- [x] Validar explicitamente as telas atualizadas em breakpoint intermediário/tablet.
+- [x] Salvar novo checkpoint para publicar as melhorias de interface.

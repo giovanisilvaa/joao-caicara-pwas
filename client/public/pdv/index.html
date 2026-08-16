@@ -40,6 +40,7 @@
         .header h1 { font-size: 1.8rem; font-family: 'Georgia', serif; letter-spacing: 1px; text-shadow: 1px 1px 2px rgba(0,0,0,0.3); }
 
         .header-actions { display: flex; align-items: center; gap: 15px; }
+        #usuario-logado-pdv { font-size:.75rem; background:rgba(255,255,255,.12); padding:7px 9px; border-radius:999px; white-space:nowrap; }
         #producao-painel { display:none; position:fixed; top:78px; right:18px; z-index:500; width:min(420px,calc(100vw - 36px)); max-height:70vh; overflow:auto; background:#fff; border:2px solid var(--accent); border-radius:14px; box-shadow:0 16px 36px rgba(15,76,92,.24); padding:14px; }
         #producao-painel h3 { font-family:Georgia,serif; color:var(--primary); margin-bottom:10px; }
         .producao-card { border:1px solid var(--border); border-left:5px solid var(--accent); border-radius:8px; padding:9px; margin:8px 0; background:#fffdf8; }
@@ -48,6 +49,9 @@
         .producao-card-actions { display:flex; gap:6px; margin-top:8px; }
         .producao-card-actions button { flex:1; border:0; border-radius:6px; padding:7px 6px; cursor:pointer; font-weight:bold; font-size:.78rem; color:#fff; background:var(--primary); }
         .producao-card-actions button.secondary { background:var(--wood); color:#333; }
+        .producao-filtros { display:grid; grid-template-columns:1fr 1fr; gap:7px; margin-bottom:10px; }
+        .producao-filtros select { width:100%; padding:8px; border:1px solid var(--border); border-radius:7px; background:#fff; color:var(--secondary); font-weight:600; }
+        .producao-resumo { font-size:.72rem; color:#666; margin-bottom:8px; }
         .btn-history { background: var(--wood); color: #fff; border: none; padding: 8px 15px; border-radius: 6px; font-weight: bold; cursor: pointer; transition: 0.2s; }
         .btn-history:hover { filter: brightness(1.1); }
 
@@ -231,12 +235,21 @@
             <button class="btn-history" onclick="abrirModalHistorico()">📜 Relatório e Histórico</button>
             <button class="btn-history" onclick="toggleProducao()">📦 Produção <span id="producao-pendente-count">0</span></button>
             <button id="btn-sair-pdv" class="btn-history" style="display:none; background:var(--danger);" onclick="sairPdv()">Sair</button>
+            <span id="usuario-logado-pdv">Não identificado</span>
             <span id="status-conexao" style="font-size: 0.75rem; color: var(--bg); opacity:0.8; margin-right: 8px;">conectando...</span>
             <span id="relogio" style="font-weight: bold; color: var(--bg); font-size: 1.1rem;"></span>
         </div>
     </header>
 
-    <div id="producao-painel" class="no-print"><h3>Pedidos da produção</h3><div id="producao-lista">Nenhum pedido recebido.</div></div>
+    <div id="producao-painel" class="no-print">
+        <h3>Pedidos da produção</h3>
+        <div class="producao-filtros" aria-label="Filtros da produção">
+            <select id="filtro-producao-setor" onchange="alterarFiltroProducao()" aria-label="Filtrar por setor"><option value="todos">Todos os setores</option><option value="cozinha">Cozinha</option><option value="bar">Bar</option></select>
+            <select id="filtro-producao-status" onchange="alterarFiltroProducao()" aria-label="Filtrar por status"><option value="pendentes">Pendentes</option><option value="todos">Todos os status</option><option value="recebido">Recebido</option><option value="impresso">Impresso</option><option value="em_preparo">Em preparo</option><option value="pronto">Pronto</option><option value="entregue">Entregue</option><option value="cancelado">Cancelado</option></select>
+        </div>
+        <div id="producao-resumo" class="producao-resumo"></div>
+        <div id="producao-lista">Nenhum pedido recebido.</div>
+    </div>
 
     <div class="main-container no-print">
         
@@ -583,6 +596,7 @@
                 document.getElementById('tela-pin').style.display = 'none';
                 document.getElementById('pin-erro').style.display = 'none';
                 document.getElementById('btn-sair-pdv').style.display = 'inline-block';
+                document.getElementById('usuario-logado-pdv').innerText = 'Caixa · sessão ativa';
                 registrarAuditoriaPdv('login', {});
             } else {
                 const tentativas = Number(sessionStorage.getItem('pdv_login_tentativas') || 0) + 1;
@@ -698,6 +712,13 @@
         });
 
         const producaoCache = {};
+        let producaoFiltroSetor = 'todos';
+        let producaoFiltroStatus = 'pendentes';
+        function alterarFiltroProducao() {
+            producaoFiltroSetor = document.getElementById('filtro-producao-setor').value;
+            producaoFiltroStatus = document.getElementById('filtro-producao-status').value;
+            renderizarPainelProducao();
+        }
         function sairPdv() {
             registrarAuditoriaPdv('logout', {});
             mesaAtualSelecionada = null;
@@ -708,6 +729,7 @@
             document.getElementById('total-valor').innerText = formatarMoeda(0);
             document.getElementById('producao-painel').style.display = 'none';
             document.getElementById('btn-sair-pdv').style.display = 'none';
+            document.getElementById('usuario-logado-pdv').innerText = 'Não identificado';
             document.getElementById('tela-pin').style.display = 'flex';
             document.getElementById('pin-input').value = '';
             gerarMesas();
@@ -743,9 +765,15 @@
             }
         }
         function renderizarPainelProducao() {
-            const pedidos = Object.entries(producaoCache).sort((a,b) => (b[1].criadoEm || 0) - (a[1].criadoEm || 0));
-            const pendentes = pedidos.filter(([, p]) => !['entregue', 'cancelado'].includes(p.status)).length;
+            const todosPedidos = Object.entries(producaoCache).sort((a,b) => (b[1].criadoEm || 0) - (a[1].criadoEm || 0));
+            const pendentes = todosPedidos.filter(([, p]) => !['entregue', 'cancelado'].includes(p.status)).length;
+            const pedidos = todosPedidos.filter(([, pedido]) => {
+                const setorOk = producaoFiltroSetor === 'todos' || (pedido.setor === producaoFiltroSetor);
+                const statusOk = producaoFiltroStatus === 'todos' || (producaoFiltroStatus === 'pendentes' ? !['entregue', 'cancelado'].includes(pedido.status) : pedido.status === producaoFiltroStatus);
+                return setorOk && statusOk;
+            });
             document.getElementById('producao-pendente-count').innerText = pendentes;
+            document.getElementById('producao-resumo').innerText = `${pedidos.length} pedido(s) no filtro · ${pendentes} pendente(s) no total`;
             document.getElementById('producao-lista').innerHTML = pedidos.slice(0, 12).map(([chave, pedido]) => `
                 <div class="producao-card"><strong>Mesa ${pedido.mesa} · ${String(pedido.setor || '').toUpperCase()}</strong>
                 <small>${(pedido.itens || []).map(item => `${item.qtd}x ${item.nome}`).join(', ')}</small>
