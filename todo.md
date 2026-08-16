@@ -34,10 +34,12 @@
 - [x] Registrar a confirmação do usuário sobre o fluxo publicado completo; sem alegar evidência automatizada adicional.
 - [x] Registrar a confirmação do usuário sobre redefinição e validação do novo PIN no PDV publicado; sem alegar evidência automatizada adicional.
 - [x] Manter separado no checklist o que foi confirmado apenas textualmente do que foi validado diretamente no navegador publicado; a confirmação final do usuário está identificada como textual.
-- [ ] Criar painel diário no PDV com total de vendas, mesas abertas e pedidos pendentes.
-- [ ] Alimentar os indicadores com dados reais do Firebase e atualização automática.
-- [ ] Validar o painel em celular, tablet, desktop, testes e build antes de publicar.
+- [x] Criar painel diário no PDV com total de vendas, mesas abertas e pedidos pendentes.
+- [x] Alimentar os indicadores com dados reais do Firebase e atualização automática.
+- [x] Validar o painel em celular, tablet, desktop, testes e build antes de publicar.
 - [x] Remover o botão Produção do cabeçalho do PDV sem alterar o fluxo interno de pedidos.
 - [x] Validar que o PDV continua funcionando e publicar a alteração visual.
-- [ ] Validar visualmente o PDV publicado após a remoção do botão Produção.
+- [x] Validar visualmente o PDV publicado após a remoção do botão Produção.
 - [x] Salvar novo checkpoint da remoção do botão Produção.
+- [x] Remover ou proteger a referência ao contador Produção removido no renderizador do painel.
+- [x] Revalidar os listeners de produção e os indicadores do painel diário após a correção.

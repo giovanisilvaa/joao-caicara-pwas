@@ -738,6 +738,7 @@
             pagamentos: { dinheiro: forma === 'dinheiro' ? total : 0, pix: forma === 'pix' ? total : 0, credito: forma === 'credito' ? total : 0, debito: forma === 'debito' ? total : 0 },
             troco: recebido - total,
             dataHora: new Date().toLocaleString('pt-BR'),
+            criadoEm: Date.now(),
             origem: 'garcom'
         };
         const mesaFechada = { itens: [], cliente: '', abertura: null };

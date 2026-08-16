@@ -56,6 +56,16 @@
         .btn-history:hover { filter: brightness(1.1); }
 
         /* LAYOUT PRINCIPAL */
+        #painel-diario { display:grid; grid-template-columns:1.1fr 1fr 1fr; gap:10px; padding:12px 20px; background:rgba(249,246,240,.96); border-bottom:1px solid var(--border); flex-shrink:0; }
+        .painel-diario-titulo { grid-column:1/-1; display:flex; align-items:baseline; justify-content:space-between; gap:10px; color:var(--primary); }
+        .painel-diario-titulo strong { font-family:Georgia,serif; font-size:1.05rem; }
+        .painel-diario-titulo span { font-size:.76rem; color:#6d7b7d; }
+        .indicador-diario { background:#fff; border:1px solid var(--border); border-radius:10px; padding:10px 12px; box-shadow:0 3px 0 rgba(15,76,92,.05); min-width:0; }
+        .indicador-diario small { display:block; color:#657174; font-size:.72rem; text-transform:uppercase; letter-spacing:.08em; font-weight:700; }
+        .indicador-diario strong { display:block; color:var(--primary); font-family:Georgia,serif; font-size:1.45rem; margin-top:3px; }
+        .indicador-diario.vendas { border-left:5px solid var(--success); }
+        .indicador-diario.mesas { border-left:5px solid var(--wood); }
+        .indicador-diario.pedidos { border-left:5px solid var(--accent); }
         .main-container { display: flex; flex: 1; overflow: hidden; }
 
         /* PAINEL DE MESAS */
@@ -153,6 +163,7 @@
             .header-logo-container { min-width: 0; }
             .header h1 { font-size: 1.35rem; }
             .header-actions { width: 100%; justify-content: flex-start; flex-wrap: wrap; gap: 8px; }
+            #painel-diario { padding:10px 14px; }
             .main-container { flex-direction: column; overflow: visible; }
             .tables-panel, .menu-panel, .order-panel { width: 100%; min-width: 0; }
             .tables-panel { max-height: none; padding: 12px; }
@@ -167,6 +178,12 @@
             .header h1 { font-size: 1.05rem; }
             .header-actions .btn-history { flex: 1 1 auto; padding: 8px 9px; font-size: .72rem; }
             .header-actions #status-conexao, .header-actions #relogio { font-size: .7rem !important; }
+            #painel-diario { grid-template-columns:1fr 1fr 1fr; gap:6px; padding:8px; }
+            .painel-diario-titulo strong { font-size:.92rem; }
+            .painel-diario-titulo span { font-size:.65rem; }
+            .indicador-diario { padding:8px; }
+            .indicador-diario small { font-size:.6rem; }
+            .indicador-diario strong { font-size:1.1rem; }
             .tables-grid { grid-template-columns: repeat(5, minmax(42px, 1fr)); gap: 6px; }
             .table-btn { padding: 9px 3px; font-size: .78rem; }
             .tabs { flex-wrap: nowrap; overflow-x: auto; margin-bottom: 12px; padding-bottom: 4px; }
@@ -240,6 +257,13 @@
             <span id="relogio" style="font-weight: bold; color: var(--bg); font-size: 1.1rem;"></span>
         </div>
     </header>
+
+    <section id="painel-diario" class="no-print" aria-label="Resumo diário">
+        <div class="painel-diario-titulo"><strong>Resumo de hoje</strong><span id="painel-diario-data">--</span></div>
+        <div class="indicador-diario vendas"><small>Total de vendas</small><strong id="indicador-vendas">R$ 0,00</strong></div>
+        <div class="indicador-diario mesas"><small>Mesas abertas</small><strong id="indicador-mesas">0</strong></div>
+        <div class="indicador-diario pedidos"><small>Pedidos pendentes</small><strong id="indicador-pedidos">0</strong></div>
+    </section>
 
     <div id="producao-painel" class="no-print">
         <h3>Pedidos da produção</h3>
@@ -772,7 +796,9 @@
                 const statusOk = producaoFiltroStatus === 'todos' || (producaoFiltroStatus === 'pendentes' ? !['entregue', 'cancelado'].includes(pedido.status) : pedido.status === producaoFiltroStatus);
                 return setorOk && statusOk;
             });
-            document.getElementById('producao-pendente-count').innerText = pendentes;
+            const contadorProducao = document.getElementById('producao-pendente-count');
+            if (contadorProducao) contadorProducao.innerText = pendentes;
+            atualizarPainelDiario();
             document.getElementById('producao-resumo').innerText = `${pedidos.length} pedido(s) no filtro · ${pendentes} pendente(s) no total`;
             document.getElementById('producao-lista').innerHTML = pedidos.slice(0, 12).map(([chave, pedido]) => `
                 <div class="producao-card"><strong>Mesa ${pedido.mesa} · ${String(pedido.setor || '').toUpperCase()}</strong>
@@ -785,7 +811,7 @@
                     ${pedido.impressoEm || pedido.status === 'impresso' ? `<button class="secondary" onclick="imprimirPedidoProducao('${chave}', true)">Reimprimir</button>` : ''}
                 </div></div>`).join('') || 'Nenhum pedido recebido.';
         }
-        db.ref('pedidosProducao').limitToLast(30).on('value', snap => {
+        db.ref('pedidosProducao').on('value', snap => {
             Object.keys(producaoCache).forEach(chave => delete producaoCache[chave]);
             snap.forEach(child => { producaoCache[child.key] = child.val() || {}; });
             renderizarPainelProducao();
@@ -989,6 +1015,32 @@
         let mesas = JSON.parse(localStorage.getItem('mesas_abertas_caicara_cache')) || {};
         let mesaAtualSelecionada = null;
         let categoriaAtual = 'favoritos';
+        let vendasCacheDiario = [];
+        const formatarDataPainel = (data) => data.toLocaleDateString('pt-BR', { weekday:'short', day:'2-digit', month:'2-digit' });
+        const chaveDataPainel = (data) => `${data.getFullYear()}-${String(data.getMonth()+1).padStart(2,'0')}-${String(data.getDate()).padStart(2,'0')}`;
+        function vendaEhDeHoje(venda) {
+            const hoje = chaveDataPainel(new Date());
+            if (Number(venda?.criadoEm)) return chaveDataPainel(new Date(Number(venda.criadoEm))) === hoje;
+            const texto = String(venda?.dataHora || '');
+            const match = texto.match(/(\d{1,2})\/(\d{1,2})\/(\d{4})/);
+            if (match) return `${match[3]}-${String(match[2]).padStart(2,'0')}-${String(match[1]).padStart(2,'0')}` === hoje;
+            const parsed = new Date(texto);
+            return !Number.isNaN(parsed.getTime()) && chaveDataPainel(parsed) === hoje;
+        }
+        function atualizarPainelDiario() {
+            const vendasHoje = vendasCacheDiario.filter(vendaEhDeHoje);
+            const totalVendas = vendasHoje.reduce((total, venda) => total + (Number(venda.total) || 0), 0);
+            const mesasAbertas = Object.values(mesas).filter(mesa => Array.isArray(mesa?.itens) && mesa.itens.length > 0).length;
+            const pedidosPendentes = Object.values(producaoCache).filter(pedido => pedido && !['entregue', 'cancelado'].includes(pedido.status)).length;
+            const dataEl = document.getElementById('painel-diario-data');
+            if (dataEl) dataEl.innerText = formatarDataPainel(new Date());
+            const vendasEl = document.getElementById('indicador-vendas');
+            const mesasEl = document.getElementById('indicador-mesas');
+            const pedidosEl = document.getElementById('indicador-pedidos');
+            if (vendasEl) vendasEl.innerText = formatarMoeda(totalVendas);
+            if (mesasEl) mesasEl.innerText = String(mesasAbertas);
+            if (pedidosEl) pedidosEl.innerText = String(pedidosPendentes);
+        }
 
         function salvarMesas() {
             localStorage.setItem('mesas_abertas_caicara_cache', JSON.stringify(mesas));
@@ -1003,6 +1055,7 @@
             mesas = normalizarMesasPDV(snapshot.val());
             localStorage.setItem('mesas_abertas_caicara_cache', JSON.stringify(mesas));
             gerarMesas();
+            atualizarPainelDiario();
 
             // Se a mesa aberta na tela mudou remotamente (outro aparelho lançou item), atualiza a comanda.
             // Evita sobrescrever o campo "Nome do Cliente" enquanto o usuário está digitando nele.
@@ -1040,14 +1093,16 @@
             return resultado;
         }
 
-        // Fechamentos feitos pelo garçom também entram no histórico do caixa.
-        db.ref('vendas').on('child_added', (snapshot) => {
-            const venda = snapshot.val();
-            if (!venda || !venda.id) return;
-            const historico = JSON.parse(localStorage.getItem('historico_vendas_caicara')) || [];
-            if (historico.some(item => String(item.id) === String(venda.id))) return;
-            historico.unshift(venda);
-            localStorage.setItem('historico_vendas_caicara', JSON.stringify(historico));
+        // Vendas fechadas pelo PDV ou pelo garçom alimentam o histórico e o painel diário.
+        db.ref('vendas').on('value', (snapshot) => {
+            const vendasFirebase = [];
+            snapshot.forEach(child => { if (child.val()) vendasFirebase.push(child.val()); });
+            vendasCacheDiario = vendasFirebase;
+            const historicoAtual = JSON.parse(localStorage.getItem('historico_vendas_caicara')) || [];
+            const porId = new Map(historicoAtual.filter(venda => venda?.id).map(venda => [String(venda.id), venda]));
+            vendasFirebase.forEach(venda => porId.set(String(venda.id), venda));
+            localStorage.setItem('historico_vendas_caicara', JSON.stringify([...porId.values()].sort((a,b) => (Number(b.criadoEm) || 0) - (Number(a.criadoEm) || 0))));
+            atualizarPainelDiario();
         }, (erro) => {
             console.error('Erro ao sincronizar vendas fechadas:', erro);
         });
@@ -1644,6 +1699,7 @@
                 mesa: mesaId,
                 cliente: cliente || 'Não informado',
                 dataHora: dataHora,
+                criadoEm: Date.now(),
                 itens: itens,
                 subtotal: subtotal,
                 taxa: taxa,
