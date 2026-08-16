@@ -217,7 +217,7 @@
 
     <div id="tela-pin" class="no-print" style="position:fixed; inset:0; background:var(--primary); display:flex; flex-direction:column; align-items:center; justify-content:center; z-index:9999; padding:20px; text-align:center;">
         <h1 style="color:#fff; font-family:'Georgia', serif; margin-bottom:20px; font-size:1.8rem;">🦐 João Caiçara Tradição<br>PDV - Caixa</h1>
-        <input type="password" inputmode="numeric" id="pin-input" placeholder="PIN" maxlength="6" style="width:220px; text-align:center; font-size:1.8rem; letter-spacing:8px; padding:12px; border-radius:8px; border:none; margin-bottom:15px;">
+        <input type="password" inputmode="numeric" pattern="[0-9]*" autocomplete="current-password" id="pin-input" placeholder="PIN de 4 dígitos" maxlength="4" style="width:220px; text-align:center; font-size:1.8rem; letter-spacing:8px; padding:12px; border-radius:8px; border:none; margin-bottom:15px;">
         <button onclick="conferirPin()" style="background:var(--accent); color:#fff; border:none; padding:14px 30px; border-radius:8px; font-size:1.1rem; font-weight:bold; cursor:pointer;">Entrar</button>
         <div id="pin-erro" style="color:var(--danger); background:#fff; padding:6px 12px; border-radius:6px; margin-top:10px; display:none; font-size:0.9rem;">PIN incorreto, tente de novo.</div>
     </div>
@@ -562,15 +562,36 @@
         const PIN_CORRETO = "1234";
 
         async function conferirPin() {
+            const bloqueio = Number(sessionStorage.getItem('pdv_login_bloqueio') || 0);
+            if (Date.now() < bloqueio) {
+                const segundos = Math.ceil((bloqueio - Date.now()) / 1000);
+                document.getElementById('pin-erro').innerText = `Muitas tentativas. Aguarde ${segundos}s.`;
+                document.getElementById('pin-erro').style.display = 'block';
+                return;
+            }
             const digitado = document.getElementById('pin-input').value.trim();
+            if (!/^\d{4}$/.test(digitado)) {
+                document.getElementById('pin-erro').innerText = 'O PIN deve ter exatamente 4 dígitos.';
+                document.getElementById('pin-erro').style.display = 'block';
+                return;
+            }
             const configurado = (await db.ref('configuracoes/pinCaixaHash').once('value')).val();
             const autorizado = configurado ? (await hashPin(digitado)) === configurado : digitado === PIN_CORRETO;
             if (autorizado) {
+                sessionStorage.removeItem('pdv_login_tentativas');
+                sessionStorage.removeItem('pdv_login_bloqueio');
                 document.getElementById('tela-pin').style.display = 'none';
                 document.getElementById('pin-erro').style.display = 'none';
                 document.getElementById('btn-sair-pdv').style.display = 'inline-block';
                 registrarAuditoriaPdv('login', {});
             } else {
+                const tentativas = Number(sessionStorage.getItem('pdv_login_tentativas') || 0) + 1;
+                sessionStorage.setItem('pdv_login_tentativas', String(tentativas));
+                if (tentativas >= 5) {
+                    sessionStorage.setItem('pdv_login_bloqueio', String(Date.now() + 30_000));
+                    sessionStorage.removeItem('pdv_login_tentativas');
+                }
+                document.getElementById('pin-erro').innerText = 'PIN incorreto.';
                 document.getElementById('pin-erro').style.display = 'block';
                 document.getElementById('pin-input').value = '';
             }
@@ -619,11 +640,16 @@
             return db.ref('auditoria').push({ acao, origem: 'pdv', funcionario: 'caixa', detalhes: detalhes || {}, criadoEm: Date.now() });
         }
         async function salvarFuncionario() {
-            const nome = document.getElementById('func-nome').value.trim();
+            const nome = document.getElementById('func-nome').value.trim().replace(/\s+/g, ' ');
             const login = document.getElementById('func-login').value.trim().toLowerCase().replace(/\s+/g, '.');
             const funcao = document.getElementById('func-funcao').value;
             const pin = document.getElementById('func-pin').value.trim();
-            if (!nome || !login || !/^\d{4}$/.test(pin)) return alert('Informe nome, identificador e um PIN de exatamente 4 dígitos.');
+            if (nome.length < 2 || nome.length > 80) return alert('Informe um nome entre 2 e 80 caracteres.');
+            if (!/^[a-z0-9][a-z0-9._-]{1,30}$/.test(login)) return alert('O identificador deve ter 2 a 31 caracteres: letras, números, ponto, hífen ou sublinhado.');
+            if (!['garcom', 'caixa', 'gerente'].includes(funcao)) return alert('Selecione uma função válida.');
+            if (!/^\d{4}$/.test(pin)) return alert('Informe um PIN de exatamente 4 dígitos.');
+            const confirmar = prompt('Digite novamente o PIN para confirmar o cadastro:');
+            if (confirmar !== pin) return alert('Os PINs não conferem.');
             const snapshot = await db.ref('funcionarios').once('value');
             const dados = snapshot.val() || {};
             if (Object.values(dados).some(funcionario => funcionario.login === login)) return alert('Esse identificador já está cadastrado.');
@@ -643,6 +669,8 @@
             if (!(await autorizarAdministracao())) return;
             const novo = prompt('Digite o novo PIN do funcionário (4 dígitos):');
             if (!/^\d{4}$/.test(novo || '')) return alert('O PIN deve ter exatamente 4 dígitos.');
+            const confirmar = prompt('Digite novamente o novo PIN para confirmar:');
+            if (confirmar !== novo) return alert('Os PINs não conferem.');
             await db.ref(`funcionarios/${chave}`).update({ pinHash: await hashPin(novo), atualizadoEm: Date.now() });
             await registrarAuditoriaPdv('redefinir_pin_funcionario', { id: chave });
             alert('PIN do funcionário redefinido.');
@@ -651,6 +679,8 @@
             if (!(await autorizarAdministracao())) return;
             const novo = prompt('Digite o novo PIN do caixa (4 dígitos):');
             if (!/^\d{4}$/.test(novo || '')) return alert('O PIN deve ter exatamente 4 dígitos.');
+            const confirmar = prompt('Digite novamente o novo PIN do caixa para confirmar:');
+            if (confirmar !== novo) return alert('Os PINs não conferem.');
             await db.ref('configuracoes/pinCaixaHash').set(await hashPin(novo));
             await registrarAuditoriaPdv('alterar_pin_caixa', {});
             alert('PIN do caixa alterado com sucesso.');

@@ -170,6 +170,13 @@
 
     async function conferirPin(event) {
         if (event) event.preventDefault();
+        const bloqueio = Number(localStorage.getItem('garcom_login_bloqueio') || 0);
+        if (Date.now() < bloqueio) {
+            const segundos = Math.ceil((bloqueio - Date.now()) / 1000);
+            document.getElementById('pin-erro').innerText = `Muitas tentativas. Aguarde ${segundos}s.`;
+            document.getElementById('pin-erro').style.display = 'block';
+            return;
+        }
         const loginInput = document.getElementById('login-input');
         const pinInput = document.getElementById('pin-input');
         const pinErro = document.getElementById('pin-erro');
@@ -182,12 +189,15 @@
             return;
         }
         try {
+            if (!/^[a-z0-9][a-z0-9._-]{1,30}$/.test(login)) throw new Error('invalid-login');
             const snapshot = await db.ref('funcionarios').once('value');
-            const funcionarios = Object.values(snapshot.val() || {});
+            const funcionarios = Object.entries(snapshot.val() || {});
             if (funcionarios.length > 0) {
-                const funcionario = funcionarios.find(item => item.login === login && item.ativo !== false);
+                const encontrado = funcionarios.find(([, item]) => item && item.login === login && item.ativo !== false);
+                const funcionarioId = encontrado?.[0];
+                const funcionario = encontrado?.[1];
                 if (!funcionario || funcionario.pinHash !== await hashPinGarcom(digitado)) throw new Error('invalid-login');
-                localStorage.setItem('garcom_sessao', JSON.stringify({ nome: funcionario.nome, login: funcionario.login, funcao: funcionario.funcao, entradaEm: Date.now() }));
+                localStorage.setItem('garcom_sessao', JSON.stringify({ funcionarioId, nome: funcionario.nome, login: funcionario.login, funcao: funcionario.funcao, entradaEm: Date.now() }));
             } else {
                 throw new Error('no-staff-configured');
             }
@@ -197,11 +207,20 @@
             document.getElementById('tela-mesas').style.display = 'block';
             document.getElementById('tela-pedido').style.display = 'none';
             document.getElementById('header-titulo').innerText = 'Selecione a mesa';
+            localStorage.removeItem('garcom_login_tentativas');
+            localStorage.removeItem('garcom_login_bloqueio');
+            monitorarSessaoGarcom();
             pinInput.blur();
             registrarAuditoriaGarcom('login', { login });
         } catch (erro) {
             console.error('Falha no login do garçom:', erro);
-            pinErro.innerText = erro.message === 'no-staff-configured' ? 'Cadastre um funcionário no PDV antes de entrar.' : 'Identificador ou PIN incorreto.';
+            const tentativas = Number(localStorage.getItem('garcom_login_tentativas') || 0) + 1;
+            localStorage.setItem('garcom_login_tentativas', String(tentativas));
+            if (tentativas >= 5) {
+                localStorage.setItem('garcom_login_bloqueio', String(Date.now() + 30_000));
+                localStorage.removeItem('garcom_login_tentativas');
+            }
+            pinErro.innerText = erro.message === 'no-staff-configured' ? 'Cadastre um funcionário no PDV antes de entrar.' : 'Identificador ou PIN incorreto ou serviço indisponível.';
             pinErro.style.display = 'block';
             pinInput.value = '';
             pinInput.focus();
@@ -267,6 +286,7 @@
     let mesaSelecionada = null;
     let categoriaAtual = 'favoritos';
     let comandaAberta = false;
+    let monitoramentoFuncionarioRef = null;
 
     const formatarMoeda = (v) => `R$ ${v.toFixed(2).replace('.', ',')}`;
 
@@ -377,9 +397,10 @@
         renderizarComandaG();
     }
 
-    function sairGarcom() {
+    function sairGarcom(silencioso = false) {
         const sessao = sessaoGarcomAtual() || {};
-        db.ref('auditoria').push({ acao: 'logout', origem: 'garcom', funcionario: sessao.login || 'desconhecido', nome: sessao.nome || '', criadoEm: Date.now() });
+        db.ref('auditoria').push({ acao: 'logout', origem: 'garcom', funcionario: sessao.login || 'desconhecido', nome: sessao.nome || '', detalhes: { silencioso }, criadoEm: Date.now() });
+        if (monitoramentoFuncionarioRef) { monitoramentoFuncionarioRef.off(); monitoramentoFuncionarioRef = null; }
         localStorage.removeItem('garcom_sessao');
         mesaSelecionada = null;
         document.getElementById('tela-pedido').style.display = 'none';
@@ -497,6 +518,7 @@
     }
 
     function editarObsG(index) {
+        if (!exigirFuncaoGarcom(['garcom', 'caixa', 'gerente'])) return;
         const dadosMesa = mesas[mesaSelecionada];
         const item = dadosMesa.itens[index];
         if (!item) return;
@@ -556,8 +578,27 @@
     }
     function exigirFuncaoGarcom(funcoes) {
         const sessao = sessaoGarcomAtual();
-        if (!sessao || !funcoes.includes(sessao.funcao)) { alert('Seu perfil não possui autorização para esta operação.'); return false; }
+        const expirada = !sessao || !sessao.entradaEm || (Date.now() - sessao.entradaEm > 12 * 60 * 60 * 1000);
+        if (expirada) {
+            if (sessao) sairGarcom(true);
+            else alert('Faça login para continuar.');
+            return false;
+        }
+        if (!funcoes.includes(sessao.funcao)) { alert('Seu perfil não possui autorização para esta operação.'); return false; }
         return true;
+    }
+    function monitorarSessaoGarcom() {
+        const sessao = sessaoGarcomAtual();
+        if (monitoramentoFuncionarioRef) monitoramentoFuncionarioRef.off();
+        if (!sessao?.funcionarioId) return;
+        monitoramentoFuncionarioRef = db.ref(`funcionarios/${sessao.funcionarioId}`);
+        monitoramentoFuncionarioRef.on('value', snap => {
+            const funcionario = snap.val();
+            if (!funcionario || funcionario.ativo === false) {
+                alert('Este acesso foi inativado no caixa.');
+                sairGarcom(true);
+            }
+        });
     }
     function registrarAuditoriaGarcom(acao, detalhes) {
         const sessao = sessaoGarcomAtual() || {};

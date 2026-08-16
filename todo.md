@@ -16,3 +16,11 @@
 - [x] Aplicar auditoria e permissões por função ao novo login.
 - [x] Usar o PIN atual do caixa para autorizar o cadastro de funcionários e permitir alteração confirmada desse PIN.
 - [x] Adicionar botão Sair nos PWAs, limpar sessão local, limpar a interface operacional e registrar logout na auditoria.
+- [x] Auditar login do garçom e cadastro de funcionários no PDV, incluindo validação, sessão, PIN, bloqueio, permissões e usabilidade.
+- [x] Corrigir melhorias encontradas no login e cadastro e validar os fluxos antes de publicar.
+- [ ] Executar teste funcional controlado no Firebase para cadastro, login do garçom e inativação com logout automático.
+- [ ] Validar no navegador publicado a redefinição do PIN do funcionário e a alteração do PIN do caixa.
+- [ ] Confirmar que as validações usam os PWAs atuais em `client/public`, não apenas os HTML antigos de upload.
+- [ ] Executar no navegador publicado o cadastro temporário, login do garçom, inativação e retorno automático ao login.
+- [ ] Validar no PDV publicado o modal de funcionários, redefinição de PIN e alteração do PIN do caixa com confirmação.
+- [ ] Registrar evidência fim a fim antes de marcar esses testes como concluídos.
