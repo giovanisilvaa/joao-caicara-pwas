@@ -544,14 +544,22 @@
             refsCriadas.push(ref);
             return ref.set({ mesa: mesaSelecionada, cliente: dadosMesa.cliente || '', setor, itens: JSON.parse(JSON.stringify(itens)), status: 'recebido', origem: 'garcom', criadoEm: agora, atualizadoEm: agora });
         });
-        Promise.all(gravacoes).then(() => salvarMesas()).then(() => {
+        Promise.all(gravacoes).then(() => {
+            // Só confirma no Firebase depois que todos os pedidos por setor foram criados.
+            // A mesa recebe a nova versão com enviado=true na mesma operação lógica.
             itensNovos.forEach(item => { item.enviado = true; });
+            return salvarMesas();
+        }).then(() => {
             renderizarComandaG();
             renderizarMesasG();
             alert(`Pedido enviado para ${porSetor.cozinha.length ? 'cozinha' : ''}${porSetor.cozinha.length && porSetor.bar.length ? ' e ' : ''}${porSetor.bar.length ? 'bar' : ''}.`);
         }).catch((erro) => {
             console.error('Falha ao enviar produção:', erro);
-            return Promise.all(refsCriadas.map(ref => ref.remove())).finally(() => alert('Não foi possível confirmar o envio. Os itens foram mantidos como novos.'));
+            itensNovos.forEach(item => { item.enviado = false; });
+            renderizarComandaG();
+            renderizarMesasG();
+            return Promise.all(refsCriadas.map(ref => ref.remove()))
+                .finally(() => alert('Não foi possível confirmar o envio. Os itens foram mantidos como novos.'));
         });
     }
 

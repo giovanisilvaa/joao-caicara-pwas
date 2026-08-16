@@ -45,6 +45,9 @@
         .producao-card { border:1px solid var(--border); border-left:5px solid var(--accent); border-radius:8px; padding:9px; margin:8px 0; background:#fffdf8; }
         .producao-card small { color:#457B9D; display:block; margin:4px 0 8px; }
         .producao-card select { width:100%; padding:6px; border:1px solid var(--border); border-radius:6px; }
+        .producao-card-actions { display:flex; gap:6px; margin-top:8px; }
+        .producao-card-actions button { flex:1; border:0; border-radius:6px; padding:7px 6px; cursor:pointer; font-weight:bold; font-size:.78rem; color:#fff; background:var(--primary); }
+        .producao-card-actions button.secondary { background:var(--wood); color:#333; }
         .btn-history { background: var(--wood); color: #fff; border: none; padding: 8px 15px; border-radius: 6px; font-weight: bold; cursor: pointer; transition: 0.2s; }
         .btn-history:hover { filter: brightness(1.1); }
 
@@ -563,6 +566,27 @@
         function atualizarStatusProducao(chave, status) {
             return db.ref(`pedidosProducao/${chave}`).update({ status, atualizadoEm: Date.now() });
         }
+        function imprimirPedidoProducao(chave, reimpressao = false) {
+            const pedido = producaoCache[chave];
+            if (!pedido || !Array.isArray(pedido.itens) || pedido.itens.length === 0) return alert('Pedido de produção vazio ou indisponível.');
+            const setor = pedido.setor === 'bar' ? 'bar' : 'cozinha';
+            document.getElementById('prod-titulo').innerText = `${setor === 'bar' ? 'PEDIDO BAR' : 'PEDIDO COZINHA'}${reimpressao ? ' (REIMPRESSÃO)' : ''}`;
+            document.getElementById('prod-mesa').innerText = pedido.mesa || '-';
+            document.getElementById('prod-cliente').innerText = pedido.cliente || 'Balcão/Geral';
+            document.getElementById('prod-data').innerText = new Date(pedido.criadoEm || Date.now()).toLocaleString('pt-BR');
+            document.getElementById('prod-itens').innerHTML = pedido.itens.map(item => {
+                const obs = item.obs ? `<div style="font-size:13px;font-weight:normal;margin:2px 0 0 0;">↳ Obs: ${item.obs}</div>` : '';
+                const serve2 = item.servePara2 ? `<div style="font-size:11px;font-weight:normal;margin:2px 0 0 0;">(serve bem 2 pessoas)</div>` : '';
+                return `<div class="cozinha-item">[ ] ${item.qtd}x ${item.nome}${obs}${serve2}</div>`;
+            }).join('');
+            document.body.classList.add('print-mode-producao');
+            window.print();
+            document.body.classList.remove('print-mode-producao');
+            if (!reimpressao) {
+                db.ref(`pedidosProducao/${chave}`).update({ status: 'impresso', impressoEm: Date.now(), atualizadoEm: Date.now() })
+                    .catch(erro => console.error('Falha ao registrar impressão:', erro));
+            }
+        }
         function renderizarPainelProducao() {
             const pedidos = Object.entries(producaoCache).sort((a,b) => (b[1].criadoEm || 0) - (a[1].criadoEm || 0));
             const pendentes = pedidos.filter(([, p]) => !['entregue', 'cancelado'].includes(p.status)).length;
@@ -571,8 +595,12 @@
                 <div class="producao-card"><strong>Mesa ${pedido.mesa} · ${String(pedido.setor || '').toUpperCase()}</strong>
                 <small>${(pedido.itens || []).map(item => `${item.qtd}x ${item.nome}`).join(', ')}</small>
                 <select onchange="atualizarStatusProducao('${chave}', this.value)">
-                    ${['recebido','em_preparo','pronto','entregue','cancelado'].map(status => `<option value="${status}" ${pedido.status === status ? 'selected' : ''}>${status.replace('_',' ')}</option>`).join('')}
-                </select></div>`).join('') || 'Nenhum pedido recebido.';
+                    ${['recebido','impresso','em_preparo','pronto','entregue','cancelado'].map(status => `<option value="${status}" ${pedido.status === status ? 'selected' : ''}>${status.replace('_',' ')}</option>`).join('')}
+                </select>
+                <div class="producao-card-actions">
+                    <button onclick="imprimirPedidoProducao('${chave}')">🖨️ Imprimir</button>
+                    ${pedido.impressoEm || pedido.status === 'impresso' ? `<button class="secondary" onclick="imprimirPedidoProducao('${chave}', true)">Reimprimir</button>` : ''}
+                </div></div>`).join('') || 'Nenhum pedido recebido.';
         }
         db.ref('pedidosProducao').limitToLast(30).on('value', snap => {
             Object.keys(producaoCache).forEach(chave => delete producaoCache[chave]);
