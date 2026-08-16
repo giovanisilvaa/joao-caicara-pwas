@@ -18,5 +18,6 @@ describe("melhorias operacionais dos PWAs", () => {
     expect(html).toContain("filtro-producao-setor");
     expect(html).toContain("filtro-producao-status");
     expect(html).toContain("alterarFiltroProducao");
+    expect(html).not.toContain('onclick="toggleProducao()">📦 Produção');
   });
 });
