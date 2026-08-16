@@ -159,6 +159,7 @@
         <div id="comanda-sheet"></div>
         <div class="acoes-comanda-g">
             <button class="btn-limpar-g" onclick="limparComandaG()">Limpar</button>
+            <button style="background:var(--info)" onclick="enviarProducaoG()">Enviar cozinha/bar</button>
             <button class="btn-fechar-g" onclick="abrirFechamentoG()">Fechar conta</button>
         </div>
     </div>
@@ -527,6 +528,31 @@
     function calcularTotalG() {
         const dados = mesas[mesaSelecionada];
         return dados ? dados.itens.reduce((s, item) => s + ((Number(item.preco) || 0) * (Number(item.qtd) || 0)), 0) : 0;
+    }
+
+    function enviarProducaoG() {
+        if (!mesaSelecionada || !mesas[mesaSelecionada]) return;
+        const dadosMesa = mesas[mesaSelecionada];
+        const itensNovos = dadosMesa.itens.filter(item => item.enviado === false);
+        if (itensNovos.length === 0) return alert('Não há itens novos para enviar.');
+        const porSetor = { cozinha: [], bar: [] };
+        itensNovos.forEach(item => (item.setor === 'bar' ? porSetor.bar : porSetor.cozinha).push(item));
+        const agora = Date.now();
+        const refsCriadas = [];
+        const gravacoes = Object.entries(porSetor).filter(([, itens]) => itens.length).map(([setor, itens]) => {
+            const ref = db.ref('pedidosProducao').push();
+            refsCriadas.push(ref);
+            return ref.set({ mesa: mesaSelecionada, cliente: dadosMesa.cliente || '', setor, itens: JSON.parse(JSON.stringify(itens)), status: 'recebido', origem: 'garcom', criadoEm: agora, atualizadoEm: agora });
+        });
+        Promise.all(gravacoes).then(() => salvarMesas()).then(() => {
+            itensNovos.forEach(item => { item.enviado = true; });
+            renderizarComandaG();
+            renderizarMesasG();
+            alert(`Pedido enviado para ${porSetor.cozinha.length ? 'cozinha' : ''}${porSetor.cozinha.length && porSetor.bar.length ? ' e ' : ''}${porSetor.bar.length ? 'bar' : ''}.`);
+        }).catch((erro) => {
+            console.error('Falha ao enviar produção:', erro);
+            return Promise.all(refsCriadas.map(ref => ref.remove())).finally(() => alert('Não foi possível confirmar o envio. Os itens foram mantidos como novos.'));
+        });
     }
 
     function abrirFechamentoG() {

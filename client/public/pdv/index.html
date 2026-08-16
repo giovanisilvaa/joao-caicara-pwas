@@ -40,6 +40,11 @@
         .header h1 { font-size: 1.8rem; font-family: 'Georgia', serif; letter-spacing: 1px; text-shadow: 1px 1px 2px rgba(0,0,0,0.3); }
 
         .header-actions { display: flex; align-items: center; gap: 15px; }
+        #producao-painel { display:none; position:fixed; top:78px; right:18px; z-index:500; width:min(420px,calc(100vw - 36px)); max-height:70vh; overflow:auto; background:#fff; border:2px solid var(--accent); border-radius:14px; box-shadow:0 16px 36px rgba(15,76,92,.24); padding:14px; }
+        #producao-painel h3 { font-family:Georgia,serif; color:var(--primary); margin-bottom:10px; }
+        .producao-card { border:1px solid var(--border); border-left:5px solid var(--accent); border-radius:8px; padding:9px; margin:8px 0; background:#fffdf8; }
+        .producao-card small { color:#457B9D; display:block; margin:4px 0 8px; }
+        .producao-card select { width:100%; padding:6px; border:1px solid var(--border); border-radius:6px; }
         .btn-history { background: var(--wood); color: #fff; border: none; padding: 8px 15px; border-radius: 6px; font-weight: bold; cursor: pointer; transition: 0.2s; }
         .btn-history:hover { filter: brightness(1.1); }
 
@@ -183,15 +188,18 @@
 
     <header class="header no-print">
         <div class="header-logo-container">
-            <img src="tradicao_caicara_logo_2.png" alt="Logo João Caiçara Tradição" style="height: 60px; border-radius: 50%; border: 2px solid #F4F1DE; background: #fff;">
+            <img src="/manus-storage/joao-caicara-mark_eadc19d3.png" alt="Logo João Caiçara Tradição" style="height: 60px; border-radius: 50%; border: 2px solid #F4F1DE; background: #fff;">
             <h1>João Caiçara Tradição</h1>
         </div>
         <div class="header-actions">
             <button class="btn-history" onclick="abrirModalHistorico()">📜 Relatório e Histórico</button>
+            <button class="btn-history" onclick="toggleProducao()">📦 Produção <span id="producao-pendente-count">0</span></button>
             <span id="status-conexao" style="font-size: 0.75rem; color: var(--bg); opacity:0.8; margin-right: 8px;">conectando...</span>
             <span id="relogio" style="font-weight: bold; color: var(--bg); font-size: 1.1rem;"></span>
         </div>
     </header>
+
+    <div id="producao-painel" class="no-print"><h3>Pedidos da produção</h3><div id="producao-lista">Nenhum pedido recebido.</div></div>
 
     <div class="main-container no-print">
         
@@ -512,6 +520,31 @@
         firebase.auth().onAuthStateChanged((user) => {
             const statusEl = document.getElementById('status-conexao');
             if (statusEl) statusEl.innerText = user ? '🟢 online' : '🔴 sem login';
+        });
+
+        const producaoCache = {};
+        function toggleProducao() {
+            const painel = document.getElementById('producao-painel');
+            painel.style.display = painel.style.display === 'block' ? 'none' : 'block';
+        }
+        function atualizarStatusProducao(chave, status) {
+            return db.ref(`pedidosProducao/${chave}`).update({ status, atualizadoEm: Date.now() });
+        }
+        function renderizarPainelProducao() {
+            const pedidos = Object.entries(producaoCache).sort((a,b) => (b[1].criadoEm || 0) - (a[1].criadoEm || 0));
+            const pendentes = pedidos.filter(([, p]) => !['entregue', 'cancelado'].includes(p.status)).length;
+            document.getElementById('producao-pendente-count').innerText = pendentes;
+            document.getElementById('producao-lista').innerHTML = pedidos.slice(0, 12).map(([chave, pedido]) => `
+                <div class="producao-card"><strong>Mesa ${pedido.mesa} · ${String(pedido.setor || '').toUpperCase()}</strong>
+                <small>${(pedido.itens || []).map(item => `${item.qtd}x ${item.nome}`).join(', ')}</small>
+                <select onchange="atualizarStatusProducao('${chave}', this.value)">
+                    ${['recebido','em_preparo','pronto','entregue','cancelado'].map(status => `<option value="${status}" ${pedido.status === status ? 'selected' : ''}>${status.replace('_',' ')}</option>`).join('')}
+                </select></div>`).join('') || 'Nenhum pedido recebido.';
+        }
+        db.ref('pedidosProducao').limitToLast(30).on('value', snap => {
+            Object.keys(producaoCache).forEach(chave => delete producaoCache[chave]);
+            snap.forEach(child => { producaoCache[child.key] = child.val() || {}; });
+            renderizarPainelProducao();
         });
     </script>
 
@@ -1094,6 +1127,18 @@
             // Marca os itens impressos como já enviados, pra não duplicar na próxima impressão
             itensFiltrados.forEach(item => { item.enviado = true; });
             salvarMesas();
+            if (!reimprimirTudo) {
+                db.ref('pedidosProducao').push({
+                    mesa: mesaAtualSelecionada,
+                    cliente: dadosMesa.cliente || '',
+                    setor,
+                    itens: JSON.parse(JSON.stringify(itensFiltrados)),
+                    status: 'recebido',
+                    origem: 'pdv',
+                    criadoEm: Date.now(),
+                    atualizadoEm: Date.now()
+                });
+            }
             gerarMesas();
         }
 

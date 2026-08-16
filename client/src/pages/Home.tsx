@@ -1,4 +1,3 @@
-/* Maré Operacional: central de acesso com contraste alto, marca caiçara e dois caminhos independentes. */
 import { ArrowRight, ClipboardList, Utensils } from "lucide-react";
 
 const mark = "/manus-storage/joao-caicara-mark_eadc19d3.png";
