@@ -61,20 +61,21 @@
 - [x] Definir o provedor de WhatsApp e o número destinatário dos alertas.
 - [x] Configurar credenciais protegidas do provedor de WhatsApp.
 - [x] Implementar alertas de indisponibilidade e recuperação via WhatsApp.
-- [x] Validar o monitoramento e publicar a integração de WhatsApp.
+- [x] Validar e publicar o health check, o job ativo e a integração preparada do WhatsApp; entrega de mensagem não foi alegada.
 - [x] Persistir o estado completo da mesa para retry de produção mesmo se a gravação da mesa falhar.
 - [x] Adicionar teste automatizado para recuperação de pendência de produção.
 - [x] Criar o job recorrente em produção para o endpoint de monitoramento WhatsApp.
 - [x] Validar o fluxo publicado do monitoramento e confirmar que o job está ativo.
-- [x] Simular queda e recuperação controladas do health check sem alterar dados operacionais; etapa de WhatsApp encerrada pelo usuário antes dessa validação.
-- [x] Confirmar envio de uma mensagem real de teste pelo Twilio WhatsApp sem duplicidade; etapa encerrada pelo usuário após as restrições do Sandbox.
-- [x] Registrar que não foi criado checkpoint adicional da transição de monitoramento, pois a integração WhatsApp foi encerrada pelo usuário.
+- [x] Documentar que a simulação queda/recuperação do health check não foi executada e permanece adiada pelo usuário.
+- [x] Documentar que o envio real de teste pelo Twilio WhatsApp não foi confirmado por causa da restrição do Sandbox e permanece adiado pelo usuário.
+- [x] Registrar que a validação da transição do monitoramento e o checkpoint específico foram adiados quando o usuário encerrou a configuração do WhatsApp.
 - [x] Implementar backup operacional do Firebase com exportação e restauração controladas.
 - [x] Implementar fechamento de caixa com totais por forma de pagamento e conferência diária.
 - [x] Implementar auditoria consultável no PDV com filtros por período, funcionário e operação.
 - [x] Validar integridade, permissões, responsividade, testes e publicação das três melhorias; validação técnica concluída, aguardando apenas o checkpoint final.
-- [ ] Adicionar filtro por funcionário/usuário na auditoria do PDV.
+- [x] Adicionar filtro por funcionário/usuário na auditoria do PDV.
 - [ ] Validar exportação e restauração de backup sem alterar os dados operacionais reais.
 - [ ] Validar funcionalmente o fechamento de caixa e a diferença em dinheiro.
 - [ ] Criar checkpoint final após a validação das três melhorias.
-- [ ] Manter a etapa de alerta WhatsApp explicitamente adiada, sem alegar entrega de mensagem.
+- [x] Manter a etapa de alerta WhatsApp explicitamente adiada, sem alegar entrega de mensagem.
+- [ ] Forçar a propagação da versão publicada do PDV com uma nova marca estática e confirmar os botões administrativos no domínio.
