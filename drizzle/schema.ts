@@ -25,4 +25,14 @@ export const users = mysqlTable("users", {
 export type User = typeof users.$inferSelect;
 export type InsertUser = typeof users.$inferInsert;
 
-// TODO: Add your tables here
+export const systemMonitor = mysqlTable("systemMonitor", {
+  id: int("id").autoincrement().primaryKey(),
+  service: varchar("service", { length: 64 }).notNull().unique(),
+  scheduleCronTaskUid: varchar("scheduleCronTaskUid", { length: 65 }),
+  status: mysqlEnum("status", ["unknown", "up", "down"]).default("unknown").notNull(),
+  lastCheckedAt: timestamp("lastCheckedAt"),
+  lastAlertAt: timestamp("lastAlertAt"),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export type SystemMonitor = typeof systemMonitor.$inferSelect;

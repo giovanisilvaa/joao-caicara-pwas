@@ -1,0 +1,1 @@
+ALTER TABLE `systemMonitor` ADD `scheduleCronTaskUid` varchar(65);

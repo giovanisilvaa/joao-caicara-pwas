@@ -41,6 +41,10 @@
 
         .header-actions { display: flex; align-items: center; gap: 15px; }
         #usuario-logado-pdv { font-size:.75rem; background:rgba(255,255,255,.12); padding:7px 9px; border-radius:999px; white-space:nowrap; }
+        .status-conexao-pdv { display:inline-flex; align-items:center; padding:6px 8px; border-radius:999px; font-size:.75rem; margin-right:8px; transition:background .2s, color .2s; }
+        .status-conexao-pdv.sync-ok { color:#d7f7e9; background:rgba(42,157,143,.3); }
+        .status-conexao-pdv.sync-pending { color:#ffe0a3; background:rgba(243,156,18,.25); }
+        .status-conexao-pdv.sync-error { color:#ffd0c7; background:rgba(231,111,81,.3); }
         #producao-painel { display:none; position:fixed; top:78px; right:18px; z-index:500; width:min(420px,calc(100vw - 36px)); max-height:70vh; overflow:auto; background:#fff; border:2px solid var(--accent); border-radius:14px; box-shadow:0 16px 36px rgba(15,76,92,.24); padding:14px; }
         #producao-painel h3 { font-family:Georgia,serif; color:var(--primary); margin-bottom:10px; }
         .producao-card { border:1px solid var(--border); border-left:5px solid var(--accent); border-radius:8px; padding:9px; margin:8px 0; background:#fffdf8; }
@@ -252,7 +256,7 @@
             <button class="btn-history" onclick="abrirModalHistorico()">📜 Relatório e Histórico</button>
             <button id="btn-sair-pdv" class="btn-history" style="display:none; background:var(--danger);" onclick="sairPdv()">Sair</button>
             <span id="usuario-logado-pdv">Não identificado</span>
-            <span id="status-conexao" style="font-size: 0.75rem; color: var(--bg); opacity:0.8; margin-right: 8px;">conectando...</span>
+            <span id="status-conexao" class="status-conexao-pdv sync-pending">🟠 conectando Firebase</span>
             <span id="relogio" style="font-weight: bold; color: var(--bg); font-size: 1.1rem;"></span>
         </div>
     </header>
@@ -728,10 +732,29 @@
             if (statusEl) statusEl.innerText = 'erro de login';
         });
 
-        firebase.auth().onAuthStateChanged((user) => {
+        let firebaseConectadoPdv = false;
+        function atualizarStatusConexaoPdv(texto, estado = '') {
             const statusEl = document.getElementById('status-conexao');
-            if (statusEl) statusEl.innerText = user ? '🟢 online' : '🔴 sem login';
+            if (!statusEl) return;
+            statusEl.innerText = texto;
+            statusEl.classList.remove('sync-ok', 'sync-pending', 'sync-error');
+            if (estado) statusEl.classList.add(estado);
+        }
+        function refletirStatusConexaoPdv() {
+            if (!navigator.onLine) atualizarStatusConexaoPdv('🔴 sem internet', 'sync-error');
+            else if (!firebaseConectadoPdv) atualizarStatusConexaoPdv('🟠 conectando Firebase', 'sync-pending');
+            else atualizarStatusConexaoPdv('🟢 sincronizado', 'sync-ok');
+        }
+        firebase.auth().onAuthStateChanged((user) => {
+            if (!user) atualizarStatusConexaoPdv('🔴 sem login', 'sync-error');
+            else refletirStatusConexaoPdv();
         });
+        db.ref('.info/connected').on('value', snap => {
+            firebaseConectadoPdv = Boolean(snap.val());
+            refletirStatusConexaoPdv();
+        });
+        window.addEventListener('online', refletirStatusConexaoPdv);
+        window.addEventListener('offline', refletirStatusConexaoPdv);
 
         const producaoCache = {};
         let producaoFiltroSetor = 'todos';

@@ -1,6 +1,6 @@
 import { eq } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/mysql2";
-import { InsertUser, users } from "../drizzle/schema";
+import { InsertUser, systemMonitor, users } from "../drizzle/schema";
 import { ENV } from './_core/env';
 
 let _db: ReturnType<typeof drizzle> | null = null;
@@ -87,6 +87,32 @@ export async function getUserByOpenId(openId: string) {
   const result = await db.select().from(users).where(eq(users.openId, openId)).limit(1);
 
   return result.length > 0 ? result[0] : undefined;
+}
+
+export async function getSystemMonitor(service: string) {
+  const db = await getDb();
+  if (!db) throw new Error("Database unavailable");
+  const rows = await db.select().from(systemMonitor).where(eq(systemMonitor.service, service)).limit(1);
+  return rows[0];
+}
+
+export async function upsertSystemMonitor(service: string, status: "unknown" | "up" | "down", lastCheckedAt: Date, lastAlertAt?: Date | null) {
+  const db = await getDb();
+  if (!db) throw new Error("Database unavailable");
+  const existing = await getSystemMonitor(service);
+  const values = { service, status, lastCheckedAt, lastAlertAt: lastAlertAt ?? null };
+  if (existing) {
+    await db.update(systemMonitor).set(values).where(eq(systemMonitor.service, service));
+  } else {
+    await db.insert(systemMonitor).values(values);
+  }
+  return getSystemMonitor(service);
+}
+
+export async function setSystemMonitorTaskUid(service: string, taskUid: string) {
+  const db = await getDb();
+  if (!db) throw new Error("Database unavailable");
+  await db.update(systemMonitor).set({ scheduleCronTaskUid: taskUid }).where(eq(systemMonitor.service, service));
 }
 
 export async function listUsers() {

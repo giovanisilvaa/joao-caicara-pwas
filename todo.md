@@ -50,3 +50,19 @@
 - [x] Reforçar a publicação do painel simplificado caso o domínio ainda sirva a versão anterior.
 - [x] Salvar checkpoint após adicionar a marca estática de versão do painel simplificado.
 - [x] Confirmar novamente no domínio público que só aparecem vendas e mesas abertas após a republicação reforçada.
+- [x] Adicionar status detalhado de conexão e sincronização no garçom e no PDV.
+- [x] Proteger lançamentos contra falhas momentâneas e registrar pendências locais sem perda de dados.
+- [x] Criar health check do sistema para monitoramento externo.
+- [ ] Definir canal de alerta externo e configurar o monitoramento correspondente.
+- [ ] Validar cenários de falha, responsividade, testes e publicação.
+- [x] Persistir payload completo das operações falhas do garçom.
+- [x] Implementar reenvio manual das pendências quando o Firebase voltar.
+- [x] Cobrir a recuperação das pendências em teste automatizado.
+- [x] Definir o provedor de WhatsApp e o número destinatário dos alertas.
+- [x] Configurar credenciais protegidas do provedor de WhatsApp.
+- [x] Implementar alertas de indisponibilidade e recuperação via WhatsApp.
+- [ ] Validar o monitoramento e publicar a integração de WhatsApp.
+- [x] Persistir o estado completo da mesa para retry de produção mesmo se a gravação da mesa falhar.
+- [x] Adicionar teste automatizado para recuperação de pendência de produção.
+- [ ] Criar o job recorrente em produção para o endpoint de monitoramento WhatsApp.
+- [ ] Validar o fluxo publicado do monitoramento e confirmar que o job está ativo.

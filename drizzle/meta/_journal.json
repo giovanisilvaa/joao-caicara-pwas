@@ -8,6 +8,20 @@
       "when": 1786846402330,
       "tag": "0000_unique_harpoon",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "5",
+      "when": 1786919669603,
+      "tag": "0001_large_juggernaut",
+      "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "5",
+      "when": 1786919867626,
+      "tag": "0002_cuddly_sauron",
+      "breakpoints": true
     }
   ]
 }

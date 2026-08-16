@@ -3,6 +3,7 @@ import fs from "node:fs";
 import vm from "node:vm";
 
 const readPwa = (name: string) => fs.readFileSync(`client/public/${name}/index.html`, "utf8");
+const readServer = () => fs.readFileSync("server/_core/index.ts", "utf8");
 
 describe("melhorias operacionais dos PWAs", () => {
   it("mantém no garçom a legenda, o usuário e o envio com estado visual", () => {
@@ -13,9 +14,90 @@ describe("melhorias operacionais dos PWAs", () => {
     expect(html).toContain("atualizarStatusConexaoG");
   });
 
+  it("mostra estados detalhados de conexão nos dois PWAs", () => {
+    const garcom = readPwa("garcom");
+    const pdv = readPwa("pdv");
+    expect(garcom).toContain("sem internet");
+    expect(garcom).toContain("firebaseConectadoG");
+    expect(pdv).toContain("status-conexao-pdv");
+    expect(pdv).toContain("firebaseConectadoPdv");
+  });
+
+  it("expõe um health check para monitoramento externo", () => {
+    expect(readServer()).toContain("app.get('/api/health'");
+    expect(readServer()).toContain("service: 'joao-caicara-pwas'");
+    expect(readServer()).toContain("app.post('/api/scheduled/monitorWhatsApp'");
+    expect(readServer()).toContain("TWILIO_WHATSAPP_TO");
+  });
+
   it("mantém o timestamp numérico nos fechamentos do garçom", () => {
     const html = readPwa("garcom");
     expect(html).toContain("criadoEm: Date.now()");
+  });
+
+  it("reenvia uma pendência de fechamento com o payload completo", async () => {
+    const html = readPwa("garcom");
+    const inicio = html.indexOf("    function atualizarStatusConexaoG");
+    const fim = html.indexOf("    firebase.auth().onAuthStateChanged", inicio);
+    const funcoes = html.slice(inicio, fim);
+    const armazenamento = new Map<string, string>();
+    const escritas: Array<{ caminho: string; payload: unknown }> = [];
+    const contexto = {
+      localStorage: {
+        getItem: (chave: string) => armazenamento.get(chave) ?? null,
+        setItem: (chave: string, valor: string) => armazenamento.set(chave, valor),
+      },
+      navigator: { onLine: true },
+      document: { getElementById: () => ({ innerText: "", classList: { remove() {}, add() {} } }) },
+      db: { ref: (caminho: string) => ({ set: async (payload: unknown) => { escritas.push({ caminho, payload }); } }) },
+      alert: () => {},
+      console,
+    };
+    armazenamento.set("garcom_pendencias_firebase", JSON.stringify([{
+      tipo: "fechamento",
+      mesa: 7,
+      vendaChave: "venda-fixa-7",
+      venda: { id: "garcom-venda-7", mesa: 7, total: 42.5, itens: [{ nome: "Peixe", qtd: 1, preco: 42.5 }] },
+      mesaFechada: { itens: [], cliente: "", abertura: null },
+    }]));
+    await vm.runInNewContext(`(async () => { ${funcoes}; firebaseConectadoG = true; await reprocessarPendenciasG(); })()`, contexto);
+    expect(escritas.map(item => item.caminho)).toEqual(["vendas/venda-fixa-7", "mesas/7"]);
+    expect(escritas[0].payload).toMatchObject({ id: "garcom-venda-7", total: 42.5 });
+    expect(armazenamento.get("garcom_pendencias_firebase")).toBe("[]");
+  });
+
+  it("reenvia uma pendência de produção com a mesa completa", async () => {
+    const html = readPwa("garcom");
+    const inicio = html.indexOf("    function atualizarStatusConexaoG");
+    const fim = html.indexOf("    firebase.auth().onAuthStateChanged", inicio);
+    const funcoes = html.slice(inicio, fim);
+    const armazenamento = new Map<string, string>();
+    const escritas: Array<{ caminho: string; payload: any }> = [];
+    const mesaCompleta = { cliente: "Mesa teste", abertura: 123, itens: [{ envioId: "envio-fixo", enviado: false, nome: "Peixe", qtd: 1, preco: 42.5 }] };
+    const contexto = {
+      localStorage: {
+        getItem: (chave: string) => armazenamento.get(chave) ?? null,
+        setItem: (chave: string, valor: string) => armazenamento.set(chave, valor),
+      },
+      navigator: { onLine: true },
+      document: { getElementById: () => ({ innerText: "", classList: { remove() {}, add() {} } }) },
+      db: { ref: (caminho: string) => ({
+        set: async (payload: unknown) => { escritas.push({ caminho, payload }); },
+      }) },
+      alert: () => {},
+      console,
+    };
+    armazenamento.set("garcom_pendencias_firebase", JSON.stringify([{
+      tipo: "producao",
+      mesa: 4,
+      envioId: "envio-fixo",
+      pedidos: [{ chave: "pedido-fixo", mesa: 4, setor: "cozinha", status: "recebido", itens: [{ envioId: "envio-fixo", nome: "Peixe", qtd: 1, preco: 42.5 }] }],
+      mesaCompleta,
+    }]));
+    await vm.runInNewContext(`(async () => { ${funcoes}; firebaseConectadoG = true; await reprocessarPendenciasG(); })()`, contexto);
+    expect(escritas.map(item => item.caminho)).toEqual(["pedidosProducao/pedido-fixo", "mesas/4"]);
+    expect(escritas[1].payload.itens[0]).toMatchObject({ envioId: "envio-fixo", enviado: true, nome: "Peixe" });
+    expect(armazenamento.get("garcom_pendencias_firebase")).toBe("[]");
   });
 
   it("renderiza produção sem o contador visual removido e atualiza o painel diário", () => {

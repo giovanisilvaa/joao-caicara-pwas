@@ -33,7 +33,7 @@
     .header .status { font-size: 0.7rem; opacity: 0.9; }
     .header-meta-g { display:flex; align-items:center; gap:8px; margin-left:auto; margin-right:8px; }
     #usuario-logado-g { font-size:.72rem; background:rgba(255,255,255,.12); padding:6px 8px; border-radius:999px; white-space:nowrap; }
-    #status-conexao { padding:6px 8px; border-radius:999px; background:rgba(255,255,255,.1); white-space:nowrap; }
+    #status-conexao { border:0; cursor:pointer; padding:6px 8px; border-radius:999px; background:rgba(255,255,255,.1); white-space:nowrap; transition:background .2s, color .2s; }
     #status-conexao.sync-ok { color:#b8f1df; background:rgba(42,157,143,.25); }
     #status-conexao.sync-pending { color:#ffe0a3; background:rgba(243,156,18,.22); }
     #status-conexao.sync-error { color:#ffd0c7; background:rgba(231,111,81,.28); }
@@ -133,7 +133,7 @@
         <h1 id="header-titulo">Selecione a mesa</h1>
         <div class="header-meta-g">
             <span id="usuario-logado-g">Não identificado</span>
-            <span class="status" id="status-conexao">conectando...</span>
+                <button type="button" id="status-conexao" title="Tocar para tentar reenviar pendências" onclick="reprocessarPendenciasG()">conectando...</button>
         </div>
         <button class="btn-voltar" id="btn-voltar" style="display:none;" onclick="voltarParaMesas()">← Mesas</button>
         <button id="btn-sair-g" style="display:none; background:var(--danger); color:#fff; border:0; border-radius:6px; padding:7px 10px; font-weight:bold;" onclick="sairGarcom()">Sair</button>
@@ -296,12 +296,75 @@
         el.classList.remove('sync-ok', 'sync-pending', 'sync-error');
         if (estado) el.classList.add(estado);
     }
+    let firebaseConectadoG = false;
+    const CHAVE_PENDENCIAS_G = 'garcom_pendencias_firebase';
+    function lerPendenciasG() {
+        try { return JSON.parse(localStorage.getItem(CHAVE_PENDENCIAS_G) || '[]'); } catch { return []; }
+    }
+    function registrarPendenciaG(tipo, detalhes = {}) {
+        const pendencias = lerPendenciasG().filter(item => item.tipo !== tipo);
+        pendencias.push({ tipo, criadoEm: Date.now(), ...detalhes });
+        localStorage.setItem(CHAVE_PENDENCIAS_G, JSON.stringify(pendencias));
+        atualizarStatusConexaoG(`🟠 ${pendencias.length} pendência(s) local(is)`, 'sync-pending');
+    }
+    function limparPendenciaG(tipo) {
+        const pendencias = lerPendenciasG().filter(item => item.tipo !== tipo);
+        localStorage.setItem(CHAVE_PENDENCIAS_G, JSON.stringify(pendencias));
+        refletirStatusConexaoG();
+    }
+    async function reprocessarPendenciasG() {
+        const pendencias = lerPendenciasG();
+        if (!pendencias.length) return;
+        if (!navigator.onLine || !firebaseConectadoG) return alert('Ainda não há conexão estável com o Firebase.');
+        atualizarStatusConexaoG('🟠 reenviando pendência(s)', 'sync-pending');
+        try {
+            for (const pendencia of pendencias) {
+                if (pendencia.tipo === 'producao') {
+                    await Promise.all((pendencia.pedidos || []).map(pedido => {
+                        const payload = { ...pedido };
+                        delete payload.chave;
+                        return db.ref(`pedidosProducao/${pedido.chave}`).set(payload);
+                    }));
+                    const mesaRef = db.ref(`mesas/${pendencia.mesa}`);
+                    const mesaCompleta = JSON.parse(JSON.stringify(pendencia.mesaCompleta || {}));
+                    const itens = Array.isArray(mesaCompleta.itens) ? mesaCompleta.itens : Object.values(mesaCompleta.itens || {});
+                    await mesaRef.set({ ...mesaCompleta, itens: itens.map(item => item.envioId === pendencia.envioId ? { ...item, enviado: true } : item) });
+                } else if (pendencia.tipo === 'fechamento') {
+                    await db.ref(`vendas/${pendencia.vendaChave}`).set(pendencia.venda);
+                    await db.ref(`mesas/${pendencia.mesa}`).set(pendencia.mesaFechada);
+                }
+                limparPendenciaG(pendencia.tipo);
+            }
+            atualizarStatusConexaoG('🟢 sincronizado', 'sync-ok');
+            alert('Pendência(s) reenviada(s) com sucesso.');
+        } catch (erro) {
+            console.error('Falha ao reenviar pendências:', erro);
+            atualizarStatusConexaoG('🔴 falha no reenvio', 'sync-error');
+            alert('Não foi possível concluir o reenvio. A pendência foi mantida neste aparelho.');
+        }
+    }
+    function refletirStatusConexaoG() {
+        const pendencias = lerPendenciasG();
+        if (!navigator.onLine) {
+            atualizarStatusConexaoG(pendencias.length ? `🔴 sem internet · ${pendencias.length} pendência(s)` : '🔴 sem internet', 'sync-error');
+        } else if (!firebaseConectadoG) {
+            atualizarStatusConexaoG('🟠 conectando Firebase', 'sync-pending');
+        } else if (pendencias.length) {
+            atualizarStatusConexaoG(`🟠 ${pendencias.length} pendência(s) local(is)`, 'sync-pending');
+        } else {
+            atualizarStatusConexaoG('🟢 sincronizado', 'sync-ok');
+        }
+    }
     firebase.auth().onAuthStateChanged((user) => {
-        atualizarStatusConexaoG(user ? '🟢 online' : '🔴 sem login', user ? 'sync-ok' : 'sync-error');
+        if (!user) atualizarStatusConexaoG('🔴 sem login', 'sync-error');
+        else refletirStatusConexaoG();
     });
     db.ref('.info/connected').on('value', snap => {
-        atualizarStatusConexaoG(snap.val() ? '🟢 online' : '🟠 offline', snap.val() ? 'sync-ok' : 'sync-pending');
+        firebaseConectadoG = Boolean(snap.val());
+        refletirStatusConexaoG();
     });
+    window.addEventListener('online', refletirStatusConexaoG);
+    window.addEventListener('offline', refletirStatusConexaoG);
 
     const categoriasCardapio = [
         { key: 'aperitivos', label: 'Aperitivos' },
@@ -349,7 +412,7 @@
         }
     }, (erro) => {
         console.error('Erro ao carregar mesas:', erro);
-        document.getElementById('status-conexao').innerText = 'erro nas mesas';
+        atualizarStatusConexaoG('🔴 erro nas mesas', 'sync-error');
         mesas = normalizarMesas(null);
         renderizarMesasG();
     });
@@ -663,11 +726,15 @@
         const porSetor = { cozinha: [], bar: [] };
         itensNovos.forEach(item => (item.setor === 'bar' ? porSetor.bar : porSetor.cozinha).push(item));
         const agora = Date.now();
+        const envioId = `envio_${agora}_${Math.random().toString(36).slice(2, 8)}`;
+        itensNovos.forEach(item => { item.envioId = envioId; });
+        const pedidosEnviados = Object.entries(porSetor).filter(([, itens]) => itens.length).map(([setor, itens]) => ({ mesa: mesaSelecionada, cliente: dadosMesa.cliente || '', setor, itens: JSON.parse(JSON.stringify(itens)), status: 'recebido', origem: 'garcom', criadoEm: agora, atualizadoEm: agora }));
         const refsCriadas = [];
-        const gravacoes = Object.entries(porSetor).filter(([, itens]) => itens.length).map(([setor, itens]) => {
+        const gravacoes = pedidosEnviados.map((pedido) => {
             const ref = db.ref('pedidosProducao').push();
             refsCriadas.push(ref);
-            return ref.set({ mesa: mesaSelecionada, cliente: dadosMesa.cliente || '', setor, itens: JSON.parse(JSON.stringify(itens)), status: 'recebido', origem: 'garcom', criadoEm: agora, atualizadoEm: agora });
+            pedido.chave = ref.key;
+            return ref.set({ ...pedido, chave: undefined });
         });
         Promise.all(gravacoes).then(() => {
             // Só confirma no Firebase depois que todos os pedidos por setor foram criados.
@@ -678,14 +745,14 @@
             renderizarComandaG();
             renderizarMesasG();
             registrarAuditoriaGarcom('enviar_producao', { mesa: mesaSelecionada, setores: Object.keys(porSetor).filter(setor => porSetor[setor].length) });
-            atualizarStatusConexaoG('🟢 sincronizado', 'sync-ok');
+            limparPendenciaG('producao');
             if (botaoEnviar) botaoEnviar.classList.remove('is-sending');
             alert(`Pedido enviado para ${porSetor.cozinha.length ? 'cozinha' : ''}${porSetor.cozinha.length && porSetor.bar.length ? ' e ' : ''}${porSetor.bar.length ? 'bar' : ''}.`);
         }).catch((erro) => {
             console.error('Falha ao enviar produção:', erro);
             itensNovos.forEach(item => { item.enviado = false; });
             if (botaoEnviar) botaoEnviar.classList.remove('is-sending');
-            atualizarStatusConexaoG('🔴 falha ao sincronizar', 'sync-error');
+            registrarPendenciaG('producao', { mesa: mesaSelecionada, quantidadeItens: itensNovos.length, envioId, pedidos: pedidosEnviados, mesaCompleta: JSON.parse(JSON.stringify(dadosMesa)) });
             renderizarComandaG();
             renderizarMesasG();
             return Promise.all(refsCriadas.map(ref => ref.remove()))
@@ -750,11 +817,13 @@
                 fecharModalG();
                 registrarAuditoriaGarcom('fechar_conta', { mesa: venda.mesa, total: venda.total });
                 alert(`Mesa ${venda.mesa} fechada. Troco: ${formatarMoeda(venda.troco)}`);
+                limparPendenciaG('fechamento');
                 voltarParaMesas();
             })
             .catch((erro) => {
                 console.error('Falha ao confirmar fechamento:', erro);
-                alert('Não foi possível confirmar o fechamento no servidor. A mesa foi mantida aberta; verifique a conexão e tente novamente.');
+                registrarPendenciaG('fechamento', { mesa: mesaSelecionada, total: venda.total, vendaChave: vendaRef.key, venda, mesaFechada });
+                alert('Não foi possível confirmar o fechamento no servidor. A mesa foi mantida aberta e a pendência foi registrada neste aparelho; tente novamente quando o status estiver sincronizado.');
             });
     }
 </script>
