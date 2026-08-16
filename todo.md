@@ -74,8 +74,11 @@
 - [x] Implementar auditoria consultável no PDV com filtros por período, funcionário e operação.
 - [x] Validar integridade, permissões, responsividade, testes e publicação das três melhorias; validação técnica concluída, aguardando apenas o checkpoint final.
 - [x] Adicionar filtro por funcionário/usuário na auditoria do PDV.
-- [ ] Validar exportação e restauração de backup sem alterar os dados operacionais reais.
-- [ ] Validar funcionalmente o fechamento de caixa e a diferença em dinheiro.
-- [ ] Criar checkpoint final após a validação das três melhorias.
+- [x] Validar exportação e restauração de backup sem alterar os dados operacionais reais; usuário confirmou os testes funcionais no PDV.
+- [x] Validar funcionalmente o fechamento de caixa e a diferença em dinheiro; usuário confirmou os testes funcionais no PDV.
+- [x] Criar checkpoint final após a validação das três melhorias.
 - [x] Manter a etapa de alerta WhatsApp explicitamente adiada, sem alegar entrega de mensagem.
-- [ ] Forçar a propagação da versão publicada do PDV com uma nova marca estática e confirmar os botões administrativos no domínio.
+- [x] Forçar a propagação da versão publicada do PDV com uma nova marca estática e confirmar os botões administrativos no domínio.
+- [x] Validar no PDV publicado a restauração controlada de um backup seguro, sem substituir dados operacionais reais; usuário confirmou que funcionou.
+- [x] Validar no PDV publicado o fluxo Registrar Fechamento, incluindo valor esperado, valor contado e diferença; usuário confirmou que funcionou.
+- [x] Salvar o checkpoint final somente após essas duas confirmações específicas.
