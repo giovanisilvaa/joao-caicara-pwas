@@ -1,0 +1,19 @@
+{
+  "name": "João Caiçara — Garçom",
+  "short_name": "Garçom",
+  "description": "Abertura e gerenciamento de comandas no salão.",
+  "start_url": "/garcom/",
+  "scope": "/garcom/",
+  "display": "standalone",
+  "orientation": "any",
+  "background_color": "#F7F4EC",
+  "theme_color": "#0F4C5C",
+  "icons": [
+    {
+      "src": "/manus-storage/joao-caicara-mark_eadc19d3.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}

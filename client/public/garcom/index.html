@@ -1,0 +1,594 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>João Caiçara - Pedidos (Garçom)</title>
+<style>
+    :root {
+        --primary: #0F4C5C;
+        --secondary: #133C4A;
+        --accent: #D95D39;
+        --success: #2A9D8F;
+        --danger: #E76F51;
+        --info: #457B9D;
+        --border: #E0DDCF;
+        --wood: #C49A6C;
+        --warning: #f39c12;
+        --bg: #F7F4EC;
+    }
+    * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; -webkit-tap-highlight-color: transparent; }
+    body { background: var(--bg); color: #222; height: 100vh; display: flex; flex-direction: column; overflow: hidden; }
+
+    /* ===== TELA DE PIN ===== */
+    #tela-pin { position: fixed; inset: 0; background: var(--primary); display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 999; padding: 20px; text-align: center; }
+    #tela-pin h1 { color: #fff; font-family: 'Georgia', serif; margin-bottom: 20px; font-size: 1.6rem; }
+    #tela-pin input { width: 220px; text-align: center; font-size: 1.8rem; letter-spacing: 8px; padding: 12px; border-radius: 8px; border: none; margin-bottom: 15px; }
+    #tela-pin button { background: var(--accent); color: #fff; border: none; padding: 14px 30px; border-radius: 8px; font-size: 1.1rem; font-weight: bold; cursor: pointer; }
+    #pin-erro { color: var(--danger); background: #fff; padding: 6px 12px; border-radius: 6px; margin-top: 10px; display: none; font-size: 0.9rem; }
+
+    /* ===== CABEÇALHO ===== */
+    .header { background: var(--primary); color: #fff; padding: 12px 15px; display: flex; align-items: center; justify-content: space-between; border-bottom: 3px solid var(--accent); flex-shrink: 0; }
+    .header h1 { font-size: 1.1rem; font-family: 'Georgia', serif; }
+    .header .status { font-size: 0.7rem; opacity: 0.8; }
+    .btn-voltar { background: var(--wood); color: #333; border: none; padding: 8px 12px; border-radius: 6px; font-weight: bold; font-size: 0.85rem; }
+
+    /* ===== TELA 1: ESCOLHER MESA ===== */
+    #tela-mesas { flex: 1; overflow-y: auto; padding: 15px; }
+    .secao-titulo { font-size: 0.8rem; text-transform: uppercase; color: var(--secondary); font-weight: bold; letter-spacing: 1px; margin: 15px 0 8px; }
+    .grid-mesas { display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px; }
+    .mesa-btn { aspect-ratio: 1; background: var(--wood); border: none; border-radius: 8px; font-weight: bold; font-size: 1rem; color: #333; position: relative; }
+    .mesa-btn.occupied { background: var(--primary); color: #fff; }
+    .mesa-btn.novo-pedido { animation: pulse-novo 1.5s infinite; }
+    @keyframes pulse-novo { 0%,100% { box-shadow: 0 0 0 0 rgba(220,53,69,.6); } 50% { box-shadow: 0 0 0 6px rgba(220,53,69,0); } }
+
+    /* ===== TELA 2: CARDÁPIO + COMANDA ===== */
+    #tela-pedido { flex: 1; display: none; flex-direction: column; overflow: hidden; }
+    .cliente-row { padding: 8px 12px; background: #fff; border-bottom: 1px solid var(--border); flex-shrink: 0; }
+    .cliente-row input { width: 100%; padding: 8px; border: 1px solid var(--border); border-radius: 6px; font-size: 0.9rem; }
+    #busca-produto-g { width: 100%; padding: 12px; border: none; border-bottom: 1px solid var(--border); font-size: 1rem; flex-shrink: 0; }
+    .tabs-g { display: flex; gap: 6px; overflow-x: auto; padding: 8px 10px; background: #fff; border-bottom: 1px solid var(--border); flex-shrink: 0; }
+    .tab-g { flex-shrink: 0; padding: 7px 14px; border-radius: 20px; border: 1px solid var(--border); background: #fff; font-size: 0.8rem; white-space: nowrap; }
+    .tab-g.active { background: var(--primary); color: #fff; border-color: var(--primary); }
+    #grid-produtos-g { flex: 1; overflow-y: auto; padding: 10px; display: grid; grid-template-columns: 1fr 1fr; gap: 8px; align-content: start; }
+    .prod-card-g { background: #fff; border: 1px solid var(--border); border-radius: 8px; padding: 10px; text-align: left; }
+    .prod-card-g h4 { font-size: 0.85rem; margin-bottom: 4px; }
+    .prod-card-g p { color: var(--success); font-weight: bold; font-size: 0.9rem; }
+    .prod-card-g small { color: var(--info); font-size: 0.68rem; display: block; margin-top: 3px; }
+
+    /* ===== COMANDA (bottom sheet) ===== */
+    #comanda-toggle { background: var(--accent); color: #fff; text-align: center; padding: 10px; font-weight: bold; flex-shrink: 0; }
+    #comanda-sheet { max-height: 45vh; overflow-y: auto; background: #fff; border-top: 2px solid var(--accent); display: none; flex-shrink: 0; }
+    .item-comanda-g { display: flex; align-items: center; gap: 8px; padding: 8px 12px; border-bottom: 1px solid var(--border); }
+    .item-comanda-g .nome { flex: 1; font-size: 0.85rem; }
+    .item-comanda-g .obs-g { font-size: 0.7rem; color: var(--danger); }
+    .qty-ctrl-g { display: flex; align-items: center; gap: 6px; }
+    .qty-ctrl-g button { width: 28px; height: 28px; border-radius: 50%; border: none; background: var(--primary); color: #fff; font-size: 1rem; }
+    .acoes-comanda-g { display:flex; gap:8px; padding:8px 10px; background:#fff; border-top:1px solid var(--border); }
+    .acoes-comanda-g button { flex:1; border:none; border-radius:6px; padding:9px 6px; font-weight:bold; color:#fff; font-size:.78rem; }
+    .btn-fechar-g { background:var(--success); }
+    .btn-limpar-g { background:var(--danger); }
+    #modal-fechar-g { display:none; position:fixed; inset:0; z-index:1000; background:rgba(15,76,92,.8); align-items:center; justify-content:center; padding:18px; }
+    #modal-fechar-g .modal-g { width:100%; max-width:380px; background:var(--bg); border-radius:12px; padding:18px; box-shadow:0 10px 25px rgba(0,0,0,.3); }
+    #modal-fechar-g h3 { color:var(--primary); margin-bottom:12px; font-family:Georgia,serif; }
+    #modal-fechar-g select, #modal-fechar-g input { width:100%; padding:10px; margin:8px 0; border:1px solid var(--border); border-radius:6px; background:#fff; }
+    .botoes-modal-g { display:flex; gap:8px; margin-top:12px; }
+    .botoes-modal-g button { flex:1; border:0; border-radius:6px; padding:11px; font-weight:bold; color:#fff; }
+
+    .msg-vazio { text-align: center; color: #999; padding: 30px; grid-column: 1/-1; }
+    /* Maré Operacional: sinalização tátil de mesa, status claros e coral reservado para atenção. */
+    .secao-titulo { font-family: Georgia, serif; font-size: .95rem; letter-spacing: .14em; }
+    .grid-mesas { gap: 10px; }
+    .mesa-btn { min-height: 64px; border-radius: 14px 14px 8px 8px; border: 2px solid rgba(15,76,92,.08); box-shadow: 0 4px 0 rgba(15,76,92,.08), 0 8px 18px rgba(15,76,92,.06); transition: transform .16s ease, box-shadow .16s ease, background .16s ease; }
+    .mesa-btn::before { content: 'LIVRE'; display:block; font-size:.55rem; letter-spacing:.12em; opacity:.6; margin-bottom:3px; }
+    .mesa-btn.occupied::before { content: 'OCUPADA'; color:#fff; opacity:.78; }
+    .mesa-btn.novo-pedido::before { content: 'NOVA'; color:#fff; opacity:1; }
+    .mesa-btn:active { transform:scale(.96); box-shadow:0 2px 0 rgba(15,76,92,.08); }
+    .mesa-btn.occupied { border-color: #0F4C5C; box-shadow:0 4px 0 #092f39, 0 10px 20px rgba(15,76,92,.18); }
+    .mesa-btn.novo-pedido { background: #D95D39; border-color:#b94528; box-shadow:0 4px 0 #8e341f, 0 10px 20px rgba(217,93,57,.22); }
+    .header h1 { font-size:1.2rem; }
+    #comanda-toggle { font-family:Georgia,serif; letter-spacing:.02em; }
+    @media (prefers-reduced-motion: reduce) { .mesa-btn { transition:none; animation:none; } }
+</style>
+<link rel="manifest" href="/garcom/manifest.json">
+<meta name="theme-color" content="#0F4C5C">
+<link rel="apple-touch-icon" href="/manus-storage/joao-caicara-mark_eadc19d3.png">
+<style>body{background-image:linear-gradient(rgba(247,244,236,.9),rgba(247,244,236,.9)),url("/manus-storage/joao-caicara-garcom-bg_46b937d2.jpg");background-size:cover;background-attachment:fixed;}</style>
+</head>
+<body>
+
+    <div id="tela-pin">
+        <h1>🦐 João Caiçara<br>Pedidos - Garçom</h1>
+        <input type="password" inputmode="numeric" pattern="[0-9]*" autocomplete="off" autocapitalize="off" spellcheck="false" enterkeyhint="done" id="pin-input" placeholder="PIN" maxlength="6">
+        <button type="button" id="btn-entrar-pin">Entrar</button>
+        <div id="pin-erro">PIN incorreto, tente de novo.</div>
+    </div>
+
+    <!-- O PIN é inicializado antes do Firebase para funcionar também em arquivos locais no celular. -->
+    <script>
+        (function iniciarPinLocal() {
+            const pinInput = document.getElementById('pin-input');
+            const btnEntrarPin = document.getElementById('btn-entrar-pin');
+            const pinErro = document.getElementById('pin-erro');
+            const telaPin = document.getElementById('tela-pin');
+            const pinLocal = '1234';
+
+            function liberarTela(event) {
+                if (event) event.preventDefault();
+                const digitado = (pinInput.value || '').trim();
+                if (digitado === pinLocal) {
+                    telaPin.style.display = 'none';
+                    pinErro.style.display = 'none';
+                    pinInput.blur();
+                } else {
+                    pinErro.style.display = 'block';
+                    pinInput.value = '';
+                    pinInput.focus();
+                }
+            }
+
+            window.conferirPin = liberarTela;
+            btnEntrarPin.addEventListener('click', liberarTela);
+            pinInput.addEventListener('keydown', (event) => {
+                if (event.key === 'Enter') liberarTela(event);
+            });
+        })();
+    </script>
+
+    <div class="header">
+        <h1 id="header-titulo">Selecione a mesa</h1>
+        <span class="status" id="status-conexao">conectando...</span>
+        <button class="btn-voltar" id="btn-voltar" style="display:none;" onclick="voltarParaMesas()">← Mesas</button>
+    </div>
+
+    <div id="tela-mesas">
+        <div class="secao-titulo">🍽️ Salão</div>
+        <div class="grid-mesas" id="grid-salao-g"></div>
+        <div class="secao-titulo">🏖️ Deck / Praia</div>
+        <div class="grid-mesas" id="grid-deck-g"></div>
+    </div>
+
+    <div id="tela-pedido">
+        <div class="cliente-row">
+            <input type="text" id="nome-cliente-g" placeholder="Nome do cliente (opcional)" oninput="atualizarNomeClienteG()">
+        </div>
+        <input type="text" id="busca-produto-g" placeholder="🔎 Buscar item...">
+        <div class="tabs-g" id="tabs-g"></div>
+        <div id="grid-produtos-g"></div>
+        <div id="comanda-toggle" onclick="toggleComanda()">🧾 Ver comanda desta mesa (<span id="qtd-itens-comanda">0</span> itens) - Total: <span id="total-comanda-g">R$ 0,00</span></div>
+        <div id="comanda-sheet"></div>
+        <div class="acoes-comanda-g">
+            <button class="btn-limpar-g" onclick="limparComandaG()">Limpar</button>
+            <button class="btn-fechar-g" onclick="abrirFechamentoG()">Fechar conta</button>
+        </div>
+    </div>
+
+    <div id="modal-fechar-g">
+        <div class="modal-g">
+            <h3>Fechar conta — Mesa <span id="mesa-fechar-g"></span></h3>
+            <p>Subtotal: <strong id="subtotal-fechar-g">R$ 0,00</strong></p>
+            <label>Forma de pagamento</label>
+            <select id="pagamento-fechar-g">
+                <option value="pix">PIX</option>
+                <option value="dinheiro">Dinheiro</option>
+                <option value="credito">Cartão crédito</option>
+                <option value="debito">Cartão débito</option>
+            </select>
+            <input id="valor-recebido-g" type="number" min="0" step="0.01" placeholder="Valor recebido (opcional)">
+            <div class="botoes-modal-g">
+                <button style="background:var(--danger)" onclick="fecharModalG()">Cancelar</button>
+                <button style="background:var(--success)" onclick="confirmarFechamentoG()">Confirmar fechamento</button>
+            </div>
+        </div>
+    </div>
+
+<script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-database-compat.js"></script>
+<script>
+    // ⚠️ Troque esse PIN pelo combinado com a equipe (é só uma trava simples, não é a segurança de verdade -
+    // a segurança de verdade está nas Regras do Firebase, que exigem login para ler/escrever os dados).
+    const PIN_CORRETO = "1234";
+
+    function conferirPin(event) {
+        if (event) event.preventDefault();
+
+        const pinInput = document.getElementById('pin-input');
+        const pinErro = document.getElementById('pin-erro');
+        const telaPin = document.getElementById('tela-pin');
+        const digitado = (pinInput.value || '').trim();
+
+        if (digitado === PIN_CORRETO) {
+            telaPin.style.display = 'none';
+            pinErro.style.display = 'none';
+            pinInput.blur();
+        } else {
+            pinErro.style.display = 'block';
+            pinInput.value = '';
+            pinInput.focus();
+        }
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+        const pinInput = document.getElementById('pin-input');
+        const btnEntrarPin = document.getElementById('btn-entrar-pin');
+        if (!pinInput || !btnEntrarPin) return;
+
+        btnEntrarPin.addEventListener('click', conferirPin);
+        pinInput.addEventListener('keydown', (event) => {
+            if (event.key === 'Enter') conferirPin(event);
+        });
+    });
+
+    const firebaseConfig = {
+        apiKey: "AIzaSyB7hHYHFZ3L-z-sPmgKbJI75eaWHlSGI3A",
+        authDomain: "joaocaicaratradicao.firebaseapp.com",
+        databaseURL: "https://joaocaicaratradicao-default-rtdb.firebaseio.com",
+        projectId: "joaocaicaratradicao",
+        storageBucket: "joaocaicaratradicao.firebasestorage.app",
+        messagingSenderId: "777982220663",
+        appId: "1:777982220663:web:0af4e9bcbaaec847122972"
+    };
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.database();
+
+    firebase.auth().signInAnonymously().catch((erro) => {
+        console.error('Erro ao autenticar no Firebase:', erro);
+        document.getElementById('status-conexao').innerText = 'erro de login';
+    });
+
+    firebase.auth().onAuthStateChanged((user) => {
+        document.getElementById('status-conexao').innerText = user ? '🟢 online' : '🔴 sem login';
+    });
+
+    const categoriasCardapio = [
+        { key: 'aperitivos', label: 'Aperitivos' },
+        { key: 'saladas', label: 'Saladas' },
+        { key: 'peixe_epoca', label: 'Peixe da Época' },
+        { key: 'file_badejo', label: 'Filé de Badejo' },
+        { key: 'salmao', label: 'Salmão' },
+        { key: 'peixes_camaroes', label: 'Peixes e Camarões' },
+        { key: 'massas_risotos', label: 'Massas, Risotos, Polvos e Lulas' },
+        { key: 'carnes', label: 'Carnes' },
+        { key: 'frango', label: 'Frango' },
+        { key: 'acompanhamentos', label: 'Acompanhamentos' },
+        { key: 'cervejas', label: 'Cervejas' },
+        { key: 'caipirinhas', label: 'Caipirinhas e Drinks' },
+        { key: 'destilados', label: 'Destilados' },
+        { key: 'aguas_refrigerantes', label: 'Águas e Refrigerantes' },
+        { key: 'sucos', label: 'Sucos' }
+    ];
+
+    let produtos = [];
+    let mesas = {};
+    let mesaSelecionada = null;
+    let categoriaAtual = 'favoritos';
+    let comandaAberta = false;
+
+    const formatarMoeda = (v) => `R$ ${v.toFixed(2).replace('.', ',')}`;
+
+    db.ref('cardapio').on('value', (snap) => {
+        const dados = snap.val();
+        produtos = Array.isArray(dados) ? dados : (dados && typeof dados === 'object' ? Object.values(dados) : []);
+        produtos = produtos.filter(Boolean);
+        if (mesaSelecionada) renderizarProdutosG();
+    }, (erro) => {
+        console.error('Erro ao carregar cardápio:', erro);
+        produtos = [];
+        if (mesaSelecionada) renderizarProdutosG();
+    });
+
+    db.ref('mesas').on('value', (snap) => {
+        mesas = normalizarMesas(snap.val());
+        renderizarMesasG();
+        if (mesaSelecionada && mesas[mesaSelecionada]) {
+            renderizarComandaG();
+        }
+    }, (erro) => {
+        console.error('Erro ao carregar mesas:', erro);
+        document.getElementById('status-conexao').innerText = 'erro nas mesas';
+        mesas = normalizarMesas(null);
+        renderizarMesasG();
+    });
+
+    function mesaVazia() {
+        return { itens: [], cliente: '', abertura: null };
+    }
+
+    function normalizarMesa(valor) {
+        const mesa = valor && typeof valor === 'object' ? valor : {};
+        let itens = Array.isArray(mesa.itens) ? mesa.itens : [];
+        // O Realtime Database pode devolver listas como objetos numerados.
+        if (!Array.isArray(mesa.itens) && mesa.itens && typeof mesa.itens === 'object') {
+            itens = Object.values(mesa.itens);
+        }
+        return {
+            ...mesa,
+            itens: itens.filter(Boolean),
+            cliente: typeof mesa.cliente === 'string' ? mesa.cliente : '',
+            abertura: mesa.abertura || null
+        };
+    }
+
+    function normalizarMesas(valor) {
+        const origem = valor && typeof valor === 'object' ? valor : {};
+        const resultado = {};
+        Object.keys(origem).forEach((numero) => {
+            resultado[numero] = normalizarMesa(origem[numero]);
+        });
+        return resultado;
+    }
+
+    function salvarMesas() {
+        // Nunca substitui o mapa inteiro quando uma mesa específica está aberta.
+        // Isso evita que alterações simultâneas do PDV e do garçom se sobrescrevam.
+        if (mesaSelecionada !== null && mesas[mesaSelecionada]) {
+            return db.ref(`mesas/${mesaSelecionada}`).set(mesas[mesaSelecionada]);
+        }
+        return db.ref('mesas').set(mesas);
+    }
+
+    function renderizarMesasG() {
+        const gridSalao = document.getElementById('grid-salao-g');
+        const gridDeck = document.getElementById('grid-deck-g');
+        if (!gridSalao || !gridDeck) return;
+        gridSalao.innerHTML = '';
+        gridDeck.innerHTML = '';
+
+        for (let i = 1; i <= 25; i++) {
+            if (!mesas[i]) mesas[i] = mesaVazia();
+            mesas[i] = normalizarMesa(mesas[i]);
+            const ocupada = mesas[i].itens.length > 0;
+            const novo = ocupada && mesas[i].itens.some(it => it.enviado === false);
+            gridSalao.innerHTML += `<button class="mesa-btn ${ocupada ? 'occupied' : ''} ${novo ? 'novo-pedido' : ''}" onclick="selecionarMesaG(${i})">${i}</button>`;
+        }
+        for (let i = 50; i <= 65; i++) {
+            if (!mesas[i]) mesas[i] = mesaVazia();
+            mesas[i] = normalizarMesa(mesas[i]);
+            const ocupada = mesas[i].itens.length > 0;
+            const novo = ocupada && mesas[i].itens.some(it => it.enviado === false);
+            gridDeck.innerHTML += `<button class="mesa-btn ${ocupada ? 'occupied' : ''} ${novo ? 'novo-pedido' : ''}" onclick="selecionarMesaG(${i})">${i}</button>`;
+        }
+    }
+
+    function selecionarMesaG(numero) {
+        mesaSelecionada = numero;
+        const eraNova = !mesas[numero];
+        if (eraNova) {
+            mesas[numero] = { itens: [], cliente: '', abertura: Date.now() };
+            salvarMesas();
+        } else {
+            mesas[numero] = normalizarMesa(mesas[numero]);
+        }
+
+        document.getElementById('tela-mesas').style.display = 'none';
+        document.getElementById('tela-pedido').style.display = 'flex';
+        document.getElementById('btn-voltar').style.display = 'inline-block';
+        document.getElementById('header-titulo').innerText = `Mesa ${numero}`;
+        document.getElementById('nome-cliente-g').value = mesas[numero].cliente || '';
+
+        renderizarTabsG();
+        filtrarCardapioG('favoritos');
+        renderizarComandaG();
+    }
+
+    function voltarParaMesas() {
+        mesaSelecionada = null;
+        document.getElementById('tela-mesas').style.display = 'block';
+        document.getElementById('tela-pedido').style.display = 'none';
+        document.getElementById('btn-voltar').style.display = 'none';
+        document.getElementById('header-titulo').innerText = 'Selecione a mesa';
+        document.getElementById('comanda-sheet').style.display = 'none';
+        comandaAberta = false;
+    }
+
+    function atualizarNomeClienteG() {
+        if (!mesaSelecionada) return;
+        mesas[mesaSelecionada].cliente = document.getElementById('nome-cliente-g').value;
+        salvarMesas();
+    }
+
+    function renderizarTabsG() {
+        const tabsDiv = document.getElementById('tabs-g');
+        let html = `<button class="tab-g active" onclick="filtrarCardapioG('favoritos', this)">⭐ Favoritos</button>`;
+        html += `<button class="tab-g" onclick="filtrarCardapioG('todos', this)">Todos</button>`;
+        categoriasCardapio.forEach(c => {
+            html += `<button class="tab-g" onclick="filtrarCardapioG('${c.key}', this)">${c.label}</button>`;
+        });
+        tabsDiv.innerHTML = html;
+    }
+
+    function filtrarCardapioG(categoria, btnEl) {
+        categoriaAtual = categoria;
+        document.getElementById('busca-produto-g').value = '';
+        document.querySelectorAll('.tab-g').forEach(b => b.classList.remove('active'));
+        if (btnEl) btnEl.classList.add('active');
+        renderizarProdutosG();
+    }
+
+    function renderizarProdutosG() {
+        const grid = document.getElementById('grid-produtos-g');
+        let filtrados;
+        if (categoriaAtual === 'favoritos') filtrados = produtos.filter(p => p.favorito);
+        else if (categoriaAtual === 'todos') filtrados = produtos;
+        else filtrados = produtos.filter(p => p.categoria === categoriaAtual);
+
+        filtrados = filtrados.filter(p => p.ativo !== false);
+
+        if (filtrados.length === 0) {
+            grid.innerHTML = '<p class="msg-vazio">Nenhum item aqui.</p>';
+            return;
+        }
+
+        grid.innerHTML = filtrados.map(p => `
+            <div class="prod-card-g" onclick="adicionarItemG(${p.id})">
+                <h4>${p.nome}</h4>
+                <p>${formatarMoeda(p.preco)}</p>
+                ${p.servePara2 ? '<small>🍽️ Serve 2 pessoas</small>' : ''}
+            </div>
+        `).join('');
+    }
+
+    document.getElementById('busca-produto-g').addEventListener('input', function() {
+        const termo = this.value.trim().toLowerCase();
+        const grid = document.getElementById('grid-produtos-g');
+        if (termo.length === 0) { renderizarProdutosG(); return; }
+        const resultado = produtos.filter(p => p.ativo !== false && p.nome.toLowerCase().includes(termo));
+        if (resultado.length === 0) { grid.innerHTML = '<p class="msg-vazio">Nada encontrado.</p>'; return; }
+        grid.innerHTML = resultado.map(p => `
+            <div class="prod-card-g" onclick="adicionarItemG(${p.id})">
+                <h4>${p.nome}</h4>
+                <p>${formatarMoeda(p.preco)}</p>
+                ${p.servePara2 ? '<small>🍽️ Serve 2 pessoas</small>' : ''}
+            </div>
+        `).join('');
+    });
+
+    function adicionarItemG(produtoId) {
+        if (!mesaSelecionada) return;
+        const produtoBase = produtos.find(p => p.id === produtoId);
+        const dadosMesa = mesas[mesaSelecionada];
+
+        if (dadosMesa.itens.length === 0) dadosMesa.abertura = Date.now();
+
+        const itemJaExiste = dadosMesa.itens.find(it => it.id === produtoId && it.preco === produtoBase.preco && !it.obs && it.enviado === false);
+        if (itemJaExiste) {
+            itemJaExiste.qtd++;
+        } else {
+            dadosMesa.itens.push({ ...produtoBase, qtd: 1, obs: '', enviado: false });
+        }
+        salvarMesas();
+        renderizarComandaG();
+        if (!comandaAberta) {
+            document.getElementById('comanda-toggle').style.background = 'var(--success)';
+            setTimeout(() => { document.getElementById('comanda-toggle').style.background = 'var(--accent)'; }, 400);
+        }
+    }
+
+    function alterarQtdG(index, delta) {
+        const dadosMesa = mesas[mesaSelecionada];
+        if (!dadosMesa.itens[index]) return;
+        dadosMesa.itens[index].qtd += delta;
+        if (dadosMesa.itens[index].qtd <= 0) dadosMesa.itens.splice(index, 1);
+        if (dadosMesa.itens.length === 0) dadosMesa.abertura = null;
+        salvarMesas();
+        renderizarComandaG();
+    }
+
+    function editarObsG(index) {
+        const dadosMesa = mesas[mesaSelecionada];
+        const item = dadosMesa.itens[index];
+        if (!item) return;
+        const novaObs = prompt(`Observação para: ${item.nome}`, item.obs || '');
+        if (novaObs !== null) {
+            item.obs = novaObs.trim();
+            salvarMesas();
+            renderizarComandaG();
+        }
+    }
+
+    function renderizarComandaG() {
+        const dadosMesa = mesas[mesaSelecionada];
+        if (!dadosMesa) return;
+        const sheet = document.getElementById('comanda-sheet');
+        let total = 0, qtdTotal = 0;
+
+        if (dadosMesa.itens.length === 0) {
+            sheet.innerHTML = '<p class="msg-vazio">Nenhum item lançado ainda nesta mesa.</p>';
+        } else {
+            sheet.innerHTML = dadosMesa.itens.map((item, index) => {
+                total += item.preco * item.qtd;
+                qtdTotal += item.qtd;
+                return `
+                    <div class="item-comanda-g">
+                        <div style="flex:1;">
+                            <div class="nome">${item.qtd}x ${item.nome} ${item.enviado ? '✅' : '🆕'}</div>
+                            <div class="obs-g" onclick="editarObsG(${index})">${item.obs ? '📝 ' + item.obs : '+ observação'}</div>
+                        </div>
+                        <div class="qty-ctrl-g">
+                            <button onclick="alterarQtdG(${index}, -1)">-</button>
+                            <span>${item.qtd}</span>
+                            <button onclick="alterarQtdG(${index}, 1)">+</button>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        document.getElementById('qtd-itens-comanda').innerText = qtdTotal;
+        document.getElementById('total-comanda-g').innerText = formatarMoeda(total);
+    }
+
+    function toggleComanda() {
+        comandaAberta = !comandaAberta;
+        document.getElementById('comanda-sheet').style.display = comandaAberta ? 'block' : 'none';
+    }
+
+    function calcularTotalG() {
+        const dados = mesas[mesaSelecionada];
+        return dados ? dados.itens.reduce((s, item) => s + ((Number(item.preco) || 0) * (Number(item.qtd) || 0)), 0) : 0;
+    }
+
+    function abrirFechamentoG() {
+        if (!mesaSelecionada) return;
+        const total = calcularTotalG();
+        if (total <= 0) return alert('A comanda está vazia. Lance pelo menos um item antes de fechar.');
+        document.getElementById('mesa-fechar-g').innerText = mesaSelecionada;
+        document.getElementById('subtotal-fechar-g').innerText = formatarMoeda(total);
+        document.getElementById('valor-recebido-g').value = total.toFixed(2);
+        document.getElementById('modal-fechar-g').style.display = 'flex';
+    }
+
+    function fecharModalG() {
+        document.getElementById('modal-fechar-g').style.display = 'none';
+    }
+
+    function limparComandaG() {
+        if (!mesaSelecionada || !mesas[mesaSelecionada]) return;
+        if (!confirm(`Limpar a comanda da Mesa ${mesaSelecionada}?`)) return;
+        mesas[mesaSelecionada] = { itens: [], cliente: '', abertura: null };
+        salvarMesas();
+        renderizarComandaG();
+    }
+
+    function confirmarFechamentoG() {
+        if (!mesaSelecionada) return;
+        const dados = mesas[mesaSelecionada];
+        const total = calcularTotalG();
+        if (!dados || total <= 0) return;
+        const forma = document.getElementById('pagamento-fechar-g').value;
+        const recebido = parseFloat(document.getElementById('valor-recebido-g').value) || total;
+        if (recebido < total) return alert(`Valor recebido insuficiente. Falta ${formatarMoeda(total - recebido)}.`);
+        const venda = {
+            id: `garcom-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
+            mesa: mesaSelecionada,
+            cliente: dados.cliente || 'Não informado',
+            itens: JSON.parse(JSON.stringify(dados.itens)),
+            subtotal: total,
+            taxa: 0,
+            total,
+            pagamentos: { dinheiro: forma === 'dinheiro' ? total : 0, pix: forma === 'pix' ? total : 0, credito: forma === 'credito' ? total : 0, debito: forma === 'debito' ? total : 0 },
+            troco: recebido - total,
+            dataHora: new Date().toLocaleString('pt-BR'),
+            origem: 'garcom'
+        };
+        const mesaFechada = { itens: [], cliente: '', abertura: null };
+        const vendaRef = db.ref('vendas').push();
+        const mesaRef = db.ref(`mesas/${mesaSelecionada}`);
+        Promise.all([vendaRef.set(venda), mesaRef.set(mesaFechada)])
+            .then(() => {
+                mesas[mesaSelecionada] = mesaFechada;
+                fecharModalG();
+                alert(`Mesa ${venda.mesa} fechada. Troco: ${formatarMoeda(venda.troco)}`);
+                voltarParaMesas();
+            })
+            .catch((erro) => {
+                console.error('Falha ao confirmar fechamento:', erro);
+                alert('Não foi possível confirmar o fechamento no servidor. A mesa foi mantida aberta; verifique a conexão e tente novamente.');
+            });
+    }
+</script>
+
+<script>if ('serviceWorker' in navigator) { window.addEventListener('load', () => navigator.serviceWorker.register('/garcom/service-worker.js', {scope: '/garcom/'})); }</script>
+</body>
+</html>

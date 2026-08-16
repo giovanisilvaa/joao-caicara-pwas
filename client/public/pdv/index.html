@@ -1,0 +1,1543 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PDV - João Caiçara Tradição</title>
+    <style>
+        :root {
+            --primary: #0F4C5C;
+            --secondary: #133C4A;
+            --accent: #D95D39;
+            --success: #2A9D8F;
+            --danger: #E76F51;
+            --info: #457B9D;
+            --kitchen: #9b3822;
+            --bg: #F9F6F0;
+            --card: #ffffff;
+            --border: #E0DDCF;
+            --wood: #C49A6C;
+            --warning: #f39c12;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+
+        body { background-color: var(--bg); display: flex; flex-direction: column; height: 100vh; overflow: hidden; color: #333; }
+
+        /* HEADER */
+        .header { 
+            background-color: var(--primary); 
+            color: white; 
+            padding: 10px 20px; 
+            display: flex; 
+            justify-content: space-between; 
+            align-items: center; 
+            border-bottom: 4px solid var(--accent);
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+        
+        .header-logo-container { display: flex; align-items: center; gap: 15px; }
+        .header h1 { font-size: 1.8rem; font-family: 'Georgia', serif; letter-spacing: 1px; text-shadow: 1px 1px 2px rgba(0,0,0,0.3); }
+
+        .header-actions { display: flex; align-items: center; gap: 15px; }
+        .btn-history { background: var(--wood); color: #fff; border: none; padding: 8px 15px; border-radius: 6px; font-weight: bold; cursor: pointer; transition: 0.2s; }
+        .btn-history:hover { filter: brightness(1.1); }
+
+        /* LAYOUT PRINCIPAL */
+        .main-container { display: flex; flex: 1; overflow: hidden; }
+
+        /* PAINEL DE MESAS */
+        .tables-panel { width: 280px; background: var(--secondary); padding: 15px; overflow-y: auto; color: white; display: flex; flex-direction: column; gap: 15px; }
+        .tables-section-title { font-size: 0.9rem; text-transform: uppercase; color: var(--wood); border-bottom: 1px solid rgba(255,255,255,0.2); padding-bottom: 5px; margin-top: 5px; font-weight: bold; letter-spacing: 1px; }
+        
+        .tables-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; }
+        .table-btn { 
+            background: var(--wood); color: #333; border: none; padding: 10px 5px; border-radius: 6px; 
+            font-size: 0.85rem; font-weight: bold; cursor: pointer; transition: 0.2s; 
+            box-shadow: 0 2px 4px rgba(0,0,0,0.2); text-align: center; position: relative;
+        }
+        .table-btn:hover { filter: brightness(1.1); }
+        .table-btn.active { background: var(--accent); color: white; transform: scale(1.05); border: 2px solid white; }
+        .table-btn.occupied { background: var(--primary); color: white; border: 1px solid var(--wood); }
+        .table-btn.time-warning { border: 2px solid var(--warning) !important; }
+        .table-btn.novo-pedido { animation: pulse-novo 1.5s infinite; }
+        @keyframes pulse-novo {
+            0%, 100% { box-shadow: 0 0 0 0 rgba(220, 53, 69, 0.6); }
+            50% { box-shadow: 0 0 0 6px rgba(220, 53, 69, 0); }
+        }
+
+        /* PAINEL DE CARDÁPIO */
+        .menu-panel { flex: 2; padding: 20px; background: var(--bg); overflow-y: auto; pointer-events: none; opacity: 0.5; transition: 0.3s; }
+        .menu-panel.active { pointer-events: all; opacity: 1; }
+        
+        .tabs { display: flex; gap: 10px; margin-bottom: 20px; flex-wrap: wrap; }
+        .tab { padding: 10px 15px; background: #e5e0d3; border: 1px solid var(--border); border-radius: 5px; cursor: pointer; font-weight: bold; color: #555; }
+        .tab.active { background: var(--primary); color: white; border-color: var(--primary); }
+
+        .products-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 15px; }
+        .product-card { background: var(--card); border: 1px solid var(--border); padding: 15px; border-radius: 8px; text-align: center; cursor: pointer; box-shadow: 0 2px 5px rgba(0,0,0,0.05); transition: 0.2s; }
+        .product-card:hover { border-color: var(--accent); transform: translateY(-3px); box-shadow: 0 5px 10px rgba(217, 93, 57, 0.2); }
+        .product-card h4 { font-size: 0.95rem; margin-bottom: 10px; color: var(--primary); }
+        .product-card p { color: var(--success); font-weight: bold; font-size: 1.1rem; }
+
+        /* PAINEL DA COMANDA */
+        .order-panel { width: 380px; background: var(--card); border-left: 1px solid var(--border); display: flex; flex-direction: column; box-shadow: -2px 0 10px rgba(0,0,0,0.05); }
+        .order-header { padding: 15px; background: #F2EFE9; border-bottom: 2px solid var(--border); text-align: center; }
+        .order-header h2 { font-family: 'Georgia', serif; color: var(--primary); font-size: 1.2rem; margin-bottom: 5px; }
+        .order-header input { width: 100%; padding: 6px; border: 1px solid var(--border); border-radius: 4px; text-align: center; font-size: 0.9rem; }
+        
+        .order-items { flex: 1; overflow-y: auto; padding: 15px; }
+        .order-item { display: flex; justify-content: space-between; align-items: center; padding: 12px 0; border-bottom: 1px dashed var(--border); }
+        .item-info { flex: 1; }
+        .item-name { font-weight: bold; font-size: 0.9rem; color: #333; }
+        .item-price { font-size: 0.85rem; color: var(--accent); text-decoration: underline; cursor: pointer; margin-top: 3px; display: inline-block; }
+        
+        .item-controls { display: flex; align-items: center; gap: 8px; }
+        .btn-qty { width: 28px; height: 28px; border-radius: 50%; border: 1px solid var(--border); background: var(--bg); cursor: pointer; font-weight: bold; color: var(--primary); }
+        .btn-qty:hover { background: #e0e0e0; }
+
+        .order-footer { padding: 15px; background: #F2EFE9; border-top: 2px solid var(--border); }
+        .total-display { font-size: 1.6rem; font-weight: bold; color: var(--primary); display: flex; justify-content: space-between; margin-bottom: 15px; }
+        
+        .action-buttons { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+        .btn { padding: 12px; border: none; border-radius: 6px; color: white; font-weight: bold; cursor: pointer; font-size: 0.9rem; text-align: center; transition: 0.2s; text-transform: uppercase; letter-spacing: 0.5px; }
+        .btn-split { background: var(--wood); color: #333; }
+        .btn-kitchen { background: var(--kitchen); }
+        .btn-bar { background: var(--info); }
+        .btn-close { background: var(--success); grid-column: span 2; font-size: 1.1rem; }
+        .btn:hover { filter: brightness(0.9); }
+
+        /* MODAIS */
+        .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(15, 76, 92, 0.8); justify-content: center; align-items: center; z-index: 1000; }
+        .modal { background: var(--bg); padding: 25px; border-radius: 12px; width: 90%; max-width: 550px; text-align: center; box-shadow: 0 10px 25px rgba(0,0,0,0.3); border: 2px solid var(--border); max-height: 90vh; overflow-y: auto; }
+        .modal.modal-large { max-width: 750px; }
+        .modal h3 { margin-bottom: 15px; color: var(--primary); font-family: 'Georgia', serif; font-size: 1.5rem; }
+        .modal input[type="number"], .modal input[type="text"] { width: 100%; padding: 10px; margin-bottom: 10px; border: 1px solid var(--border); border-radius: 6px; text-align: center; font-size: 1.1rem; background: white; }
+        
+        .payment-split-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; background: white; padding: 8px 12px; border-radius: 6px; border: 1px solid var(--border); }
+        .payment-split-row label { font-weight: bold; color: #444; font-size: 0.9rem; width: 130px; text-align: left; }
+        .payment-split-row input { width: 120px !important; margin-bottom: 0 !important; padding: 6px !important; font-size: 1rem !important; }
+
+        .report-box { background: #fff; padding: 15px; border-radius: 8px; border: 1px solid var(--border); margin-bottom: 15px; text-align: left; }
+        .report-box h4 { color: var(--primary); margin-bottom: 10px; border-bottom: 1px solid #eee; padding-bottom: 5px; font-size: 1.1rem; display: flex; justify-content: space-between; align-items: center; }
+        .report-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; font-size: 0.95rem; }
+        .report-item { background: #fdfbf7; padding: 8px 12px; border-radius: 6px; border: 1px solid #f0ede6; display: flex; justify-content: space-between; }
+
+        .history-list { text-align: center; max-height: 250px; overflow-y: auto; display: flex; flex-direction: column; gap: 10px; margin-bottom: 15px; }
+        .history-card { background: white; padding: 12px; border-radius: 6px; border: 1px solid var(--border); font-size: 0.9rem; text-align: left; }
+        .history-card header { display: flex; justify-content: space-between; font-weight: bold; color: var(--primary); margin-bottom: 5px; border-bottom: 1px solid #eee; padding-bottom: 3px; }
+
+        .modal-btns { display: flex; gap: 10px; margin-top: 15px; }
+        .modal-btns .btn { flex: 1; }
+
+        /* ========================================================
+           CSS ESTRITO PARA IMPRESSORA TÉRMICA
+           ======================================================== */
+        #cupom-caixa, #cupom-producao, #cupom-relatorio { display: none; }
+
+        @media print {
+            @page { margin: 0; }
+            body > *:not(.print-container) { display: none !important; }
+            body { background: white; margin: 0; padding: 0; color: black; font-family: 'Courier New', Courier, monospace; }
+            
+            body.print-mode-caixa #cupom-caixa { display: block !important; }
+            body.print-mode-producao #cupom-producao { display: block !important; }
+            body.print-mode-relatorio #cupom-relatorio { display: block !important; }
+
+            .print-container { width: 80mm; padding: 4mm; margin: 0 auto; font-size: 12px; }
+            .t-header { text-align: center; border-bottom: 1px dashed #000; padding-bottom: 5px; margin-bottom: 5px; }
+            .t-header h2 { font-size: 16px; margin: 0; }
+            .t-item { display: flex; justify-content: space-between; margin-bottom: 4px; }
+            .t-item-name { width: 70%; word-break: break-all; }
+            .t-total { border-top: 1px dashed #000; padding-top: 5px; margin-top: 5px; font-weight: bold; font-size: 14px; text-align: right; }
+            .cozinha-item { font-size: 16px; font-weight: bold; margin-bottom: 8px; border-bottom: 1px solid #000; padding-bottom: 5px; }
+        }
+        /* Maré Operacional: petróleo controla, areia informa, madeira executa e coral alerta. */
+        .tables-section-title { font-family: Georgia, serif; letter-spacing: .14em; }
+        .table-btn { border-radius: 10px 10px 6px 6px; border: 1px solid rgba(255,255,255,.12); box-shadow:0 3px 0 rgba(0,0,0,.16), 0 7px 14px rgba(0,0,0,.12); }
+        .table-btn::after { content:'LIVRE'; display:block; font-size:.52rem; letter-spacing:.1em; opacity:.62; margin-top:2px; }
+        .table-btn.occupied::after { content:'OCUPADA'; color:#fff; opacity:.8; }
+        .table-btn.novo-pedido::after { content:'NOVA'; color:#fff; opacity:1; }
+        .table-btn.novo-pedido { background:var(--accent); border-color:#b94528; }
+        .table-btn.active { box-shadow:0 0 0 3px rgba(255,255,255,.8), 0 5px 16px rgba(217,93,57,.3); }
+        .table-btn:active, .btn:active, .product-card:active { transform:scale(.97); }
+        .product-card { border-radius:12px; box-shadow:0 4px 0 rgba(15,76,92,.06), 0 10px 20px rgba(15,76,92,.05); }
+        .product-card h4, .order-header h2 { font-family: Georgia, serif; }
+        .total-display { font-family: Georgia, serif; font-size:1.8rem; }
+        .btn-close { box-shadow:0 4px 0 #1d7469; }
+        @media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation:none !important; transition:none !important; }         }
+    </style>
+<link rel="manifest" href="/pdv/manifest.json">
+<meta name="theme-color" content="#0F4C5C">
+<link rel="apple-touch-icon" href="/manus-storage/joao-caicara-mark_eadc19d3.png">
+<style>body{background-image:linear-gradient(rgba(247,244,236,.9),rgba(247,244,236,.9)),url("/manus-storage/joao-caicara-pdv-bg_e9179969.jpg");background-size:cover;background-attachment:fixed;}</style>
+</head>
+<body>
+
+    <div id="tela-pin" class="no-print" style="position:fixed; inset:0; background:var(--primary); display:flex; flex-direction:column; align-items:center; justify-content:center; z-index:9999; padding:20px; text-align:center;">
+        <h1 style="color:#fff; font-family:'Georgia', serif; margin-bottom:20px; font-size:1.8rem;">🦐 João Caiçara Tradição<br>PDV - Caixa</h1>
+        <input type="password" inputmode="numeric" id="pin-input" placeholder="PIN" maxlength="6" style="width:220px; text-align:center; font-size:1.8rem; letter-spacing:8px; padding:12px; border-radius:8px; border:none; margin-bottom:15px;">
+        <button onclick="conferirPin()" style="background:var(--accent); color:#fff; border:none; padding:14px 30px; border-radius:8px; font-size:1.1rem; font-weight:bold; cursor:pointer;">Entrar</button>
+        <div id="pin-erro" style="color:var(--danger); background:#fff; padding:6px 12px; border-radius:6px; margin-top:10px; display:none; font-size:0.9rem;">PIN incorreto, tente de novo.</div>
+    </div>
+
+    <header class="header no-print">
+        <div class="header-logo-container">
+            <img src="tradicao_caicara_logo_2.png" alt="Logo João Caiçara Tradição" style="height: 60px; border-radius: 50%; border: 2px solid #F4F1DE; background: #fff;">
+            <h1>João Caiçara Tradição</h1>
+        </div>
+        <div class="header-actions">
+            <button class="btn-history" onclick="abrirModalHistorico()">📜 Relatório e Histórico</button>
+            <span id="status-conexao" style="font-size: 0.75rem; color: var(--bg); opacity:0.8; margin-right: 8px;">conectando...</span>
+            <span id="relogio" style="font-weight: bold; color: var(--bg); font-size: 1.1rem;"></span>
+        </div>
+    </header>
+
+    <div class="main-container no-print">
+        
+        <div class="tables-panel">
+            <div class="tables-section-title">Salão (1 - 25)</div>
+            <div class="tables-grid" id="grid-salao"></div>
+
+            <div class="tables-section-title" style="margin-top: 10px;">Deck / Praia (50 - 65)</div>
+            <div class="tables-grid" id="grid-deck"></div>
+        </div>
+
+        <div class="menu-panel" id="menu-panel">
+            <div style="display:flex; justify-content:space-between; align-items:center; gap:10px; margin-bottom: 15px;">
+                <h2 style="color: var(--primary); font-family: 'Georgia', serif;">Cardápio Caiçara</h2>
+                <button class="btn-history" onclick="abrirModalCardapio()">⚙️ Gerenciar Cardápio</button>
+            </div>
+            <input type="text" id="busca-produto" placeholder="🔎 Buscar item no cardápio..." oninput="buscarProduto()" style="width:100%; padding:10px; margin-bottom:15px; border:1px solid var(--border); border-radius:6px; font-size:0.95rem;">
+            <div class="tabs">
+                <button class="tab active" onclick="filtrarCardapio('favoritos')">Favoritos ⭐</button>
+                <button class="tab" onclick="filtrarCardapio('todos')">Todos</button>
+                <button class="tab" onclick="filtrarCardapio('aperitivos')">Aperitivos</button>
+                <button class="tab" onclick="filtrarCardapio('saladas')">Saladas</button>
+                <button class="tab" onclick="filtrarCardapio('peixe_epoca')">Peixe da Época</button>
+                <button class="tab" onclick="filtrarCardapio('file_badejo')">Filé de Badejo</button>
+                <button class="tab" onclick="filtrarCardapio('salmao')">Salmão</button>
+                <button class="tab" onclick="filtrarCardapio('peixes_camaroes')">Peixes e Camarões</button>
+                <button class="tab" onclick="filtrarCardapio('massas_risotos')">Massas, Risotos, Polvos e Lulas</button>
+                <button class="tab" onclick="filtrarCardapio('carnes')">Carnes</button>
+                <button class="tab" onclick="filtrarCardapio('frango')">Frango</button>
+                <button class="tab" onclick="filtrarCardapio('acompanhamentos')">Acompanhamentos</button>
+                <button class="tab" onclick="filtrarCardapio('cervejas')">Cervejas</button>
+                <button class="tab" onclick="filtrarCardapio('caipirinhas')">Caipirinhas e Drinks</button>
+                <button class="tab" onclick="filtrarCardapio('destilados')">Destilados</button>
+                <button class="tab" onclick="filtrarCardapio('aguas_refrigerantes')">Águas e Refrigerantes</button>
+                <button class="tab" onclick="filtrarCardapio('sucos')">Sucos</button>
+            </div>
+            <div class="products-grid" id="products-grid"></div>
+        </div>
+
+        <div class="order-panel">
+            <div class="order-header">
+                <h2 id="mesa-titulo">Selecione uma Mesa</h2>
+                <input type="text" id="nome-cliente" placeholder="Nome do Cliente (Opcional)" oninput="atualizarNomeCliente()">
+            </div>
+            <div class="order-items" id="order-items">
+                <p style="text-align:center; color:#999; margin-top: 20px;">Nenhuma mesa selecionada.</p>
+            </div>
+            <div class="order-footer">
+                <div class="total-display">
+                    <span>Total:</span>
+                    <span id="total-valor">R$ 0,00</span>
+                </div>
+                <div class="action-buttons">
+                    <button class="btn btn-split" onclick="abrirModalDividir()">Dividir</button>
+                    <button class="btn btn-split" onclick="limparMesa()">Limpar</button>
+                    <button class="btn btn-split" onclick="transferirMesa()">🔄 Transferir/Juntar</button>
+                    <button class="btn btn-kitchen" onclick="imprimirProducao('cozinha')">🖨️ COZINHA</button>
+                    <button class="btn btn-bar" onclick="imprimirProducao('bar')">🖨️ BAR</button>
+                    <button class="btn btn-split" style="font-size: 0.75rem;" onclick="imprimirProducao('cozinha', true)">🖨️ Reimprimir Cozinha (tudo)</button>
+                    <button class="btn btn-split" style="font-size: 0.75rem;" onclick="imprimirProducao('bar', true)">🖨️ Reimprimir Bar (tudo)</button>
+                    <button class="btn btn-close" onclick="abrirModalFechar()">FECHAR CONTA (CAIXA)</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL RELATÓRIO E HISTÓRICO DE VENDAS -->
+    <div class="modal-overlay no-print" id="modal-historico">
+        <div class="modal modal-large">
+            <h3>Fechamento de Caixa e Relatório</h3>
+            <p style="margin-bottom: 15px; font-size: 0.9rem; color: #555;">Balanço das entradas por forma de pagamento e histórico de auditoria.</p>
+            
+            <div class="report-box">
+                <h4>
+                    <span>📊 Resumo de Entradas no Período</span>
+                    <button class="btn" style="background: var(--info); padding: 5px 10px; font-size: 0.8rem;" onclick="imprimirRelatorioCaixa()">🖨️ Imprimir Fechamento</button>
+                </h4>
+                <div class="report-grid">
+                    <div class="report-item"><span>Dinheiro:</span> <strong id="rep-dinheiro" style="color:var(--success);">R$ 0,00</strong></div>
+                    <div class="report-item"><span>PIX:</span> <strong id="rep-pix" style="color:var(--success);">R$ 0,00</strong></div>
+                    <div class="report-item"><span>Cartão Crédito:</span> <strong id="rep-credito" style="color:var(--success);">R$ 0,00</strong></div>
+                    <div class="report-item"><span>Cartão Débito:</span> <strong id="rep-debito" style="color:var(--success);">R$ 0,00</strong></div>
+                </div>
+                <div style="margin-top: 10px; display: flex; justify-content: space-between; border-top: 1px dashed #ddd; padding-top: 8px; font-size: 1.05rem;">
+                    <span><strong>Total Arrecadado:</strong> <span id="rep-total" style="color: var(--primary);">R$ 0,00</span></span>
+                    <span><strong>Trocos dados:</strong> <span id="rep-troco" style="color: var(--danger);">R$ 0,00</span></span>
+                </div>
+                <div style="margin-top: 6px; display: flex; justify-content: space-between; font-size: 0.9rem; color: #555;">
+                    <span>💰 Taxa de serviço (10%) arrecadada no período:</span>
+                    <strong id="rep-taxa-servico">R$ 0,00</strong>
+                </div>
+            </div>
+
+            <input type="text" id="filtro-historico" placeholder="Filtrar por número da mesa..." oninput="renderizarHistorico()" style="margin-bottom: 10px;">
+
+            <div class="history-list" id="lista-historico"></div>
+
+            <div class="modal-btns">
+                <button class="btn" style="background: var(--danger);" onclick="limparHistoricoGeral()">Zerar Caixa / Histórico</button>
+                <button class="btn" style="background: var(--primary);" onclick="fecharModais()">Fechar Janela</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL DIVIDIR CONTA -->
+    <div class="modal-overlay no-print" id="modal-dividir">
+        <div class="modal">
+            <h3>Dividir Conta por Pessoas</h3>
+            <p style="margin-bottom: 6px;">Total da mesa: <strong id="dividir-total-mostrar"></strong></p>
+            <label style="display:flex; align-items:center; gap:6px; justify-content:center; font-size:0.85rem; color:#555; margin-bottom: 10px; cursor:pointer;">
+                <input type="checkbox" id="chk-taxa-dividir" checked onchange="calcularDivisao()"> Incluir taxa de serviço (10%)
+            </label>
+            <label style="font-weight: bold; color: #555;">Dividir por quantas pessoas?</label>
+            <input type="number" id="qtd-pessoas" value="2" min="2" oninput="calcularDivisao()">
+            <h2 id="valor-por-pessoa" style="color: var(--success); margin: 15px 0;">R$ 0,00 / pessoa</h2>
+            <div class="modal-btns">
+                <button class="btn" style="background: var(--danger);" onclick="fecharModais()">Sair</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL FECHAR CONTA -->
+    <div class="modal-overlay no-print" id="modal-fechar">
+        <div class="modal">
+            <h3>Fechar Mesa <span id="fechar-mesa-num"></span></h3>
+
+            <div style="background: #fff; padding: 10px; border-radius: 6px; margin-bottom: 12px; border: 1px solid var(--border); text-align: left;">
+                <div style="display: flex; justify-content: space-between; font-size: 0.95rem;">
+                    <span>Subtotal:</span>
+                    <strong id="fechar-subtotal"></strong>
+                </div>
+                <div style="display: flex; justify-content: space-between; align-items: center; font-size: 0.95rem; margin-top: 6px;">
+                    <label style="display:flex; align-items:center; gap:6px; cursor:pointer;">
+                        <input type="checkbox" id="chk-taxa-servico" checked onchange="toggleTaxaServico()"> Taxa de serviço (10%):
+                    </label>
+                    <strong id="fechar-taxa-valor"></strong>
+                </div>
+                <div style="display: flex; justify-content: space-between; font-size: 1.15rem; margin-top: 8px; padding-top: 8px; border-top: 1px dashed var(--border);">
+                    <span>TOTAL A PAGAR:</span>
+                    <strong id="fechar-total" style="color: var(--primary);"></strong>
+                </div>
+            </div>
+            
+            <p style="font-size: 0.85rem; color: #666; margin-bottom: 15px;">Informe quanto foi pago em cada forma (Pagamento Misto):</p>
+
+            <div style="display: flex; flex-direction: column;">
+                <div class="payment-split-row">
+                    <label>Dinheiro:</label>
+                    <input type="number" id="pag-dinheiro" value="0.00" step="0.01" min="0" oninput="atualizarCalculoPagamento()">
+                </div>
+                <div class="payment-split-row">
+                    <label>PIX:</label>
+                    <input type="number" id="pag-pix" value="0.00" step="0.01" min="0" oninput="atualizarCalculoPagamento()">
+                </div>
+                <div class="payment-split-row">
+                    <label>Cartão Crédito:</label>
+                    <input type="number" id="pag-credito" value="0.00" step="0.01" min="0" oninput="atualizarCalculoPagamento()">
+                </div>
+                <div class="payment-split-row">
+                    <label>Cartão Débito:</label>
+                    <input type="number" id="pag-debito" value="0.00" step="0.01" min="0" oninput="atualizarCalculoPagamento()">
+                </div>
+            </div>
+
+            <div style="background: #fff; padding: 10px; border-radius: 6px; margin-top: 10px; border: 1px solid var(--border); text-align: left;">
+                <div style="display: flex; justify-content: space-between; font-size: 0.95rem;">
+                    <span>Total Informado:</span>
+                    <strong id="resumo-informado">R$ 0,00</strong>
+                </div>
+                <div style="display: flex; justify-content: space-between; font-size: 1.05rem; margin-top: 5px; color: var(--danger);" id="linha-falta">
+                    <span>Falta pagar:</span>
+                    <strong id="resumo-falta">R$ 0,00</strong>
+                </div>
+                <div style="display: flex; justify-content: space-between; font-size: 1.05rem; margin-top: 5px; color: var(--success); display: none;" id="linha-troco">
+                    <span>Troco:</span>
+                    <strong id="resumo-troco">R$ 0,00</strong>
+                </div>
+            </div>
+
+            <div class="modal-btns">
+                <button class="btn" style="background: var(--danger);" onclick="fecharModais()">Cancelar</button>
+                <button class="btn" id="btn-confirmar-pagamento" style="background: var(--success);" onclick="imprimirCaixa()" disabled style="opacity: 0.5; cursor: not-allowed;">Confirmar e Imprimir</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL GERENCIAR CARDÁPIO -->
+    <div class="modal-overlay no-print" id="modal-cardapio">
+        <div class="modal modal-large">
+            <h3>⚙️ Gerenciar Cardápio</h3>
+            <p style="margin-bottom: 10px; font-size: 0.85rem; color: #555;">Edite nome, preço, categoria, setor (cozinha/bar), favorito, se está ativo e se serve 2 pessoas. As alterações salvam automaticamente.</p>
+
+            <input type="text" id="busca-admin-cardapio" placeholder="🔎 Filtrar itens..." oninput="renderizarAdminCardapio(this.value)" style="margin-bottom: 10px;">
+
+            <div id="lista-admin-cardapio" style="max-height: 300px; overflow-y: auto; text-align: left; border: 1px solid var(--border); border-radius: 6px; margin-bottom: 15px;"></div>
+
+            <div style="background:#fff; border:1px solid var(--border); border-radius:8px; padding:12px; text-align:left;">
+                <h4 style="margin-bottom:8px; color: var(--primary);">➕ Adicionar novo item</h4>
+                <div style="display:flex; gap:8px; flex-wrap:wrap;">
+                    <input type="text" id="novo-prod-nome" placeholder="Nome do item" style="flex:2; min-width:150px; margin-bottom:0;">
+                    <input type="number" id="novo-prod-preco" placeholder="Preço" step="0.01" style="width:100px; margin-bottom:0;">
+                    <select id="novo-prod-categoria" style="padding:10px;"></select>
+                    <select id="novo-prod-setor" style="padding:10px;">
+                        <option value="cozinha">Cozinha</option>
+                        <option value="bar">Bar</option>
+                    </select>
+                    <button class="btn" style="background: var(--success);" onclick="adicionarNovoProdutoAdmin()">Adicionar</button>
+                </div>
+            </div>
+
+            <div class="modal-btns">
+                <button class="btn" style="background: var(--danger);" onclick="restaurarCardapioPadrao()">Restaurar Cardápio Padrão</button>
+                <button class="btn" style="background: var(--primary);" onclick="fecharModais()">Fechar Janela</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- TICKET 1: FECHAMENTO DE CONTA (CAIXA) -->
+    <div id="cupom-caixa" class="print-container">
+        <div class="t-header">
+            <h2>JOÃO CAIÇARA TRADIÇÃO</h2>
+            <p>Comprovante de Consumo</p>
+            <p>Mesa: <strong id="caixa-mesa"></strong></p>
+            <p>Cliente: <span id="caixa-cliente"></span></p>
+            <p>Data: <span id="caixa-data"></span></p>
+        </div>
+        <div id="caixa-itens"></div>
+        <div style="border-top: 1px dashed #000; margin-top: 8px; padding-top: 6px; font-size: 12px;">
+            <div style="display:flex; justify-content:space-between;">
+                <span>Subtotal:</span>
+                <span id="caixa-subtotal-valor"></span>
+            </div>
+            <div id="caixa-linha-taxa" style="display:flex; justify-content:space-between;">
+                <span>Taxa de serviço (10%):</span>
+                <span id="caixa-taxa-valor"></span>
+            </div>
+        </div>
+        <div class="t-total">
+            TOTAL: <span id="caixa-total-valor"></span><br>
+            <div style="font-weight: normal; font-size: 11px; margin-top: 5px; text-align: left;" id="caixa-detalhe-pgto"></div>
+        </div>
+        <p style="text-align:center; margin-top: 15px; font-size: 10px;">Agradecemos a preferência!</p>
+    </div>
+
+    <!-- TICKET 2: PEDIDO PARA PRODUÇÃO (COZINHA OU BAR) -->
+    <div id="cupom-producao" class="print-container">
+        <div class="t-header">
+            <h2 id="prod-titulo">PEDIDO PRODUÇÃO</h2>
+            <p style="font-size: 16px;">MESA: <strong id="prod-mesa"></strong> | CLIENTE: <span id="prod-cliente"></span></p>
+            <p>Data: <span id="prod-data"></span></p>
+        </div>
+        <div style="margin-top: 10px;" id="prod-itens"></div>
+        <p style="text-align:center; margin-top: 20px; font-size: 10px;">Fim do pedido.</p>
+    </div>
+
+    <!-- TICKET 3: RELATÓRIO DE FECHAMENTO DE CAIXA -->
+    <div id="cupom-relatorio" class="print-container">
+        <div class="t-header">
+            <h2>JOÃO CAIÇARA TRADIÇÃO</h2>
+            <p>FECHAMENTO DE CAIXA / TURNO</p>
+            <p>Data: <span id="rel-data"></span></p>
+        </div>
+        <div style="margin-top: 10px; font-size: 12px;">
+            <div style="display:flex; justify-content:space-between; margin-bottom:4px;"><span>Dinheiro:</span> <strong id="rel-dinheiro"></strong></div>
+            <div style="display:flex; justify-content:space-between; margin-bottom:4px;"><span>PIX:</span> <strong id="rel-pix"></strong></div>
+            <div style="display:flex; justify-content:space-between; margin-bottom:4px;"><span>Cartão Crédito:</span> <strong id="rel-credito"></strong></div>
+            <div style="display:flex; justify-content:space-between; margin-bottom:4px;"><span>Cartão Débito:</span> <strong id="rel-debito"></strong></div>
+        </div>
+        <div class="t-total">
+            TOTAL GERAL: <span id="rel-total"></span><br>
+            <small style="font-weight:normal;">Trocos dados: <span id="rel-troco"></span></small><br>
+            <small style="font-weight:normal;">Taxa de serviço (10%) arrecadada: <span id="rel-taxa-servico"></span></small>
+        </div>
+        <p style="text-align:center; margin-top: 15px; font-size: 10px;">Fim do relatório.</p>
+    </div>
+
+    <!-- Firebase SDK (versão "compat", carregada via tag script comum, sem necessidade de npm/build) -->
+    <script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-database-compat.js"></script>
+    <script>
+        const firebaseConfig = {
+            apiKey: "AIzaSyB7hHYHFZ3L-z-sPmgKbJI75eaWHlSGI3A",
+            authDomain: "joaocaicaratradicao.firebaseapp.com",
+            databaseURL: "https://joaocaicaratradicao-default-rtdb.firebaseio.com",
+            projectId: "joaocaicaratradicao",
+            storageBucket: "joaocaicaratradicao.firebasestorage.app",
+            messagingSenderId: "777982220663",
+            appId: "1:777982220663:web:0af4e9bcbaaec847122972"
+        };
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.database();
+
+        // ⚠️ Troque esse PIN pelo combinado com a equipe (é só uma trava simples de tela;
+        // a segurança de verdade está nas Regras do Firebase, que exigem login pra ler/escrever os dados).
+        const PIN_CORRETO = "1234";
+
+        function conferirPin() {
+            const digitado = document.getElementById('pin-input').value;
+            if (digitado === PIN_CORRETO) {
+                document.getElementById('tela-pin').style.display = 'none';
+            } else {
+                document.getElementById('pin-erro').style.display = 'block';
+                document.getElementById('pin-input').value = '';
+            }
+        }
+        document.addEventListener('DOMContentLoaded', () => {
+            const pinInput = document.getElementById('pin-input');
+            if (pinInput) pinInput.addEventListener('keyup', (e) => { if (e.key === 'Enter') conferirPin(); });
+        });
+
+        firebase.auth().signInAnonymously().catch((erro) => {
+            console.error('Erro ao autenticar no Firebase:', erro);
+            const statusEl = document.getElementById('status-conexao');
+            if (statusEl) statusEl.innerText = 'erro de login';
+        });
+
+        firebase.auth().onAuthStateChanged((user) => {
+            const statusEl = document.getElementById('status-conexao');
+            if (statusEl) statusEl.innerText = user ? '🟢 online' : '🔴 sem login';
+        });
+    </script>
+
+    <script>
+        const produtosPadrao = [
+            // ===== APERITIVOS =====
+            { id: 1, nome: "Camarão Aperitivo", preco: 99.00, categoria: "aperitivos", setor: "cozinha", favorito: true, ativo: true, servePara2: false },
+            { id: 2, nome: "Camarão Grande à Paulista", preco: 280.00, categoria: "aperitivos", setor: "cozinha", favorito: false, ativo: true, servePara2: false },
+            { id: 3, nome: "Lula à Dorê", preco: 105.00, categoria: "aperitivos", setor: "cozinha", favorito: false, ativo: true, servePara2: false },
+            { id: 4, nome: "Lula Alho e Óleo", preco: 135.00, categoria: "aperitivos", setor: "cozinha", favorito: false, ativo: true, servePara2: false },
+            { id: 5, nome: "Polvo à Vinagrete", preco: 225.00, categoria: "aperitivos", setor: "cozinha", favorito: false, ativo: true, servePara2: false },
+            { id: 6, nome: "Polvo Alho e Óleo", preco: 225.00, categoria: "aperitivos", setor: "cozinha", favorito: false, ativo: true, servePara2: false },
+            { id: 7, nome: "Peixe Aperitivo", preco: 75.00, categoria: "aperitivos", setor: "cozinha", favorito: false, ativo: true, servePara2: false },
+            { id: 8, nome: "Badejo Aperitivo", preco: 125.00, categoria: "aperitivos", setor: "cozinha", favorito: false, ativo: true, servePara2: false },
+            { id: 9, nome: "Marisco à Vinagrete", preco: 85.00, categoria: "aperitivos", setor: "cozinha", favorito: false, ativo: true, servePara2: false },
+            { id: 10, nome: "Mariscada", preco: 95.00, categoria: "aperitivos", setor: "cozinha", favorito: false, ativo: true, servePara2: false },
+            { id: 11, nome: "Mariscada Temperada", preco: 115.00, categoria: "aperitivos", setor: "cozinha", favorito: false, ativo: true, servePara2: false },
+            { id: 12, nome: "Carne Aperitivo", preco: 75.00, categoria: "aperitivos", setor: "cozinha", favorito: false, ativo: true, servePara2: false },
+            { id: 13, nome: "Batata Frita", preco: 48.00, categoria: "aperitivos", setor: "cozinha", favorito: true, ativo: true, servePara2: false },
+            { id: 14, nome: "Mandioca Frita", preco: 48.00, categoria: "aperitivos", setor: "cozinha", favorito: false, ativo: true, servePara2: false },
+            { id: 15, nome: "Casquinha de Siri", preco: 32.00, categoria: "aperitivos", setor: "cozinha", favorito: false, ativo: true, servePara2: false },
+            { id: 16, nome: "Ostras · 12 unid.", preco: 175.00, categoria: "aperitivos", setor: "cozinha", favorito: false, ativo: true, servePara2: false },
+            { id: 17, nome: "Ostras · 6 unid.", preco: 75.00, categoria: "aperitivos", setor: "cozinha", favorito: false, ativo: true, servePara2: false },
+            { id: 18, nome: "Caranguejo", preco: 110.00, categoria: "aperitivos", setor: "cozinha", favorito: false, ativo: true, servePara2: false },
+            { id: 19, nome: "Molho Rosé", preco: 18.00, categoria: "aperitivos", setor: "cozinha", favorito: false, ativo: true, servePara2: false },
+
+            // ===== SALADAS =====
+            { id: 20, nome: "Salada Mista", preco: 55.00, categoria: "saladas", setor: "cozinha", favorito: false, ativo: true, servePara2: false },
+            { id: 21, nome: "Salada Mista com Palmito", preco: 75.00, categoria: "saladas", setor: "cozinha", favorito: false, ativo: true, servePara2: false },
+            { id: 22, nome: "Maionese de Camarão", preco: 95.00, categoria: "saladas", setor: "cozinha", favorito: false, ativo: true, servePara2: false },
+            { id: 23, nome: "Maionese de Legumes", preco: 65.00, categoria: "saladas", setor: "cozinha", favorito: false, ativo: true, servePara2: false },
+
+            // ===== PEIXE DA ÉPOCA (nomeado "Peixe do Dia" para não repetir com Filé de Badejo / Peixes e Camarões) =====
+            { id: 24, nome: "Peixe do Dia à Camponesa", preco: 165.00, categoria: "peixe_epoca", setor: "cozinha", favorito: false, ativo: true, servePara2: true },
+            { id: 25, nome: "Peixe do Dia à Moda do Chefe", preco: 185.00, categoria: "peixe_epoca", setor: "cozinha", favorito: false, ativo: true, servePara2: true },
+            { id: 26, nome: "Peixe do Dia à La Meunière", preco: 185.00, categoria: "peixe_epoca", setor: "cozinha", favorito: false, ativo: true, servePara2: true },
+            { id: 27, nome: "Peixe do Dia com Legumes", preco: 145.00, categoria: "peixe_epoca", setor: "cozinha", favorito: false, ativo: true, servePara2: true },
+            { id: 28, nome: "Peixe do Dia com Molho de Camarão", preco: 165.00, categoria: "peixe_epoca", setor: "cozinha", favorito: true, ativo: true, servePara2: true },
+            { id: 29, nome: "Peixe do Dia com Molho Rosé e Fritas", preco: 135.00, categoria: "peixe_epoca", setor: "cozinha", favorito: false, ativo: true, servePara2: true },
+
+            // ===== FILÉ DE BADEJO =====
+            { id: 30, nome: "Badejo à Camponesa", preco: 245.00, categoria: "file_badejo", setor: "cozinha", favorito: false, ativo: true, servePara2: true },
+            { id: 31, nome: "Badejo à Moda do Chefe", preco: 245.00, categoria: "file_badejo", setor: "cozinha", favorito: false, ativo: true, servePara2: true },
+            { id: 32, nome: "Badejo à La Meunière", preco: 245.00, categoria: "file_badejo", setor: "cozinha", favorito: false, ativo: true, servePara2: true },
+            { id: 33, nome: "Badejo ao Gratin", preco: 245.00, categoria: "file_badejo", setor: "cozinha", favorito: false, ativo: true, servePara2: true },
+            { id: 34, nome: "Badejo com Legumes", preco: 245.00, categoria: "file_badejo", setor: "cozinha", favorito: false, ativo: true, servePara2: true },
+            { id: 35, nome: "Badejo com Molho de Camarão", preco: 245.00, categoria: "file_badejo", setor: "cozinha", favorito: false, ativo: true, servePara2: true },
+
+            // ===== SALMÃO =====
+            { id: 36, nome: "Salmão com Legumes", preco: 235.00, categoria: "salmao", setor: "cozinha", favorito: false, ativo: true, servePara2: true },
+            { id: 37, nome: "Salmão à Marinheira", preco: 235.00, categoria: "salmao", setor: "cozinha", favorito: false, ativo: true, servePara2: true },
+
+            // ===== PEIXES E CAMARÕES =====
+            { id: 38, nome: "Peixe com Molho de Camarão", preco: 125.00, categoria: "peixes_camaroes", setor: "cozinha", favorito: false, ativo: true, servePara2: true },
+            { id: 39, nome: "Peixe com Fritas e Molho Rosé", preco: 125.00, categoria: "peixes_camaroes", setor: "cozinha", favorito: false, ativo: true, servePara2: true },
+            { id: 40, nome: "Filé de Peixe com Legumes", preco: 125.00, categoria: "peixes_camaroes", setor: "cozinha", favorito: false, ativo: true, servePara2: true },
+            { id: 41, nome: "Moqueca de Peixe", preco: 285.00, categoria: "peixes_camaroes", setor: "cozinha", favorito: true, ativo: true, servePara2: true },
+            { id: 42, nome: "Caldeirada", preco: 145.00, categoria: "peixes_camaroes", setor: "cozinha", favorito: false, ativo: true, servePara2: true },
+            { id: 43, nome: "Azul Marinho", preco: 265.00, categoria: "peixes_camaroes", setor: "cozinha", favorito: false, ativo: true, servePara2: true },
+            { id: 44, nome: "Camarão na Moranga", preco: 395.00, categoria: "peixes_camaroes", setor: "cozinha", favorito: false, ativo: true, servePara2: true },
+            { id: 45, nome: "Camarão à Grega", preco: 260.00, categoria: "peixes_camaroes", setor: "cozinha", favorito: false, ativo: true, servePara2: true },
+            { id: 46, nome: "Camarão à Baiana", preco: 260.00, categoria: "peixes_camaroes", setor: "cozinha", favorito: false, ativo: true, servePara2: true },
+            { id: 47, nome: "Moqueca de Camarão Grande", preco: 260.00, categoria: "peixes_camaroes", setor: "cozinha", favorito: false, ativo: true, servePara2: true },
+            { id: 48, nome: "Bobó de Camarão Grande", preco: 260.00, categoria: "peixes_camaroes", setor: "cozinha", favorito: false, ativo: true, servePara2: true },
+
+            // ===== MASSAS, RISOTOS, POLVOS E LULAS =====
+            { id: 49, nome: "Lambe-Lambe", preco: 165.00, categoria: "massas_risotos", setor: "cozinha", favorito: false, ativo: true, servePara2: true },
+            { id: 50, nome: "Bobó de Camarão Pequeno", preco: 165.00, categoria: "massas_risotos", setor: "cozinha", favorito: false, ativo: true, servePara2: true },
+            { id: 51, nome: "Macarrão ao Fundo do Mar", preco: 225.00, categoria: "massas_risotos", setor: "cozinha", favorito: false, ativo: true, servePara2: true },
+            { id: 52, nome: "Risoto de Camarão Grande", preco: 260.00, categoria: "massas_risotos", setor: "cozinha", favorito: false, ativo: true, servePara2: true },
+            { id: 53, nome: "Risoto de Camarão Pequeno", preco: 165.00, categoria: "massas_risotos", setor: "cozinha", favorito: false, ativo: true, servePara2: true },
+            { id: 54, nome: "Risoto à Moda", preco: 235.00, categoria: "massas_risotos", setor: "cozinha", favorito: false, ativo: true, servePara2: true },
+            { id: 55, nome: "Polvo à Baiana", preco: 255.00, categoria: "massas_risotos", setor: "cozinha", favorito: false, ativo: true, servePara2: true },
+            { id: 56, nome: "Polvo à Provençal", preco: 255.00, categoria: "massas_risotos", setor: "cozinha", favorito: false, ativo: true, servePara2: true },
+            { id: 57, nome: "Lula à Provençal", preco: 195.00, categoria: "massas_risotos", setor: "cozinha", favorito: false, ativo: true, servePara2: true },
+
+            // ===== CARNES =====
+            { id: 58, nome: "Contra Filé com Legumes", preco: 155.00, categoria: "carnes", setor: "cozinha", favorito: false, ativo: true, servePara2: true },
+            { id: 59, nome: "Contra Filé com Fritas", preco: 175.00, categoria: "carnes", setor: "cozinha", favorito: true, ativo: true, servePara2: true },
+            { id: 60, nome: "Churrasco à Brasileira", preco: 175.00, categoria: "carnes", setor: "cozinha", favorito: false, ativo: true, servePara2: true },
+            { id: 61, nome: "Contra Filé à Parmegiana", preco: 165.00, categoria: "carnes", setor: "cozinha", favorito: false, ativo: true, servePara2: true },
+
+            // ===== FRANGO =====
+            { id: 62, nome: "Filé de Frango à Parmegiana", preco: 145.00, categoria: "frango", setor: "cozinha", favorito: true, ativo: true, servePara2: true },
+            { id: 63, nome: "Filé de Frango com Creme de Milho", preco: 125.00, categoria: "frango", setor: "cozinha", favorito: false, ativo: true, servePara2: true },
+            { id: 64, nome: "Filé de Frango com Fritas", preco: 125.00, categoria: "frango", setor: "cozinha", favorito: false, ativo: true, servePara2: true },
+
+            // ===== ACOMPANHAMENTOS (se necessário) =====
+            { id: 65, nome: "Arroz Branco", preco: 22.00, categoria: "acompanhamentos", setor: "cozinha", favorito: false, ativo: true, servePara2: false },
+            { id: 66, nome: "Arroz à Grega", preco: 25.00, categoria: "acompanhamentos", setor: "cozinha", favorito: false, ativo: true, servePara2: false },
+            { id: 67, nome: "Arroz com Brócolis", preco: 25.00, categoria: "acompanhamentos", setor: "cozinha", favorito: false, ativo: true, servePara2: false },
+            { id: 68, nome: "Feijão", preco: 18.00, categoria: "acompanhamentos", setor: "cozinha", favorito: false, ativo: true, servePara2: false },
+            { id: 69, nome: "Pirão", preco: 29.00, categoria: "acompanhamentos", setor: "cozinha", favorito: false, ativo: true, servePara2: false },
+            { id: 70, nome: "Molho de Camarão", preco: 55.00, categoria: "acompanhamentos", setor: "cozinha", favorito: false, ativo: true, servePara2: false },
+            { id: 71, nome: "Legumes", preco: 38.00, categoria: "acompanhamentos", setor: "cozinha", favorito: false, ativo: true, servePara2: false },
+
+            // ===== CERVEJAS =====
+            { id: 72, nome: "Heineken · Longneck", preco: 15.50, categoria: "cervejas", setor: "bar", favorito: false, ativo: true, servePara2: false },
+            { id: 73, nome: "Heineken · 600 ml", preco: 22.00, categoria: "cervejas", setor: "bar", favorito: false, ativo: true, servePara2: false },
+            { id: 74, nome: "Heineken · Lata", preco: 14.00, categoria: "cervejas", setor: "bar", favorito: true, ativo: true, servePara2: false },
+            { id: 75, nome: "Heineken Zero · 600 ml", preco: 22.00, categoria: "cervejas", setor: "bar", favorito: false, ativo: true, servePara2: false },
+            { id: 76, nome: "Heineken Zero · Lata", preco: 12.00, categoria: "cervejas", setor: "bar", favorito: false, ativo: true, servePara2: false },
+            { id: 77, nome: "Original · 600 ml", preco: 22.00, categoria: "cervejas", setor: "bar", favorito: false, ativo: true, servePara2: false },
+            { id: 78, nome: "Original · Lata", preco: 12.00, categoria: "cervejas", setor: "bar", favorito: false, ativo: true, servePara2: false },
+
+            // ===== CAIPIRINHAS E DRINKS =====
+            { id: 79, nome: "Caipirinha de Pinga com Limão", preco: 35.00, categoria: "caipirinhas", setor: "bar", favorito: true, ativo: true, servePara2: false },
+            { id: 80, nome: "Caipirinha de Vodka", preco: 45.00, categoria: "caipirinhas", setor: "bar", favorito: false, ativo: true, servePara2: false },
+            { id: 81, nome: "Caipirinha de Pinga com Polpa", preco: 35.00, categoria: "caipirinhas", setor: "bar", favorito: false, ativo: true, servePara2: false },
+            { id: 82, nome: "Caipirinha de Ypióca", preco: 35.00, categoria: "caipirinhas", setor: "bar", favorito: false, ativo: true, servePara2: false },
+            { id: 83, nome: "Caipirinha de Absolut", preco: 58.00, categoria: "caipirinhas", setor: "bar", favorito: false, ativo: true, servePara2: false },
+            { id: 84, nome: "Caipirinha de Saquê", preco: 40.00, categoria: "caipirinhas", setor: "bar", favorito: false, ativo: true, servePara2: false },
+            { id: 85, nome: "Caipirinha Brasileirinha", preco: 50.00, categoria: "caipirinhas", setor: "bar", favorito: false, ativo: true, servePara2: false },
+            { id: 86, nome: "Batida Cachaça", preco: 38.00, categoria: "caipirinhas", setor: "bar", favorito: false, ativo: true, servePara2: false },
+            { id: 87, nome: "Batida de Vodka", preco: 40.00, categoria: "caipirinhas", setor: "bar", favorito: false, ativo: true, servePara2: false },
+            { id: 88, nome: "Gin Tônica Tanqueray", preco: 55.00, categoria: "caipirinhas", setor: "bar", favorito: false, ativo: true, servePara2: false },
+            { id: 89, nome: "Mojito", preco: 45.00, categoria: "caipirinhas", setor: "bar", favorito: false, ativo: true, servePara2: false },
+
+            // ===== DESTILADOS E APERITIVOS =====
+            { id: 90, nome: "Whisky Red Label", preco: 40.00, categoria: "destilados", setor: "bar", favorito: false, ativo: true, servePara2: false },
+            { id: 91, nome: "Whisky Jack Daniel's", preco: 65.00, categoria: "destilados", setor: "bar", favorito: false, ativo: true, servePara2: false },
+            { id: 92, nome: "Ypióca", preco: 12.00, categoria: "destilados", setor: "bar", favorito: false, ativo: true, servePara2: false },
+            { id: 93, nome: "Martini / Cinzano", preco: 12.00, categoria: "destilados", setor: "bar", favorito: false, ativo: true, servePara2: false },
+            { id: 94, nome: "Campari", preco: 25.00, categoria: "destilados", setor: "bar", favorito: false, ativo: true, servePara2: false },
+            { id: 95, nome: "Vodka", preco: 18.00, categoria: "destilados", setor: "bar", favorito: false, ativo: true, servePara2: false },
+            { id: 96, nome: "Absolut", preco: 35.00, categoria: "destilados", setor: "bar", favorito: false, ativo: true, servePara2: false },
+            { id: 97, nome: "Steinhaeger", preco: 20.00, categoria: "destilados", setor: "bar", favorito: false, ativo: true, servePara2: false },
+            { id: 98, nome: "Gin Tanqueray", preco: 40.00, categoria: "destilados", setor: "bar", favorito: false, ativo: true, servePara2: false },
+
+            // ===== ÁGUAS E REFRIGERANTES =====
+            { id: 99, nome: "Água Mineral · com ou sem gás", preco: 5.00, categoria: "aguas_refrigerantes", setor: "bar", favorito: true, ativo: true, servePara2: false },
+            { id: 100, nome: "Refrigerante Lata", preco: 9.00, categoria: "aguas_refrigerantes", setor: "bar", favorito: false, ativo: true, servePara2: false },
+            { id: 101, nome: "H2Oh ou H2Oh Limoneto", preco: 10.00, categoria: "aguas_refrigerantes", setor: "bar", favorito: false, ativo: true, servePara2: false },
+            { id: 102, nome: "Tônica", preco: 9.00, categoria: "aguas_refrigerantes", setor: "bar", favorito: false, ativo: true, servePara2: false },
+
+            // ===== SUCOS =====
+            { id: 103, nome: "Suco Natural · 400 ml", preco: 18.00, categoria: "sucos", setor: "bar", favorito: false, ativo: true, servePara2: false },
+            { id: 104, nome: "Suco de Polpa · 400 ml", preco: 16.00, categoria: "sucos", setor: "bar", favorito: false, ativo: true, servePara2: false },
+            { id: 105, nome: "Suco de Polpa com Laranja · 400 ml", preco: 20.00, categoria: "sucos", setor: "bar", favorito: false, ativo: true, servePara2: false },
+            { id: 106, nome: "Suco de Polpa com Laranja · 600 ml", preco: 28.00, categoria: "sucos", setor: "bar", favorito: false, ativo: true, servePara2: false },
+            { id: 107, nome: "Suco de Polpa com Leite · 400 ml", preco: 18.00, categoria: "sucos", setor: "bar", favorito: false, ativo: true, servePara2: false },
+            { id: 108, nome: "Suco de Polpa com Leite · 600 ml", preco: 23.00, categoria: "sucos", setor: "bar", favorito: false, ativo: true, servePara2: false },
+            { id: 109, nome: "Limonada Suíça · 400 ml", preco: 25.00, categoria: "sucos", setor: "bar", favorito: false, ativo: true, servePara2: false },
+            { id: 110, nome: "Limonada Suíça · 600 ml", preco: 30.00, categoria: "sucos", setor: "bar", favorito: false, ativo: true, servePara2: false }
+        ];
+
+        // Cardápio agora sincroniza em tempo real via Firebase: qualquer edição no painel de
+        // gerenciamento aparece automaticamente em todos os celulares/computadores conectados.
+        // Mantém uma cópia em localStorage só como cache, pra abrir rápido mesmo sem internet.
+        let produtos = JSON.parse(localStorage.getItem('cardapio_caicara_cache')) || JSON.parse(JSON.stringify(produtosPadrao));
+
+        function salvarProdutos() {
+            db.ref('cardapio').set(produtos);
+            localStorage.setItem('cardapio_caicara_cache', JSON.stringify(produtos));
+        }
+
+        db.ref('cardapio').on('value', (snapshot) => {
+            const dados = snapshot.val();
+            if (Array.isArray(dados)) {
+                produtos = dados.filter(Boolean);
+            } else if (dados && typeof dados === 'object') {
+                produtos = Object.values(dados).filter(Boolean);
+            } else {
+                // Primeira vez que o sistema roda com esse Firebase: semeia com o cardápio padrão
+                produtos = JSON.parse(JSON.stringify(produtosPadrao));
+                db.ref('cardapio').set(produtos);
+            }
+            localStorage.setItem('cardapio_caicara_cache', JSON.stringify(produtos));
+            renderizarCardapio(categoriaAtual);
+            const modalCardapioAberto = document.getElementById('modal-cardapio');
+            if (modalCardapioAberto && modalCardapioAberto.style.display === 'flex') {
+                renderizarAdminCardapio(document.getElementById('busca-admin-cardapio').value);
+            }
+        }, (erro) => {
+            console.error('Erro ao sincronizar cardápio com o Firebase:', erro);
+        });
+
+        const categoriasCardapio = [
+            { key: 'aperitivos', label: 'Aperitivos' },
+            { key: 'saladas', label: 'Saladas' },
+            { key: 'peixe_epoca', label: 'Peixe da Época' },
+            { key: 'file_badejo', label: 'Filé de Badejo' },
+            { key: 'salmao', label: 'Salmão' },
+            { key: 'peixes_camaroes', label: 'Peixes e Camarões' },
+            { key: 'massas_risotos', label: 'Massas, Risotos, Polvos e Lulas' },
+            { key: 'carnes', label: 'Carnes' },
+            { key: 'frango', label: 'Frango' },
+            { key: 'acompanhamentos', label: 'Acompanhamentos' },
+            { key: 'cervejas', label: 'Cervejas' },
+            { key: 'caipirinhas', label: 'Caipirinhas e Drinks' },
+            { key: 'destilados', label: 'Destilados' },
+            { key: 'aguas_refrigerantes', label: 'Águas e Refrigerantes' },
+            { key: 'sucos', label: 'Sucos' }
+        ];
+
+        // Mesas/comandas agora sincronizam em tempo real via Firebase: um pedido lançado no celular
+        // de um garçom aparece na hora na tela do caixa (e em qualquer outro aparelho conectado).
+        let mesas = JSON.parse(localStorage.getItem('mesas_abertas_caicara_cache')) || {};
+        let mesaAtualSelecionada = null;
+        let categoriaAtual = 'favoritos';
+
+        function salvarMesas() {
+            localStorage.setItem('mesas_abertas_caicara_cache', JSON.stringify(mesas));
+            // Atualiza somente a mesa em uso para evitar sobrescrita concorrente.
+            if (mesaAtualSelecionada !== null && mesas[mesaAtualSelecionada]) {
+                return db.ref(`mesas/${mesaAtualSelecionada}`).set(mesas[mesaAtualSelecionada]);
+            }
+            return db.ref('mesas').set(mesas);
+        }
+
+        db.ref('mesas').on('value', (snapshot) => {
+            mesas = normalizarMesasPDV(snapshot.val());
+            localStorage.setItem('mesas_abertas_caicara_cache', JSON.stringify(mesas));
+            gerarMesas();
+
+            // Se a mesa aberta na tela mudou remotamente (outro aparelho lançou item), atualiza a comanda.
+            // Evita sobrescrever o campo "Nome do Cliente" enquanto o usuário está digitando nele.
+            if (mesaAtualSelecionada && mesas[mesaAtualSelecionada]) {
+                renderizarComanda();
+                const inputNome = document.getElementById('nome-cliente');
+                if (document.activeElement !== inputNome) {
+                    inputNome.value = mesas[mesaAtualSelecionada].cliente || '';
+                }
+            }
+        }, (erro) => {
+            console.error('Erro ao sincronizar mesas com o Firebase:', erro);
+        });
+
+        function normalizarMesaPDV(valor) {
+            const mesa = valor && typeof valor === 'object' ? valor : {};
+            let itens = Array.isArray(mesa.itens) ? mesa.itens : [];
+            if (!Array.isArray(mesa.itens) && mesa.itens && typeof mesa.itens === 'object') {
+                itens = Object.values(mesa.itens);
+            }
+            return {
+                ...mesa,
+                itens: itens.filter(Boolean),
+                cliente: typeof mesa.cliente === 'string' ? mesa.cliente : '',
+                abertura: mesa.abertura || null
+            };
+        }
+
+        function normalizarMesasPDV(valor) {
+            const origem = valor && typeof valor === 'object' ? valor : {};
+            const resultado = {};
+            Object.keys(origem).forEach(numero => {
+                resultado[numero] = normalizarMesaPDV(origem[numero]);
+            });
+            return resultado;
+        }
+
+        // Fechamentos feitos pelo garçom também entram no histórico do caixa.
+        db.ref('vendas').on('child_added', (snapshot) => {
+            const venda = snapshot.val();
+            if (!venda || !venda.id) return;
+            const historico = JSON.parse(localStorage.getItem('historico_vendas_caicara')) || [];
+            if (historico.some(item => String(item.id) === String(venda.id))) return;
+            historico.unshift(venda);
+            localStorage.setItem('historico_vendas_caicara', JSON.stringify(historico));
+        }, (erro) => {
+            console.error('Erro ao sincronizar vendas fechadas:', erro);
+        });
+
+        window.onload = () => {
+            gerarMesas(); // Renderiza rápido com o que já estiver em cache, enquanto aguarda o Firebase
+            filtrarCardapio('favoritos');
+            atualizarRelogio();
+            setInterval(atualizarRelogio, 30000); // Atualiza relógio e checa tempo das mesas a cada 30s
+        };
+
+        function gerarMesas() {
+            const agora = Date.now();
+
+            // Salão (1 a 25)
+            const gridSalao = document.getElementById('grid-salao');
+            gridSalao.innerHTML = '';
+            for(let i = 1; i <= 25; i++) {
+                if(!mesas[i]) mesas[i] = { itens: [], cliente: '', abertura: null };
+                mesas[i] = normalizarMesaPDV(mesas[i]);
+                
+                const temPedido = mesas[i].itens.length > 0;
+                const classeAtiva = mesaAtualSelecionada === i ? 'active' : '';
+                const classeOcupada = temPedido ? 'occupied' : '';
+                const temNovoPedido = temPedido && mesas[i].itens.some(item => item.enviado === false);
+                const classeNovo = temNovoPedido ? 'novo-pedido' : '';
+                
+                // Alerta se mesa estiver aberta há mais de 60 minutos
+                let avisoTempo = '';
+                if(temPedido && mesas[i].abertura && (agora - mesas[i].abertura > 60 * 60 * 1000)) {
+                    avisoTempo = 'time-warning';
+                }
+
+                gridSalao.innerHTML += `<button class="table-btn ${classeAtiva} ${classeOcupada} ${avisoTempo} ${classeNovo}" onclick="selecionarMesa(${i})" title="${temNovoPedido ? 'Pedido novo aguardando envio!' : ''}">${i}${temNovoPedido ? ' 🔔' : ''}</button>`;
+            }
+
+            // Deck / Praia (50 a 65)
+            const gridDeck = document.getElementById('grid-deck');
+            gridDeck.innerHTML = '';
+            for(let i = 50; i <= 65; i++) {
+                if(!mesas[i]) mesas[i] = { itens: [], cliente: '', abertura: null };
+                mesas[i] = normalizarMesaPDV(mesas[i]);
+                
+                const temPedido = mesas[i].itens.length > 0;
+                const classeAtiva = mesaAtualSelecionada === i ? 'active' : '';
+                const classeOcupada = temPedido ? 'occupied' : '';
+                const temNovoPedido = temPedido && mesas[i].itens.some(item => item.enviado === false);
+                const classeNovo = temNovoPedido ? 'novo-pedido' : '';
+
+                let avisoTempo = '';
+                if(temPedido && mesas[i].abertura && (agora - mesas[i].abertura > 60 * 60 * 1000)) {
+                    avisoTempo = 'time-warning';
+                }
+
+                gridDeck.innerHTML += `<button class="table-btn ${classeAtiva} ${classeOcupada} ${avisoTempo} ${classeNovo}" onclick="selecionarMesa(${i})" title="${temNovoPedido ? 'Pedido novo aguardando envio!' : ''}">${i}${temNovoPedido ? ' 🔔' : ''}</button>`;
+            }
+        }
+
+        function selecionarMesa(numero) {
+            mesaAtualSelecionada = numero;
+            document.getElementById('mesa-titulo').innerText = `Comanda - Mesa ${numero}`;
+            document.getElementById('nome-cliente').value = mesas[numero].cliente || '';
+            document.getElementById('menu-panel').classList.add('active'); 
+            gerarMesas(); 
+            renderizarComanda();
+        }
+
+        function atualizarNomeCliente() {
+            if(!mesaAtualSelecionada) return;
+            mesas[mesaAtualSelecionada].cliente = document.getElementById('nome-cliente').value;
+            salvarMesas();
+        }
+
+        function renderizarCardapio(categoria) {
+            const grid = document.getElementById('products-grid');
+            grid.innerHTML = '';
+
+            let filtrados = [];
+            if(categoria === 'favoritos') {
+                filtrados = produtos.filter(p => p.favorito);
+            } else if(categoria === 'todos') {
+                filtrados = produtos;
+            } else {
+                filtrados = produtos.filter(p => p.categoria === categoria);
+            }
+
+            filtrados = filtrados.filter(p => p.ativo !== false);
+
+            if(filtrados.length === 0) {
+                grid.innerHTML = '<p style="color:#999; grid-column: 1 / -1;">Nenhum item nesta categoria.</p>';
+                return;
+            }
+
+            filtrados.forEach(prod => {
+                const selo = prod.servePara2 ? '<span style="display:block; font-size:0.7rem; color:var(--info); margin-top:4px;">🍽️ Serve bem 2 pessoas</span>' : '';
+                grid.innerHTML += `
+                    <div class="product-card" onclick="adicionarProduto(${prod.id})">
+                        <h4>${prod.nome}</h4>
+                        <p>${formatarMoeda(prod.preco)}</p>
+                        ${selo}
+                    </div>`;
+            });
+        }
+
+        function filtrarCardapio(categoria) {
+            categoriaAtual = categoria;
+            document.getElementById('busca-produto').value = '';
+            document.querySelectorAll('.tab').forEach(btn => btn.classList.remove('active'));
+            if (typeof event !== 'undefined' && event && event.target) event.target.classList.add('active');
+            renderizarCardapio(categoria);
+        }
+
+        function buscarProduto() {
+            const termo = document.getElementById('busca-produto').value.trim().toLowerCase();
+            const grid = document.getElementById('products-grid');
+
+            if(termo.length === 0) {
+                renderizarCardapio(categoriaAtual);
+                return;
+            }
+
+            document.querySelectorAll('.tab').forEach(btn => btn.classList.remove('active'));
+
+            const resultado = produtos.filter(p => p.ativo !== false && p.nome.toLowerCase().includes(termo));
+            grid.innerHTML = '';
+
+            if(resultado.length === 0) {
+                grid.innerHTML = '<p style="color:#999; grid-column: 1 / -1;">Nenhum item encontrado.</p>';
+                return;
+            }
+
+            resultado.forEach(prod => {
+                const selo = prod.servePara2 ? '<span style="display:block; font-size:0.7rem; color:var(--info); margin-top:4px;">🍽️ Serve bem 2 pessoas</span>' : '';
+                grid.innerHTML += `
+                    <div class="product-card" onclick="adicionarProduto(${prod.id})">
+                        <h4>${prod.nome}</h4>
+                        <p>${formatarMoeda(prod.preco)}</p>
+                        ${selo}
+                    </div>`;
+            });
+        }
+
+        function adicionarProduto(produtoId) {
+            if(!mesaAtualSelecionada) return;
+            const produtoBase = produtos.find(p => p.id === produtoId);
+            const dadosMesa = mesas[mesaAtualSelecionada];
+
+            // Se for o primeiro item da mesa, marca o horário de abertura
+            if(dadosMesa.itens.length === 0) {
+                dadosMesa.abertura = Date.now();
+            }
+
+            const itemJaExiste = dadosMesa.itens.find(item => item.id === produtoId && item.preco === produtoBase.preco && !item.obs && item.enviado === false);
+
+            if(itemJaExiste) {
+                itemJaExiste.qtd++;
+            } else {
+                dadosMesa.itens.push({ ...produtoBase, qtd: 1, obs: '', enviado: false });
+            }
+            renderizarComanda();
+            gerarMesas();
+            salvarMesas();
+        }
+
+        function registrarCancelamentoItem(mesa, item, quantidade, motivo, origem) {
+            return db.ref('cancelamentos').push({
+                id: `cancel-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
+                mesa,
+                item: { id: item.id, nome: item.nome, preco: item.preco },
+                quantidade,
+                motivo,
+                origem: origem || 'pdv',
+                dataHora: new Date().toLocaleString('pt-BR')
+            });
+        }
+
+        function alterarQtdItem(produtoId, indexOriginal, delta) {
+            const dadosMesa = mesas[mesaAtualSelecionada];
+            if(dadosMesa.itens[indexOriginal]) {
+                const item = dadosMesa.itens[indexOriginal];
+                if (delta < 0 && item.enviado === true) {
+                    const motivo = prompt(`Motivo do cancelamento de ${item.nome}:`);
+                    if (!motivo || !motivo.trim()) return alert('Informe o motivo para cancelar um item já enviado.');
+                    registrarCancelamentoItem(mesaAtualSelecionada, item, Math.min(Math.abs(delta), item.qtd), motivo.trim(), 'pdv')
+                        .catch(erro => console.error('Falha ao registrar cancelamento:', erro));
+                }
+                dadosMesa.itens[indexOriginal].qtd += delta;
+                if(dadosMesa.itens[indexOriginal].qtd <= 0) {
+                    dadosMesa.itens.splice(indexOriginal, 1); 
+                }
+                if(dadosMesa.itens.length === 0) {
+                    dadosMesa.abertura = null;
+                }
+            }
+            renderizarComanda();
+            gerarMesas();
+            salvarMesas();
+        }
+
+        function editarObsItem(indexOriginal) {
+            const dadosMesa = mesas[mesaAtualSelecionada];
+            const item = dadosMesa.itens[indexOriginal];
+            if(item) {
+                const novaObs = prompt(`Observação para: ${item.nome}\n(ex: sem cebola, ao ponto, sem gelo...)`, item.obs || '');
+                if(novaObs !== null) {
+                    item.obs = novaObs.trim();
+                    renderizarComanda();
+                    salvarMesas();
+                }
+            }
+        }
+
+        function editarPrecoItem(indexOriginal) {
+            const dadosMesa = mesas[mesaAtualSelecionada];
+            const item = dadosMesa.itens[indexOriginal];
+            if(item) {
+                let novoPreco = prompt(`Editar valor unitário para: ${item.nome}`, item.preco.toFixed(2));
+                if(novoPreco !== null) {
+                    novoPreco = parseFloat(novoPreco.replace(',', '.'));
+                    if(!isNaN(novoPreco) && novoPreco >= 0) {
+                        item.preco = novoPreco;
+                        renderizarComanda();
+                        salvarMesas();
+                    } else {
+                        alert("Valor inválido! Digite apenas números.");
+                    }
+                }
+            }
+        }
+
+        function calcularTotalMesa() {
+            if(!mesaAtualSelecionada) return 0;
+            return mesas[mesaAtualSelecionada].itens.reduce((acc, item) => acc + (item.preco * item.qtd), 0);
+        }
+
+        function renderizarComanda() {
+            const container = document.getElementById('order-items');
+            const dadosMesa = mesas[mesaAtualSelecionada];
+            const total = calcularTotalMesa();
+
+            document.getElementById('total-valor').innerText = formatarMoeda(total);
+
+            if(!dadosMesa || dadosMesa.itens.length === 0) {
+                container.innerHTML = '<p style="text-align:center; color:#999; margin-top: 20px;">Comanda vazia.</p>';
+                return;
+            }
+
+            container.innerHTML = '';
+            dadosMesa.itens.forEach((item, index) => {
+                const sub = item.preco * item.qtd;
+                const obsHtml = item.obs
+                    ? `<div style="font-size:0.78rem; color: var(--danger); margin-top:2px; cursor:pointer;" onclick="editarObsItem(${index})" title="Clique para editar observação">📝 ${item.obs}</div>`
+                    : `<div style="font-size:0.78rem; color:#999; margin-top:2px; cursor:pointer;" onclick="editarObsItem(${index})" title="Clique para adicionar observação">+ observação</div>`;
+                container.innerHTML += `
+                    <div class="order-item">
+                        <div class="item-info">
+                            <div class="item-name">${item.nome}</div>
+                            <div class="item-price" onclick="editarPrecoItem(${index})" title="Clique para editar valor">
+                                Editar val: ${formatarMoeda(item.preco)}
+                            </div>
+                            ${obsHtml}
+                        </div>
+                        <div class="item-controls">
+                            <button class="btn-qty" onclick="alterarQtdItem(${item.id}, ${index}, -1)">-</button>
+                            <span>${item.qtd}</span>
+                            <button class="btn-qty" onclick="alterarQtdItem(${item.id}, ${index}, 1)">+</button>
+                        </div>
+                        <div style="font-weight: bold; width: 75px; text-align: right; color: var(--primary);">
+                            ${formatarMoeda(sub)}
+                        </div>
+                    </div>
+                `;
+            });
+        }
+
+        function limparMesa() {
+            if(!mesaAtualSelecionada) return;
+            if(confirm(`Tem certeza que deseja limpar a Mesa ${mesaAtualSelecionada}?`)) {
+                mesas[mesaAtualSelecionada] = { itens: [], cliente: '', abertura: null };
+                document.getElementById('nome-cliente').value = '';
+                renderizarComanda();
+                gerarMesas();
+                salvarMesas();
+            }
+        }
+
+        function imprimirProducao(setor, reimprimirTudo) {
+            if(!mesaAtualSelecionada) return alert('Selecione uma mesa!');
+            const dadosMesa = mesas[mesaAtualSelecionada];
+            if(dadosMesa.itens.length === 0) return alert('Comanda vazia!');
+
+            let itensFiltrados = [];
+            if(setor === 'bar') {
+                itensFiltrados = dadosMesa.itens.filter(item => item.setor === 'bar' && (reimprimirTudo || item.enviado === false));
+                document.getElementById('prod-titulo').innerText = reimprimirTudo ? "PEDIDO BAR (REIMPRESSÃO)" : "PEDIDO BAR";
+            } else {
+                itensFiltrados = dadosMesa.itens.filter(item => item.setor !== 'bar' && (reimprimirTudo || item.enviado === false));
+                document.getElementById('prod-titulo').innerText = reimprimirTudo ? "PEDIDO COZINHA (REIMPRESSÃO)" : "PEDIDO COZINHA";
+            }
+
+            if(itensFiltrados.length === 0) {
+                return alert(reimprimirTudo ? `Não há itens de ${setor.toUpperCase()} nesta mesa!` : `Não há itens novos para enviar ao ${setor.toUpperCase()} nesta mesa! (Use "Reimprimir tudo" se quiser reimprimir os já enviados)`);
+            }
+
+            document.getElementById('prod-mesa').innerText = mesaAtualSelecionada;
+            document.getElementById('prod-cliente').innerText = dadosMesa.cliente || 'Balcão/Geral';
+            document.getElementById('prod-data').innerText = new Date().toLocaleString('pt-BR');
+
+            const itensHtml = document.getElementById('prod-itens');
+            itensHtml.innerHTML = '';
+            itensFiltrados.forEach(item => {
+                const obsLinha = item.obs ? `<div style="font-size:13px; font-weight:normal; margin: 2px 0 0 0;">↳ Obs: ${item.obs}</div>` : '';
+                const serve2Linha = item.servePara2 ? `<div style="font-size:11px; font-weight:normal; margin: 2px 0 0 0;">(serve bem 2 pessoas)</div>` : '';
+                itensHtml.innerHTML += `<div class="cozinha-item">[ ] ${item.qtd}x ${item.nome}${obsLinha}${serve2Linha}</div>`;
+            });
+
+            document.body.classList.add('print-mode-producao');
+            window.print();
+            document.body.classList.remove('print-mode-producao');
+
+            // Marca os itens impressos como já enviados, pra não duplicar na próxima impressão
+            itensFiltrados.forEach(item => { item.enviado = true; });
+            salvarMesas();
+            gerarMesas();
+        }
+
+        function transferirMesa() {
+            if(!mesaAtualSelecionada) return alert('Selecione uma mesa!');
+            const dadosMesa = mesas[mesaAtualSelecionada];
+            if(dadosMesa.itens.length === 0) return alert('A comanda está vazia, não há nada para transferir!');
+
+            const destinoStr = prompt(`Transferir Mesa ${mesaAtualSelecionada} para qual mesa? (número de 1 a 25 ou 50 a 65)`);
+            if(destinoStr === null) return;
+            const destino = parseInt(destinoStr);
+
+            if(isNaN(destino) || destino === mesaAtualSelecionada) {
+                return alert('Número de mesa inválido.');
+            }
+            if(!((destino >= 1 && destino <= 25) || (destino >= 50 && destino <= 65))) {
+                return alert('Essa mesa não existe no salão nem no deck/praia.');
+            }
+
+            if(!mesas[destino]) mesas[destino] = { itens: [], cliente: '', abertura: null };
+            const dadosDestino = mesas[destino];
+
+            if(dadosDestino.itens.length > 0) {
+                if(!confirm(`A Mesa ${destino} já está ocupada. Deseja JUNTAR a conta da Mesa ${mesaAtualSelecionada} com a Mesa ${destino}?`)) {
+                    return;
+                }
+                // Junta os itens, somando quantidade quando for exatamente o mesmo item (mesmo preço e observação)
+                dadosMesa.itens.forEach(item => {
+                    const igual = dadosDestino.itens.find(i => i.id === item.id && i.preco === item.preco && (i.obs || '') === (item.obs || ''));
+                    if(igual) {
+                        igual.qtd += item.qtd;
+                    } else {
+                        dadosDestino.itens.push(item);
+                    }
+                });
+                if(!dadosDestino.cliente && dadosMesa.cliente) dadosDestino.cliente = dadosMesa.cliente;
+            } else {
+                dadosDestino.itens = dadosMesa.itens;
+                dadosDestino.cliente = dadosMesa.cliente;
+                dadosDestino.abertura = dadosMesa.abertura;
+            }
+
+            mesas[mesaAtualSelecionada] = { itens: [], cliente: '', abertura: null };
+            mesaAtualSelecionada = destino;
+            document.getElementById('mesa-titulo').innerText = `Comanda - Mesa ${destino}`;
+            document.getElementById('nome-cliente').value = dadosDestino.cliente || '';
+
+            renderizarComanda();
+            gerarMesas();
+            salvarMesas();
+            alert(`Mesa transferida para a Mesa ${destino} com sucesso!`);
+        }
+
+        function abrirModalCardapio() {
+            document.getElementById('novo-prod-categoria').innerHTML = categoriasCardapio.map(c => `<option value="${c.key}">${c.label}</option>`).join('');
+            document.getElementById('busca-admin-cardapio').value = '';
+            renderizarAdminCardapio();
+            document.getElementById('modal-cardapio').style.display = 'flex';
+        }
+
+        function renderizarAdminCardapio(filtro) {
+            const lista = document.getElementById('lista-admin-cardapio');
+            const termo = (filtro || '').toLowerCase();
+            let itens = produtos.slice().sort((a, b) => a.categoria.localeCompare(b.categoria) || a.nome.localeCompare(b.nome));
+            if(termo) itens = itens.filter(p => p.nome.toLowerCase().includes(termo));
+
+            if(itens.length === 0) {
+                lista.innerHTML = '<p style="padding:10px; color:#999;">Nenhum item encontrado.</p>';
+                return;
+            }
+
+            lista.innerHTML = itens.map(p => `
+                <div style="display:flex; gap:6px; align-items:center; padding:6px; border-bottom:1px solid var(--border); flex-wrap:wrap;">
+                    <input type="text" value="${p.nome.replace(/"/g, '&quot;')}" style="flex:2; min-width:150px; padding:5px; margin-bottom:0;" onchange="editarProdutoAdmin(${p.id}, 'nome', this.value)">
+                    <input type="number" value="${p.preco}" step="0.01" style="width:80px; padding:5px; margin-bottom:0;" onchange="editarProdutoAdmin(${p.id}, 'preco', this.value)">
+                    <select onchange="editarProdutoAdmin(${p.id}, 'categoria', this.value)" style="padding:5px;">
+                        ${categoriasCardapio.map(c => `<option value="${c.key}" ${c.key === p.categoria ? 'selected' : ''}>${c.label}</option>`).join('')}
+                    </select>
+                    <select onchange="editarProdutoAdmin(${p.id}, 'setor', this.value)" style="padding:5px;">
+                        <option value="cozinha" ${p.setor === 'cozinha' ? 'selected' : ''}>Cozinha</option>
+                        <option value="bar" ${p.setor === 'bar' ? 'selected' : ''}>Bar</option>
+                    </select>
+                    <label style="font-size:0.8rem; white-space:nowrap;"><input type="checkbox" ${p.favorito ? 'checked' : ''} onchange="editarProdutoAdmin(${p.id}, 'favorito', this.checked)"> Favorito</label>
+                    <label style="font-size:0.8rem; white-space:nowrap;"><input type="checkbox" ${p.ativo !== false ? 'checked' : ''} onchange="editarProdutoAdmin(${p.id}, 'ativo', this.checked)"> Ativo</label>
+                    <label style="font-size:0.8rem; white-space:nowrap;"><input type="checkbox" ${p.servePara2 ? 'checked' : ''} onchange="editarProdutoAdmin(${p.id}, 'servePara2', this.checked)"> Serve 2</label>
+                    <button class="btn" style="background:var(--danger); padding:4px 8px; font-size:0.75rem;" onclick="excluirProdutoAdmin(${p.id})">Excluir</button>
+                </div>
+            `).join('');
+        }
+
+        function editarProdutoAdmin(id, campo, valor) {
+            const p = produtos.find(x => x.id === id);
+            if(!p) return;
+            if(campo === 'preco') {
+                valor = parseFloat(valor);
+                if(isNaN(valor) || valor < 0) {
+                    alert('Preço inválido!');
+                    renderizarAdminCardapio(document.getElementById('busca-admin-cardapio').value);
+                    return;
+                }
+            }
+            p[campo] = valor;
+            salvarProdutos();
+            renderizarCardapio(categoriaAtual);
+        }
+
+        function excluirProdutoAdmin(id) {
+            const p = produtos.find(x => x.id === id);
+            if(!p) return;
+            if(confirm(`Excluir "${p.nome}" do cardápio? Isso não afeta vendas já registradas no histórico.`)) {
+                produtos = produtos.filter(x => x.id !== id);
+                salvarProdutos();
+                renderizarAdminCardapio(document.getElementById('busca-admin-cardapio').value);
+                renderizarCardapio(categoriaAtual);
+            }
+        }
+
+        function adicionarNovoProdutoAdmin() {
+            const nome = document.getElementById('novo-prod-nome').value.trim();
+            const preco = parseFloat(document.getElementById('novo-prod-preco').value);
+            const categoria = document.getElementById('novo-prod-categoria').value;
+            const setor = document.getElementById('novo-prod-setor').value;
+
+            if(!nome) return alert('Digite o nome do item.');
+            if(isNaN(preco) || preco < 0) return alert('Digite um preço válido.');
+
+            const novoId = produtos.length ? Math.max(...produtos.map(p => p.id)) + 1 : 1;
+            produtos.push({ id: novoId, nome, preco, categoria, setor, favorito: false, ativo: true, servePara2: false });
+            salvarProdutos();
+
+            document.getElementById('novo-prod-nome').value = '';
+            document.getElementById('novo-prod-preco').value = '';
+            renderizarAdminCardapio(document.getElementById('busca-admin-cardapio').value);
+            renderizarCardapio(categoriaAtual);
+        }
+
+        function restaurarCardapioPadrao() {
+            if(confirm('Isso vai substituir TODAS as suas edições pelo cardápio padrão original. Deseja continuar?')) {
+                produtos = JSON.parse(JSON.stringify(produtosPadrao));
+                salvarProdutos();
+                renderizarAdminCardapio(document.getElementById('busca-admin-cardapio').value);
+                renderizarCardapio(categoriaAtual);
+            }
+        }
+
+        function abrirModalDividir() {
+            const total = calcularTotalMesa();
+            if(total <= 0) return alert('A comanda está vazia!');
+            document.getElementById('dividir-total-mostrar').innerText = formatarMoeda(total);
+            document.getElementById('qtd-pessoas').value = 2;
+            document.getElementById('chk-taxa-dividir').checked = true;
+            document.getElementById('modal-dividir').style.display = 'flex';
+            calcularDivisao();
+        }
+
+        function calcularTotalComTaxa(checkboxId) {
+            const subtotal = calcularTotalMesa();
+            const chk = document.getElementById(checkboxId);
+            const incluirTaxa = chk ? chk.checked : true;
+            const taxa = incluirTaxa ? subtotal * 0.10 : 0;
+            return { subtotal, taxa, total: subtotal + taxa };
+        }
+
+        function calcularDivisao() {
+            const { total } = calcularTotalComTaxa('chk-taxa-dividir');
+            const qtd = parseInt(document.getElementById('qtd-pessoas').value) || 1;
+            document.getElementById('valor-por-pessoa').innerText = `${formatarMoeda(total / (qtd > 0 ? qtd : 1))} / pessoa`;
+        }
+
+        function abrirModalFechar() {
+            const subtotal = calcularTotalMesa();
+            if(subtotal <= 0) return alert('A comanda está vazia!');
+            
+            document.getElementById('fechar-mesa-num').innerText = mesaAtualSelecionada;
+            document.getElementById('chk-taxa-servico').checked = true;
+            
+            document.getElementById('pag-dinheiro').value = "0.00";
+            document.getElementById('pag-pix').value = "0.00";
+            document.getElementById('pag-credito').value = "0.00";
+            document.getElementById('pag-debito').value = "0.00";
+
+            const { taxa, total } = calcularTotalComTaxa('chk-taxa-servico');
+            document.getElementById('fechar-subtotal').innerText = formatarMoeda(subtotal);
+            document.getElementById('fechar-taxa-valor').innerText = formatarMoeda(taxa);
+            document.getElementById('fechar-total').innerText = formatarMoeda(total);
+
+            document.getElementById('modal-fechar').style.display = 'flex';
+            atualizarCalculoPagamento();
+        }
+
+        function toggleTaxaServico() {
+            const { taxa, total } = calcularTotalComTaxa('chk-taxa-servico');
+            document.getElementById('fechar-taxa-valor').innerText = formatarMoeda(taxa);
+            document.getElementById('fechar-total').innerText = formatarMoeda(total);
+            atualizarCalculoPagamento();
+        }
+
+        function atualizarCalculoPagamento() {
+            const { total } = calcularTotalComTaxa('chk-taxa-servico');
+            const dinheiro = parseFloat(document.getElementById('pag-dinheiro').value) || 0;
+            const pix = parseFloat(document.getElementById('pag-pix').value) || 0;
+            const credito = parseFloat(document.getElementById('pag-credito').value) || 0;
+            const debito = parseFloat(document.getElementById('pag-debito').value) || 0;
+
+            const informado = dinheiro + pix + credito + debito;
+            document.getElementById('resumo-informado').innerText = formatarMoeda(informado);
+
+            const btnConfirmar = document.getElementById('btn-confirmar-pagamento');
+            const linhaFalta = document.getElementById('linha-falta');
+            const linhaTroco = document.getElementById('linha-troco');
+
+            const diferenca = informado - total;
+
+            if (diferenca >= -0.01) { 
+                linhaFalta.style.display = 'none';
+                linhaTroco.style.display = 'flex';
+                document.getElementById('resumo-troco').innerText = formatarMoeda(diferenca);
+                
+                btnConfirmar.disabled = false;
+                btnConfirmar.style.opacity = '1';
+                btnConfirmar.style.cursor = 'pointer';
+            } else { 
+                linhaTroco.style.display = 'none';
+                linhaFalta.style.display = 'flex';
+                document.getElementById('resumo-falta').innerText = formatarMoeda(Math.abs(diferenca));
+
+                btnConfirmar.disabled = true;
+                btnConfirmar.style.opacity = '0.5';
+                btnConfirmar.style.cursor = 'not-allowed';
+            }
+        }
+
+        function fecharModais() {
+            document.getElementById('modal-dividir').style.display = 'none';
+            document.getElementById('modal-fechar').style.display = 'none';
+            document.getElementById('modal-historico').style.display = 'none';
+            document.getElementById('modal-cardapio').style.display = 'none';
+        }
+
+        function salvarVendaNoHistorico(mesaId, cliente, itens, total, pagamentos, troco, dataHora, subtotal, taxa) {
+            let historico = JSON.parse(localStorage.getItem('historico_vendas_caicara')) || [];
+            
+            const registro = {
+                id: `pdv-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
+                mesa: mesaId,
+                cliente: cliente || 'Não informado',
+                dataHora: dataHora,
+                itens: itens,
+                subtotal: subtotal,
+                taxa: taxa,
+                total: total,
+                pagamentos: pagamentos,
+                troco: troco,
+                origem: 'pdv'
+            };
+
+            historico.unshift(registro);
+            localStorage.setItem('historico_vendas_caicara', JSON.stringify(historico));
+            db.ref('vendas').push(registro);
+        }
+
+        function abrirModalHistorico() {
+            renderizarHistorico();
+            document.getElementById('modal-historico').style.display = 'flex';
+        }
+
+        function renderizarHistorico() {
+            const listaDiv = document.getElementById('lista-historico');
+            const filtro = document.getElementById('filtro-historico').value.toLowerCase();
+            let historico = JSON.parse(localStorage.getItem('historico_vendas_caicara')) || [];
+
+            let totalDinheiro = 0;
+            let totalPix = 0;
+            let totalCredito = 0;
+            let totalDebito = 0;
+            let totalGeral = 0;
+            let totalTrocos = 0;
+            let totalTaxaServico = 0;
+
+            historico.forEach(reg => {
+                totalDinheiro += reg.pagamentos.dinheiro || 0;
+                totalPix += reg.pagamentos.pix || 0;
+                totalCredito += reg.pagamentos.credito || 0;
+                totalDebito += reg.pagamentos.debito || 0;
+                totalGeral += reg.total || 0;
+                totalTrocos += reg.troco || 0;
+                totalTaxaServico += reg.taxa || 0;
+            });
+
+            document.getElementById('rep-dinheiro').innerText = formatarMoeda(totalDinheiro);
+            document.getElementById('rep-pix').innerText = formatarMoeda(totalPix);
+            document.getElementById('rep-credito').innerText = formatarMoeda(totalCredito);
+            document.getElementById('rep-debito').innerText = formatarMoeda(totalDebito);
+            document.getElementById('rep-taxa-servico').innerText = formatarMoeda(totalTaxaServico);
+            document.getElementById('rep-total').innerText = formatarMoeda(totalGeral);
+            document.getElementById('rep-troco').innerText = formatarMoeda(totalTrocos);
+
+            let historicoFiltrado = historico;
+            if (filtro) {
+                historicoFiltrado = historico.filter(h => h.mesa.toString().includes(filtro) || h.cliente.toLowerCase().includes(filtro));
+            }
+
+            if (historicoFiltrado.length === 0) {
+                listaDiv.innerHTML = '<p style="text-align:center; color:#777; padding:10px;">Nenhum registro encontrado.</p>';
+                return;
+            }
+
+            listaDiv.innerHTML = '';
+            historicoFiltrado.forEach(reg => {
+                let itensStr = reg.itens.map(i => `${i.qtd}x ${i.nome} (${formatarMoeda(i.preco)})`).join(', ');
+                let pgtosStr = [];
+                if(reg.pagamentos.dinheiro > 0) pgtosStr.push(`Dinheiro: ${formatarMoeda(reg.pagamentos.dinheiro)}`);
+                if(reg.pagamentos.pix > 0) pgtosStr.push(`PIX: ${formatarMoeda(reg.pagamentos.pix)}`);
+                if(reg.pagamentos.credito > 0) pgtosStr.push(`Crédito: ${formatarMoeda(reg.pagamentos.credito)}`);
+                if(reg.pagamentos.debito > 0) pgtosStr.push(`Débito: ${formatarMoeda(reg.pagamentos.debito)}`);
+
+                listaDiv.innerHTML += `
+                    <div class="history-card">
+                        <header>
+                            <span>Mesa ${reg.mesa} (${reg.cliente})</span>
+                            <span>${reg.dataHora}</span>
+                        </header>
+                        <div style="margin-bottom: 3px;"><strong>Itens:</strong> ${itensStr}</div>
+                        <div style="margin-bottom: 3px; color: #555;"><strong>Pgto:</strong> ${pgtosStr.join(' | ')}</div>
+                        ${reg.taxa > 0 ? `<div style="margin-bottom: 3px; color: #555; font-size: 0.85rem;">Subtotal: ${formatarMoeda(reg.subtotal || 0)} + Taxa 10%: ${formatarMoeda(reg.taxa)}</div>` : ''}
+                        <div style="display:flex; justify-content:space-between; font-weight:bold; color: var(--primary);">
+                            <span>Total: ${formatarMoeda(reg.total)}</span>
+                            <span>Troco: ${formatarMoeda(reg.troco)}</span>
+                        </div>
+                    </div>
+                `;
+            });
+        }
+
+        function limparHistoricoGeral() {
+            if(confirm("Deseja realmente zerar o caixa e apagar todo o histórico de vendas salvo?")) {
+                localStorage.removeItem('historico_vendas_caicara');
+                renderizarHistorico();
+            }
+        }
+
+        function imprimirRelatorioCaixa() {
+            let historico = JSON.parse(localStorage.getItem('historico_vendas_caicara')) || [];
+            let totalDinheiro = 0, totalPix = 0, totalCredito = 0, totalDebito = 0, totalGeral = 0, totalTrocos = 0, totalTaxaServico = 0;
+
+            historico.forEach(reg => {
+                totalDinheiro += reg.pagamentos.dinheiro || 0;
+                totalPix += reg.pagamentos.pix || 0;
+                totalCredito += reg.pagamentos.credito || 0;
+                totalDebito += reg.pagamentos.debito || 0;
+                totalGeral += reg.total || 0;
+                totalTrocos += reg.troco || 0;
+                totalTaxaServico += reg.taxa || 0;
+            });
+
+            document.getElementById('rel-data').innerText = new Date().toLocaleString('pt-BR');
+            document.getElementById('rel-dinheiro').innerText = formatarMoeda(totalDinheiro);
+            document.getElementById('rel-pix').innerText = formatarMoeda(totalPix);
+            document.getElementById('rel-credito').innerText = formatarMoeda(totalCredito);
+            document.getElementById('rel-debito').innerText = formatarMoeda(totalDebito);
+            document.getElementById('rel-total').innerText = formatarMoeda(totalGeral);
+            document.getElementById('rel-troco').innerText = formatarMoeda(totalTrocos);
+            document.getElementById('rel-taxa-servico').innerText = formatarMoeda(totalTaxaServico);
+
+            document.body.classList.add('print-mode-relatorio');
+            window.print();
+            document.body.classList.remove('print-mode-relatorio');
+        }
+
+        function imprimirCaixa() {
+            const { subtotal, taxa, total } = calcularTotalComTaxa('chk-taxa-servico');
+            const cliente = mesas[mesaAtualSelecionada].cliente;
+            const dinheiro = parseFloat(document.getElementById('pag-dinheiro').value) || 0;
+            const pix = parseFloat(document.getElementById('pag-pix').value) || 0;
+            const credito = parseFloat(document.getElementById('pag-credito').value) || 0;
+            const debito = parseFloat(document.getElementById('pag-debito').value) || 0;
+            const informado = dinheiro + pix + credito + debito;
+            const troco = informado - total;
+            const dataAtualStr = new Date().toLocaleString('pt-BR');
+
+            salvarVendaNoHistorico(
+                mesaAtualSelecionada, 
+                cliente, 
+                JSON.parse(JSON.stringify(mesas[mesaAtualSelecionada].itens)), 
+                total, 
+                {dinheiro, pix, credito, debito}, 
+                troco, 
+                dataAtualStr,
+                subtotal,
+                taxa
+            );
+
+            let detalhePgtoHtml = "";
+            if (dinheiro > 0) detalhePgtoHtml += `Dinheiro: ${formatarMoeda(dinheiro)}<br>`;
+            if (pix > 0) detalhePgtoHtml += `PIX: ${formatarMoeda(pix)}<br>`;
+            if (credito > 0) detalhePgtoHtml += `Crédito: ${formatarMoeda(credito)}<br>`;
+            if (debito > 0) detalhePgtoHtml += `Débito: ${formatarMoeda(debito)}<br>`;
+            if (troco > 0.01) detalhePgtoHtml += `Troco dado: ${formatarMoeda(troco)}`;
+
+            document.getElementById('caixa-mesa').innerText = mesaAtualSelecionada;
+            document.getElementById('caixa-cliente').innerText = cliente || 'Não informado';
+            document.getElementById('caixa-data').innerText = dataAtualStr;
+            document.getElementById('caixa-detalhe-pgto').innerHTML = detalhePgtoHtml;
+            document.getElementById('caixa-subtotal-valor').innerText = formatarMoeda(subtotal);
+            document.getElementById('caixa-linha-taxa').style.display = taxa > 0 ? 'flex' : 'none';
+            document.getElementById('caixa-taxa-valor').innerText = formatarMoeda(taxa);
+            document.getElementById('caixa-total-valor').innerText = formatarMoeda(total);
+
+            const printItens = document.getElementById('caixa-itens');
+            printItens.innerHTML = '';
+            mesas[mesaAtualSelecionada].itens.forEach(item => {
+                printItens.innerHTML += `
+                    <div class="t-item">
+                        <span class="t-item-name">${item.qtd}x ${item.nome}</span>
+                        <span>R$ ${(item.preco * item.qtd).toFixed(2)}</span>
+                    </div>
+                `;
+            });
+
+            fecharModais();
+            
+            setTimeout(() => {
+                document.body.classList.add('print-mode-caixa');
+                window.print();
+                document.body.classList.remove('print-mode-caixa');
+
+                mesas[mesaAtualSelecionada] = { itens: [], cliente: '', abertura: null };
+                mesaAtualSelecionada = null;
+                document.getElementById('mesa-titulo').innerText = "Selecione uma Mesa";
+                document.getElementById('nome-cliente').value = '';
+                document.getElementById('menu-panel').classList.remove('active');
+                renderizarComanda();
+                gerarMesas();
+                salvarMesas();
+            }, 500);
+        }
+
+        function formatarMoeda(valor) { return valor.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }); }
+        function atualizarRelogio() { 
+            document.getElementById('relogio').innerText = new Date().toLocaleString('pt-BR'); 
+            gerarMesas(); // Atualiza o alerta de tempo das mesas periodicamente
+        }
+    </script>
+
+<script>if ('serviceWorker' in navigator) { window.addEventListener('load', () => navigator.serviceWorker.register('/pdv/service-worker.js', {scope: '/pdv/'})); }</script>
+</body>
+</html>

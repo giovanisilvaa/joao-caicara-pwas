@@ -1,0 +1,19 @@
+{
+  "name": "João Caiçara — PDV",
+  "short_name": "PDV",
+  "description": "Operação de caixa, produção e fechamento de contas.",
+  "start_url": "/pdv/",
+  "scope": "/pdv/",
+  "display": "standalone",
+  "orientation": "any",
+  "background_color": "#F7F4EC",
+  "theme_color": "#0F4C5C",
+  "icons": [
+    {
+      "src": "/manus-storage/joao-caicara-mark_eadc19d3.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}
