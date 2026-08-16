@@ -99,41 +99,11 @@
 
     <div id="tela-pin">
         <h1>🦐 João Caiçara<br>Pedidos - Garçom</h1>
-        <input type="password" inputmode="numeric" pattern="[0-9]*" autocomplete="off" autocapitalize="off" spellcheck="false" enterkeyhint="done" id="pin-input" placeholder="PIN" maxlength="6">
+        <input type="text" id="login-input" placeholder="Identificador do funcionário" autocomplete="username" autocapitalize="none" spellcheck="false">
+        <input type="password" inputmode="numeric" pattern="[0-9]*" autocomplete="current-password" autocapitalize="off" spellcheck="false" enterkeyhint="done" id="pin-input" placeholder="PIN de 4 dígitos" maxlength="4">
         <button type="button" id="btn-entrar-pin">Entrar</button>
         <div id="pin-erro">PIN incorreto, tente de novo.</div>
     </div>
-
-    <!-- O PIN é inicializado antes do Firebase para funcionar também em arquivos locais no celular. -->
-    <script>
-        (function iniciarPinLocal() {
-            const pinInput = document.getElementById('pin-input');
-            const btnEntrarPin = document.getElementById('btn-entrar-pin');
-            const pinErro = document.getElementById('pin-erro');
-            const telaPin = document.getElementById('tela-pin');
-            const pinLocal = '1234';
-
-            function liberarTela(event) {
-                if (event) event.preventDefault();
-                const digitado = (pinInput.value || '').trim();
-                if (digitado === pinLocal) {
-                    telaPin.style.display = 'none';
-                    pinErro.style.display = 'none';
-                    pinInput.blur();
-                } else {
-                    pinErro.style.display = 'block';
-                    pinInput.value = '';
-                    pinInput.focus();
-                }
-            }
-
-            window.conferirPin = liberarTela;
-            btnEntrarPin.addEventListener('click', liberarTela);
-            pinInput.addEventListener('keydown', (event) => {
-                if (event.key === 'Enter') liberarTela(event);
-            });
-        })();
-    </script>
 
     <div class="header">
         <h1 id="header-titulo">Selecione a mesa</h1>
@@ -191,19 +161,41 @@
     // a segurança de verdade está nas Regras do Firebase, que exigem login para ler/escrever os dados).
     const PIN_CORRETO = "1234";
 
-    function conferirPin(event) {
-        if (event) event.preventDefault();
+    async function hashPinGarcom(pin) {
+        const bytes = new TextEncoder().encode(String(pin));
+        const digest = await crypto.subtle.digest('SHA-256', bytes);
+        return Array.from(new Uint8Array(digest)).map(byte => byte.toString(16).padStart(2, '0')).join('');
+    }
 
+    async function conferirPin(event) {
+        if (event) event.preventDefault();
+        const loginInput = document.getElementById('login-input');
         const pinInput = document.getElementById('pin-input');
         const pinErro = document.getElementById('pin-erro');
         const telaPin = document.getElementById('tela-pin');
+        const login = (loginInput.value || '').trim().toLowerCase();
         const digitado = (pinInput.value || '').trim();
-
-        if (digitado === PIN_CORRETO) {
+        if (!/^\d{4}$/.test(digitado)) {
+            pinErro.innerText = 'O PIN deve ter 4 dígitos.';
+            pinErro.style.display = 'block';
+            return;
+        }
+        try {
+            const snapshot = await db.ref('funcionarios').once('value');
+            const funcionarios = Object.values(snapshot.val() || {});
+            if (funcionarios.length > 0) {
+                const funcionario = funcionarios.find(item => item.login === login && item.ativo !== false);
+                if (!funcionario || funcionario.pinHash !== await hashPinGarcom(digitado)) throw new Error('invalid-login');
+                localStorage.setItem('garcom_sessao', JSON.stringify({ nome: funcionario.nome, login: funcionario.login, funcao: funcionario.funcao, entradaEm: Date.now() }));
+            } else {
+                throw new Error('no-staff-configured');
+            }
             telaPin.style.display = 'none';
             pinErro.style.display = 'none';
             pinInput.blur();
-        } else {
+        } catch (erro) {
+            console.error('Falha no login do garçom:', erro);
+            pinErro.innerText = erro.message === 'no-staff-configured' ? 'Cadastre um funcionário no PDV antes de entrar.' : 'Identificador ou PIN incorreto.';
             pinErro.style.display = 'block';
             pinInput.value = '';
             pinInput.focus();
@@ -212,12 +204,16 @@
 
     document.addEventListener('DOMContentLoaded', () => {
         const pinInput = document.getElementById('pin-input');
+        const loginInput = document.getElementById('login-input');
         const btnEntrarPin = document.getElementById('btn-entrar-pin');
-        if (!pinInput || !btnEntrarPin) return;
+        if (!pinInput || !loginInput || !btnEntrarPin) return;
 
         btnEntrarPin.addEventListener('click', conferirPin);
         pinInput.addEventListener('keydown', (event) => {
             if (event.key === 'Enter') conferirPin(event);
+        });
+        loginInput.addEventListener('keydown', (event) => {
+            if (event.key === 'Enter') pinInput.focus();
         });
     });
 

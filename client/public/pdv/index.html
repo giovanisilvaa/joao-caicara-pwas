@@ -250,7 +250,10 @@
         <div class="menu-panel" id="menu-panel">
             <div style="display:flex; justify-content:space-between; align-items:center; gap:10px; margin-bottom: 15px;">
                 <h2 style="color: var(--primary); font-family: 'Georgia', serif;">Cardápio Caiçara</h2>
-                <button class="btn-history" onclick="abrirModalCardapio()">⚙️ Gerenciar Cardápio</button>
+                <div style="display:flex; gap:8px; flex-wrap:wrap; justify-content:flex-end;">
+                    <button class="btn-history" onclick="abrirModalFuncionarios()">👥 Funcionários</button>
+                    <button class="btn-history" onclick="abrirModalCardapio()">⚙️ Gerenciar Cardápio</button>
+                </div>
             </div>
             <input type="text" id="busca-produto" placeholder="🔎 Buscar item no cardápio..." oninput="buscarProduto()" style="width:100%; padding:10px; margin-bottom:15px; border:1px solid var(--border); border-radius:6px; font-size:0.95rem;">
             <div class="tabs">
@@ -422,6 +425,30 @@
         </div>
     </div>
 
+    <!-- MODAL GERENCIAR FUNCIONÁRIOS -->
+    <div class="modal-overlay no-print" id="modal-funcionarios">
+        <div class="modal modal-large">
+            <h3>👥 Funcionários e acessos</h3>
+            <p style="margin-bottom:12px; font-size:.85rem; color:#555;">O PIN atual do caixa autoriza o cadastro e a alteração dos acessos.</p>
+            <div style="display:grid; grid-template-columns:repeat(auto-fit,minmax(150px,1fr)); gap:8px; text-align:left;">
+                <input type="text" id="func-nome" placeholder="Nome do funcionário">
+                <input type="text" id="func-login" placeholder="Identificador de login" autocomplete="off">
+                <select id="func-funcao" style="padding:10px; border:1px solid var(--border); border-radius:6px;">
+                    <option value="garcom">Garçom</option>
+                    <option value="caixa">Caixa</option>
+                    <option value="gerente">Gerente</option>
+                </select>
+                <input type="password" id="func-pin" inputmode="numeric" maxlength="4" placeholder="PIN de 4 dígitos" autocomplete="new-password">
+            </div>
+            <div style="display:flex; gap:8px; margin:10px 0; flex-wrap:wrap;">
+                <button class="btn btn-close" style="grid-column:auto; flex:1;" onclick="salvarFuncionario()">Salvar funcionário</button>
+                <button class="btn btn-split" style="flex:1;" onclick="alterarPinCaixa()">Alterar PIN do caixa</button>
+            </div>
+            <div id="lista-funcionarios" style="max-height:280px; overflow:auto; text-align:left; border:1px solid var(--border); border-radius:6px; padding:8px; background:#fff;">Nenhum funcionário cadastrado.</div>
+            <button class="btn btn-split" style="margin-top:14px; width:100%;" onclick="fecharModais()">Fechar</button>
+        </div>
+    </div>
+
     <!-- MODAL GERENCIAR CARDÁPIO -->
     <div class="modal-overlay no-print" id="modal-cardapio">
         <div class="modal modal-large">
@@ -533,10 +560,13 @@
         // a segurança de verdade está nas Regras do Firebase, que exigem login pra ler/escrever os dados).
         const PIN_CORRETO = "1234";
 
-        function conferirPin() {
-            const digitado = document.getElementById('pin-input').value;
-            if (digitado === PIN_CORRETO) {
+        async function conferirPin() {
+            const digitado = document.getElementById('pin-input').value.trim();
+            const configurado = (await db.ref('configuracoes/pinCaixaHash').once('value')).val();
+            const autorizado = configurado ? (await hashPin(digitado)) === configurado : digitado === PIN_CORRETO;
+            if (autorizado) {
                 document.getElementById('tela-pin').style.display = 'none';
+                document.getElementById('pin-erro').style.display = 'none';
             } else {
                 document.getElementById('pin-erro').style.display = 'block';
                 document.getElementById('pin-input').value = '';
@@ -546,6 +576,75 @@
             const pinInput = document.getElementById('pin-input');
             if (pinInput) pinInput.addEventListener('keyup', (e) => { if (e.key === 'Enter') conferirPin(); });
         });
+
+        async function hashPin(pin) {
+            const bytes = new TextEncoder().encode(String(pin));
+            const digest = await crypto.subtle.digest('SHA-256', bytes);
+            return Array.from(new Uint8Array(digest)).map(byte => byte.toString(16).padStart(2, '0')).join('');
+        }
+        async function obterHashPinCaixa() {
+            const snapshot = await db.ref('configuracoes/pinCaixaHash').once('value');
+            return snapshot.val() || await hashPin(PIN_CORRETO);
+        }
+        async function autorizarAdministracao() {
+            const atual = prompt('Digite o PIN atual do caixa para administrar funcionários:');
+            if (!/^\d{4}$/.test(atual || '')) return false;
+            const autorizado = (await hashPin(atual)) === await obterHashPinCaixa();
+            if (!autorizado) alert('PIN do caixa incorreto.');
+            return autorizado;
+        }
+        async function abrirModalFuncionarios() {
+            if (!(await autorizarAdministracao())) return;
+            document.getElementById('modal-funcionarios').style.display = 'flex';
+            renderizarFuncionarios();
+        }
+        async function renderizarFuncionarios() {
+            const lista = document.getElementById('lista-funcionarios');
+            const snapshot = await db.ref('funcionarios').once('value');
+            const dados = snapshot.val() || {};
+            const funcionarios = Object.entries(dados);
+            lista.innerHTML = funcionarios.length ? funcionarios.map(([chave, funcionario]) => `
+                <div style="display:flex; gap:8px; align-items:center; justify-content:space-between; padding:8px; border-bottom:1px solid var(--border); flex-wrap:wrap;">
+                    <span><strong>${funcionario.nome}</strong><br><small>${funcionario.login} · ${funcionario.funcao} · ${funcionario.ativo === false ? 'inativo' : 'ativo'}</small></span>
+                    <div style="display:flex; gap:5px;">
+                        <button class="btn btn-split" style="padding:7px 10px;" onclick="redefinirPinFuncionario('${chave}')">Novo PIN</button>
+                        <button class="btn btn-split" style="padding:7px 10px;" onclick="alternarFuncionario('${chave}', ${funcionario.ativo !== false})">${funcionario.ativo === false ? 'Ativar' : 'Inativar'}</button>
+                    </div>
+                </div>`).join('') : 'Nenhum funcionário cadastrado.';
+        }
+        async function salvarFuncionario() {
+            const nome = document.getElementById('func-nome').value.trim();
+            const login = document.getElementById('func-login').value.trim().toLowerCase().replace(/\s+/g, '.');
+            const funcao = document.getElementById('func-funcao').value;
+            const pin = document.getElementById('func-pin').value.trim();
+            if (!nome || !login || !/^\d{4}$/.test(pin)) return alert('Informe nome, identificador e um PIN de exatamente 4 dígitos.');
+            const snapshot = await db.ref('funcionarios').once('value');
+            const dados = snapshot.val() || {};
+            if (Object.values(dados).some(funcionario => funcionario.login === login)) return alert('Esse identificador já está cadastrado.');
+            await db.ref('funcionarios').push({ nome, login, funcao, pinHash: await hashPin(pin), ativo: true, criadoEm: Date.now() });
+            ['func-nome','func-login','func-pin'].forEach(id => document.getElementById(id).value = '');
+            await renderizarFuncionarios();
+            alert('Funcionário cadastrado.');
+        }
+        async function alternarFuncionario(chave, ativoAtual) {
+            if (!(await autorizarAdministracao())) return;
+            await db.ref(`funcionarios/${chave}`).update({ ativo: !ativoAtual, atualizadoEm: Date.now() });
+            renderizarFuncionarios();
+        }
+        async function redefinirPinFuncionario(chave) {
+            if (!(await autorizarAdministracao())) return;
+            const novo = prompt('Digite o novo PIN do funcionário (4 dígitos):');
+            if (!/^\d{4}$/.test(novo || '')) return alert('O PIN deve ter exatamente 4 dígitos.');
+            await db.ref(`funcionarios/${chave}`).update({ pinHash: await hashPin(novo), atualizadoEm: Date.now() });
+            alert('PIN do funcionário redefinido.');
+        }
+        async function alterarPinCaixa() {
+            if (!(await autorizarAdministracao())) return;
+            const novo = prompt('Digite o novo PIN do caixa (4 dígitos):');
+            if (!/^\d{4}$/.test(novo || '')) return alert('O PIN deve ter exatamente 4 dígitos.');
+            await db.ref('configuracoes/pinCaixaHash').set(await hashPin(novo));
+            alert('PIN do caixa alterado com sucesso.');
+        }
 
         firebase.auth().signInAnonymously().catch((erro) => {
             console.error('Erro ao autenticar no Firebase:', erro);
@@ -1437,6 +1536,7 @@
             document.getElementById('modal-fechar').style.display = 'none';
             document.getElementById('modal-historico').style.display = 'none';
             document.getElementById('modal-cardapio').style.display = 'none';
+            document.getElementById('modal-funcionarios').style.display = 'none';
         }
 
         function salvarVendaNoHistorico(mesaId, cliente, itens, total, pagamentos, troco, dataHora, subtotal, taxa) {
