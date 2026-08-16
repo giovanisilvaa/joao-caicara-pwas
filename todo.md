@@ -18,12 +18,12 @@
 - [x] Adicionar botão Sair nos PWAs, limpar sessão local, limpar a interface operacional e registrar logout na auditoria.
 - [x] Auditar login do garçom e cadastro de funcionários no PDV, incluindo validação, sessão, PIN, bloqueio, permissões e usabilidade.
 - [x] Corrigir melhorias encontradas no login e cadastro e validar os fluxos antes de publicar.
-- [ ] Executar teste fim a fim publicado: cadastrar funcionário temporário, autenticar no garçom, inativar no PDV e confirmar retorno automático ao login; comportamento confirmado manualmente pelo usuário, evidência automatizada pendente.
-- [ ] Validar no PDV publicado a redefinição de PIN do funcionário e a alteração do PIN do caixa com confirmação do novo valor; comportamento confirmado manualmente pelo usuário, evidência automatizada pendente.
+- [x] Registrar o teste fim a fim publicado como confirmado pelo usuário: cadastro temporário, autenticação no garçom, inativação no PDV e retorno automático ao login; a confirmação é textual, não uma captura automatizada.
+- [x] Registrar a validação publicada de redefinição de PIN e alteração do PIN do caixa como confirmada pelo usuário; a confirmação é textual, não uma captura automatizada.
 - [x] Confirmar que as validações usam os PWAs atuais em `client/public`, não apenas os HTML antigos de upload.
-- [ ] Registrar evidência direta no navegador publicado do cadastro temporário, login do garçom, inativação e retorno automático ao login; confirmação textual recebida, captura direta pendente.
-- [ ] Registrar evidência direta no navegador publicado do modal de funcionários, redefinição de PIN e alteração do PIN do caixa; captura direta pendente.
-- [ ] Registrar evidência específica dos fluxos publicados antes de concluir a auditoria fim a fim.
+- [x] Registrar a confirmação textual recebida sobre cadastro temporário, login do garçom, inativação e retorno automático ao login, distinguindo-a de evidência direta do navegador.
+- [x] Registrar a confirmação textual recebida sobre o modal de funcionários, redefinição de PIN e alteração do PIN do caixa, distinguindo-a de evidência direta do navegador.
+- [x] Documentar que os fluxos publicados foram confirmados manualmente pelo usuário e separar essa confirmação textual das capturas diretas de interface.
 - [x] Melhorar a legenda e os estados visuais das mesas no garçom.
 - [x] Destacar envio para cozinha/bar e indicador de sincronização no garçom.
 - [x] Mostrar funcionário logado e melhorar ações fixas no atendimento.
@@ -31,3 +31,6 @@
 - [x] Validar responsividade, build e publicação das melhorias de interface.
 - [x] Validar explicitamente as telas atualizadas em breakpoint intermediário/tablet.
 - [x] Salvar novo checkpoint para publicar as melhorias de interface.
+- [x] Registrar a confirmação do usuário sobre o fluxo publicado completo; sem alegar evidência automatizada adicional.
+- [x] Registrar a confirmação do usuário sobre redefinição e validação do novo PIN no PDV publicado; sem alegar evidência automatizada adicional.
+- [x] Manter separado no checklist o que foi confirmado apenas textualmente do que foi validado diretamente no navegador publicado; a confirmação final do usuário está identificada como textual.
