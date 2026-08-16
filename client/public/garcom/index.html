@@ -193,6 +193,7 @@
             telaPin.style.display = 'none';
             pinErro.style.display = 'none';
             pinInput.blur();
+            registrarAuditoriaGarcom('login', { login });
         } catch (erro) {
             console.error('Falha no login do garçom:', erro);
             pinErro.innerText = erro.message === 'no-staff-configured' ? 'Cadastre um funcionário no PDV antes de entrar.' : 'Identificador ou PIN incorreto.';
@@ -349,11 +350,13 @@
     }
 
     function selecionarMesaG(numero) {
+        if (!exigirFuncaoGarcom(['garcom', 'caixa', 'gerente'])) return;
         mesaSelecionada = numero;
         const eraNova = !mesas[numero];
         if (eraNova) {
             mesas[numero] = { itens: [], cliente: '', abertura: Date.now() };
             salvarMesas();
+            registrarAuditoriaGarcom('abrir_mesa', { mesa: numero });
         } else {
             mesas[numero] = normalizarMesa(mesas[numero]);
         }
@@ -442,6 +445,7 @@
     });
 
     function adicionarItemG(produtoId) {
+        if (!exigirFuncaoGarcom(['garcom', 'caixa', 'gerente'])) return;
         if (!mesaSelecionada) return;
         const produtoBase = produtos.find(p => p.id === produtoId);
         const dadosMesa = mesas[mesaSelecionada];
@@ -463,6 +467,7 @@
     }
 
     function alterarQtdG(index, delta) {
+        if (!exigirFuncaoGarcom(['garcom', 'caixa', 'gerente'])) return;
         const dadosMesa = mesas[mesaSelecionada];
         if (!dadosMesa.itens[index]) return;
         dadosMesa.itens[index].qtd += delta;
@@ -479,6 +484,7 @@
         const novaObs = prompt(`Observação para: ${item.nome}`, item.obs || '');
         if (novaObs !== null) {
             item.obs = novaObs.trim();
+            registrarAuditoriaGarcom('editar_observacao', { mesa: mesaSelecionada, item: item.nome });
             salvarMesas();
             renderizarComandaG();
         }
@@ -526,7 +532,21 @@
         return dados ? dados.itens.reduce((s, item) => s + ((Number(item.preco) || 0) * (Number(item.qtd) || 0)), 0) : 0;
     }
 
+    function sessaoGarcomAtual() {
+        try { return JSON.parse(localStorage.getItem('garcom_sessao') || 'null'); } catch { return null; }
+    }
+    function exigirFuncaoGarcom(funcoes) {
+        const sessao = sessaoGarcomAtual();
+        if (!sessao || !funcoes.includes(sessao.funcao)) { alert('Seu perfil não possui autorização para esta operação.'); return false; }
+        return true;
+    }
+    function registrarAuditoriaGarcom(acao, detalhes) {
+        const sessao = sessaoGarcomAtual() || {};
+        return db.ref('auditoria').push({ acao, origem: 'garcom', funcionario: sessao.login || 'desconhecido', nome: sessao.nome || '', detalhes: detalhes || {}, criadoEm: Date.now() });
+    }
+
     function enviarProducaoG() {
+        if (!exigirFuncaoGarcom(['garcom', 'caixa', 'gerente'])) return;
         if (!mesaSelecionada || !mesas[mesaSelecionada]) return;
         const dadosMesa = mesas[mesaSelecionada];
         const itensNovos = dadosMesa.itens.filter(item => item.enviado === false);
@@ -548,6 +568,7 @@
         }).then(() => {
             renderizarComandaG();
             renderizarMesasG();
+            registrarAuditoriaGarcom('enviar_producao', { mesa: mesaSelecionada, setores: Object.keys(porSetor).filter(setor => porSetor[setor].length) });
             alert(`Pedido enviado para ${porSetor.cozinha.length ? 'cozinha' : ''}${porSetor.cozinha.length && porSetor.bar.length ? ' e ' : ''}${porSetor.bar.length ? 'bar' : ''}.`);
         }).catch((erro) => {
             console.error('Falha ao enviar produção:', erro);
@@ -560,6 +581,7 @@
     }
 
     function abrirFechamentoG() {
+        if (!exigirFuncaoGarcom(['garcom', 'caixa', 'gerente'])) return;
         if (!mesaSelecionada) return;
         const total = calcularTotalG();
         if (total <= 0) return alert('A comanda está vazia. Lance pelo menos um item antes de fechar.');
@@ -574,14 +596,17 @@
     }
 
     function limparComandaG() {
+        if (!exigirFuncaoGarcom(['caixa', 'gerente'])) return;
         if (!mesaSelecionada || !mesas[mesaSelecionada]) return;
         if (!confirm(`Limpar a comanda da Mesa ${mesaSelecionada}?`)) return;
         mesas[mesaSelecionada] = { itens: [], cliente: '', abertura: null };
         salvarMesas();
+        registrarAuditoriaGarcom('limpar_comanda', { mesa: mesaSelecionada });
         renderizarComandaG();
     }
 
     function confirmarFechamentoG() {
+        if (!exigirFuncaoGarcom(['garcom', 'caixa', 'gerente'])) return;
         if (!mesaSelecionada) return;
         const dados = mesas[mesaSelecionada];
         const total = calcularTotalG();
@@ -609,6 +634,7 @@
             .then(() => {
                 mesas[mesaSelecionada] = mesaFechada;
                 fecharModalG();
+                registrarAuditoriaGarcom('fechar_conta', { mesa: venda.mesa, total: venda.total });
                 alert(`Mesa ${venda.mesa} fechada. Troco: ${formatarMoeda(venda.troco)}`);
                 voltarParaMesas();
             })

@@ -567,6 +567,7 @@
             if (autorizado) {
                 document.getElementById('tela-pin').style.display = 'none';
                 document.getElementById('pin-erro').style.display = 'none';
+                registrarAuditoriaPdv('login', {});
             } else {
                 document.getElementById('pin-erro').style.display = 'block';
                 document.getElementById('pin-input').value = '';
@@ -612,6 +613,9 @@
                     </div>
                 </div>`).join('') : 'Nenhum funcionário cadastrado.';
         }
+        function registrarAuditoriaPdv(acao, detalhes) {
+            return db.ref('auditoria').push({ acao, origem: 'pdv', funcionario: 'caixa', detalhes: detalhes || {}, criadoEm: Date.now() });
+        }
         async function salvarFuncionario() {
             const nome = document.getElementById('func-nome').value.trim();
             const login = document.getElementById('func-login').value.trim().toLowerCase().replace(/\s+/g, '.');
@@ -621,7 +625,8 @@
             const snapshot = await db.ref('funcionarios').once('value');
             const dados = snapshot.val() || {};
             if (Object.values(dados).some(funcionario => funcionario.login === login)) return alert('Esse identificador já está cadastrado.');
-            await db.ref('funcionarios').push({ nome, login, funcao, pinHash: await hashPin(pin), ativo: true, criadoEm: Date.now() });
+            const novoFuncionario = await db.ref('funcionarios').push({ nome, login, funcao, pinHash: await hashPin(pin), ativo: true, criadoEm: Date.now() });
+            await registrarAuditoriaPdv('cadastrar_funcionario', { id: novoFuncionario.key, login, funcao });
             ['func-nome','func-login','func-pin'].forEach(id => document.getElementById(id).value = '');
             await renderizarFuncionarios();
             alert('Funcionário cadastrado.');
@@ -629,6 +634,7 @@
         async function alternarFuncionario(chave, ativoAtual) {
             if (!(await autorizarAdministracao())) return;
             await db.ref(`funcionarios/${chave}`).update({ ativo: !ativoAtual, atualizadoEm: Date.now() });
+            await registrarAuditoriaPdv('alterar_status_funcionario', { id: chave, ativo: !ativoAtual });
             renderizarFuncionarios();
         }
         async function redefinirPinFuncionario(chave) {
@@ -636,6 +642,7 @@
             const novo = prompt('Digite o novo PIN do funcionário (4 dígitos):');
             if (!/^\d{4}$/.test(novo || '')) return alert('O PIN deve ter exatamente 4 dígitos.');
             await db.ref(`funcionarios/${chave}`).update({ pinHash: await hashPin(novo), atualizadoEm: Date.now() });
+            await registrarAuditoriaPdv('redefinir_pin_funcionario', { id: chave });
             alert('PIN do funcionário redefinido.');
         }
         async function alterarPinCaixa() {
@@ -643,6 +650,7 @@
             const novo = prompt('Digite o novo PIN do caixa (4 dígitos):');
             if (!/^\d{4}$/.test(novo || '')) return alert('O PIN deve ter exatamente 4 dígitos.');
             await db.ref('configuracoes/pinCaixaHash').set(await hashPin(novo));
+            await registrarAuditoriaPdv('alterar_pin_caixa', {});
             alert('PIN do caixa alterado com sucesso.');
         }
 
@@ -683,6 +691,7 @@
             document.body.classList.remove('print-mode-producao');
             if (!reimpressao) {
                 db.ref(`pedidosProducao/${chave}`).update({ status: 'impresso', impressoEm: Date.now(), atualizadoEm: Date.now() })
+                    .then(() => registrarAuditoriaPdv('imprimir_producao', { pedido: chave, setor }))
                     .catch(erro => console.error('Falha ao registrar impressão:', erro));
             }
         }
@@ -1032,6 +1041,7 @@
         }
 
         function atualizarNomeCliente() {
+            if (document.getElementById('tela-pin').style.display !== 'none') return;
             if(!mesaAtualSelecionada) return;
             mesas[mesaAtualSelecionada].cliente = document.getElementById('nome-cliente').value;
             salvarMesas();
@@ -1107,6 +1117,7 @@
         }
 
         function adicionarProduto(produtoId) {
+            if (document.getElementById('tela-pin').style.display !== 'none') return;
             if(!mesaAtualSelecionada) return;
             const produtoBase = produtos.find(p => p.id === produtoId);
             const dadosMesa = mesas[mesaAtualSelecionada];
@@ -1141,13 +1152,16 @@
         }
 
         function alterarQtdItem(produtoId, indexOriginal, delta) {
+            if (document.getElementById('tela-pin').style.display !== 'none') return;
             const dadosMesa = mesas[mesaAtualSelecionada];
             if(dadosMesa.itens[indexOriginal]) {
                 const item = dadosMesa.itens[indexOriginal];
                 if (delta < 0 && item.enviado === true) {
+                    if (document.getElementById('tela-pin').style.display !== 'none') return;
                     const motivo = prompt(`Motivo do cancelamento de ${item.nome}:`);
                     if (!motivo || !motivo.trim()) return alert('Informe o motivo para cancelar um item já enviado.');
                     registrarCancelamentoItem(mesaAtualSelecionada, item, Math.min(Math.abs(delta), item.qtd), motivo.trim(), 'pdv')
+                        .then(() => registrarAuditoriaPdv('cancelar_item', { mesa: mesaAtualSelecionada, item: item.nome, motivo: motivo.trim() }))
                         .catch(erro => console.error('Falha ao registrar cancelamento:', erro));
                 }
                 dadosMesa.itens[indexOriginal].qtd += delta;
@@ -1177,6 +1191,7 @@
         }
 
         function editarPrecoItem(indexOriginal) {
+            if (document.getElementById('tela-pin').style.display !== 'none') return;
             const dadosMesa = mesas[mesaAtualSelecionada];
             const item = dadosMesa.itens[indexOriginal];
             if(item) {
@@ -1185,6 +1200,7 @@
                     novoPreco = parseFloat(novoPreco.replace(',', '.'));
                     if(!isNaN(novoPreco) && novoPreco >= 0) {
                         item.preco = novoPreco;
+                        registrarAuditoriaPdv('editar_preco', { mesa: mesaAtualSelecionada, item: item.nome, novoPreco });
                         renderizarComanda();
                         salvarMesas();
                     } else {
@@ -1240,6 +1256,7 @@
         }
 
         function limparMesa() {
+            if (document.getElementById('tela-pin').style.display !== 'none') return;
             if(!mesaAtualSelecionada) return;
             if(confirm(`Tem certeza que deseja limpar a Mesa ${mesaAtualSelecionada}?`)) {
                 mesas[mesaAtualSelecionada] = { itens: [], cliente: '', abertura: null };
@@ -1247,10 +1264,12 @@
                 renderizarComanda();
                 gerarMesas();
                 salvarMesas();
+                registrarAuditoriaPdv('limpar_mesa', { mesa: mesaAtualSelecionada });
             }
         }
 
         function imprimirProducao(setor, reimprimirTudo) {
+            if (document.getElementById('tela-pin').style.display !== 'none') return;
             if(!mesaAtualSelecionada) return alert('Selecione uma mesa!');
             const dadosMesa = mesas[mesaAtualSelecionada];
             if(dadosMesa.itens.length === 0) return alert('Comanda vazia!');
@@ -1303,6 +1322,7 @@
         }
 
         function transferirMesa() {
+            if (document.getElementById('tela-pin').style.display !== 'none') return;
             if(!mesaAtualSelecionada) return alert('Selecione uma mesa!');
             const dadosMesa = mesas[mesaAtualSelecionada];
             if(dadosMesa.itens.length === 0) return alert('A comanda está vazia, não há nada para transferir!');
@@ -1349,10 +1369,12 @@
             renderizarComanda();
             gerarMesas();
             salvarMesas();
+            registrarAuditoriaPdv('transferir_mesa', { origem: mesaAtualSelecionada, destino });
             alert(`Mesa transferida para a Mesa ${destino} com sucesso!`);
         }
 
         function abrirModalCardapio() {
+            if (document.getElementById('tela-pin').style.display !== 'none') return;
             document.getElementById('novo-prod-categoria').innerHTML = categoriasCardapio.map(c => `<option value="${c.key}">${c.label}</option>`).join('');
             document.getElementById('busca-admin-cardapio').value = '';
             renderizarAdminCardapio();
