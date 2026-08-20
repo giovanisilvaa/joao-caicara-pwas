@@ -67,7 +67,6 @@
 - [x] Criar o job recorrente em produção para o endpoint de monitoramento WhatsApp.
 - [x] Validar o fluxo publicado do monitoramento e confirmar que o job está ativo.
 - [x] Documentar que a simulação queda/recuperação do health check não foi executada e permanece adiada pelo usuário.
-- [x] Documentar que o envio real de teste pelo Twilio WhatsApp não foi confirmado por causa da restrição do Sandbox e permanece adiado pelo usuário.
 - [x] Registrar que a validação da transição do monitoramento e o checkpoint específico foram adiados quando o usuário encerrou a configuração do WhatsApp.
 - [x] Implementar backup operacional do Firebase com exportação e restauração controladas.
 - [x] Implementar fechamento de caixa com totais por forma de pagamento e conferência diária.

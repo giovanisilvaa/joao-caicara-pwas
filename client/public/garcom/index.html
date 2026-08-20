@@ -21,10 +21,6 @@
     body { background: var(--bg); color: #222; height: 100vh; display: flex; flex-direction: column; overflow: hidden; }
 
     /* ===== TELA DE PIN ===== */
-    #tela-pin { position: fixed; inset: 0; background: var(--primary); display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 999; padding: 20px; text-align: center; }
-    #tela-pin h1 { color: #fff; font-family: 'Georgia', serif; margin-bottom: 20px; font-size: 1.6rem; }
-    #tela-pin input { width: 220px; text-align: center; font-size: 1.8rem; letter-spacing: 8px; padding: 12px; border-radius: 8px; border: none; margin-bottom: 15px; }
-    #tela-pin button { background: var(--accent); color: #fff; border: none; padding: 14px 30px; border-radius: 8px; font-size: 1.1rem; font-weight: bold; cursor: pointer; }
     #pin-erro { color: var(--danger); background: #fff; padding: 6px 12px; border-radius: 6px; margin-top: 10px; display: none; font-size: 0.9rem; }
 
     /* ===== CABEÇALHO ===== */
@@ -121,7 +117,7 @@
 </head>
 <body>
 
-    <div id="tela-pin">
+    <div id="tela-pin" style="display:none;">
         <h1>🦐 João Caiçara<br>Pedidos - Garçom</h1>
         <input type="text" id="login-input" placeholder="Identificador do funcionário" autocomplete="username" autocapitalize="none" spellcheck="false">
         <input type="password" inputmode="numeric" pattern="[0-9]*" autocomplete="current-password" autocapitalize="off" spellcheck="false" enterkeyhint="done" id="pin-input" placeholder="PIN de 4 dígitos" maxlength="4">
@@ -132,7 +128,7 @@
     <div class="header">
         <h1 id="header-titulo">Selecione a mesa</h1>
         <div class="header-meta-g">
-            <span id="usuario-logado-g">Não identificado</span>
+            <span id="usuario-logado-g">Acesso livre</span>
                 <button type="button" id="status-conexao" title="Tocar para tentar reenviar pendências" onclick="reprocessarPendenciasG()">conectando...</button>
         </div>
         <button class="btn-voltar" id="btn-voltar" style="display:none;" onclick="voltarParaMesas()">← Mesas</button>

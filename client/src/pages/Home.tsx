@@ -11,7 +11,7 @@ export default function Home() {
             <img src={mark} alt="Símbolo João Caiçara" className="mb-8 h-20 w-20 object-contain" />
             <p className="mb-3 text-xs font-bold uppercase tracking-[0.24em] text-[#D95D39]">João Caiçara Tradição</p>
             <h1 className="max-w-md font-serif text-5xl font-bold leading-[0.98] tracking-tight sm:text-6xl">Operação que acompanha a maré.</h1>
-            <p className="mt-6 max-w-md text-lg leading-8 text-[#457B9D]">Acesse o sistema certo para cada função. Os dois ambientes compartilham as mesmas comandas e o mesmo Firebase.</p>
+            <p className="mt-6 max-w-md text-lg leading-8 text-[#457B9D]">Acesse diretamente os ambientes de operação. O sistema está livre, sem cadastro de funcionários, senhas ou bloqueios de acesso.</p>
           </section>
           <section className="grid gap-4">
             <a href="/garcom/index.html" className="group rounded-2xl border border-[#0F4C5C]/10 bg-[#0F4C5C] p-6 text-white shadow-xl shadow-[#0F4C5C]/10 transition hover:-translate-y-1 hover:bg-[#133C4A] focus:outline-none focus:ring-4 focus:ring-[#D95D39]/30">
@@ -36,7 +36,7 @@ export default function Home() {
             </a>
           </section>
         </div>
-        <p className="mt-16 text-xs font-semibold uppercase tracking-[0.18em] text-[#457B9D]/70">Maré Operacional · acesso por função</p>
+        <p className="mt-16 text-xs font-semibold uppercase tracking-[0.18em] text-[#457B9D]/70">Maré Operacional · acesso livre</p>
       </div>
     </main>
   );

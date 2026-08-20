@@ -25,17 +25,17 @@
         body { background-color: var(--bg); display: flex; flex-direction: column; height: 100vh; overflow: hidden; color: #333; }
 
         /* HEADER */
-        .header { 
-            background-color: var(--primary); 
-            color: white; 
-            padding: 10px 20px; 
-            display: flex; 
-            justify-content: space-between; 
-            align-items: center; 
+        .header {
+            background-color: var(--primary);
+            color: white;
+            padding: 10px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
             border-bottom: 4px solid var(--accent);
             box-shadow: 0 4px 6px rgba(0,0,0,0.1);
         }
-        
+
         .header-logo-container { display: flex; align-items: center; gap: 15px; }
         .header h1 { font-size: 1.8rem; font-family: 'Georgia', serif; letter-spacing: 1px; text-shadow: 1px 1px 2px rgba(0,0,0,0.3); }
 
@@ -74,11 +74,11 @@
         /* PAINEL DE MESAS */
         .tables-panel { width: 280px; background: var(--secondary); padding: 15px; overflow-y: auto; color: white; display: flex; flex-direction: column; gap: 15px; }
         .tables-section-title { font-size: 0.9rem; text-transform: uppercase; color: var(--wood); border-bottom: 1px solid rgba(255,255,255,0.2); padding-bottom: 5px; margin-top: 5px; font-weight: bold; letter-spacing: 1px; }
-        
+
         .tables-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; }
-        .table-btn { 
-            background: var(--wood); color: #333; border: none; padding: 10px 5px; border-radius: 6px; 
-            font-size: 0.85rem; font-weight: bold; cursor: pointer; transition: 0.2s; 
+        .table-btn {
+            background: var(--wood); color: #333; border: none; padding: 10px 5px; border-radius: 6px;
+            font-size: 0.85rem; font-weight: bold; cursor: pointer; transition: 0.2s;
             box-shadow: 0 2px 4px rgba(0,0,0,0.2); text-align: center; position: relative;
         }
         .table-btn:hover { filter: brightness(1.1); }
@@ -94,7 +94,7 @@
         /* PAINEL DE CARDÁPIO */
         .menu-panel { flex: 2; padding: 20px; background: var(--bg); overflow-y: auto; pointer-events: none; opacity: 0.5; transition: 0.3s; }
         .menu-panel.active { pointer-events: all; opacity: 1; }
-        
+
         .tabs { display: flex; gap: 10px; margin-bottom: 20px; flex-wrap: wrap; }
         .tab { padding: 10px 15px; background: #e5e0d3; border: 1px solid var(--border); border-radius: 5px; cursor: pointer; font-weight: bold; color: #555; }
         .tab.active { background: var(--primary); color: white; border-color: var(--primary); }
@@ -110,20 +110,20 @@
         .order-header { padding: 15px; background: #F2EFE9; border-bottom: 2px solid var(--border); text-align: center; }
         .order-header h2 { font-family: 'Georgia', serif; color: var(--primary); font-size: 1.2rem; margin-bottom: 5px; }
         .order-header input { width: 100%; padding: 6px; border: 1px solid var(--border); border-radius: 4px; text-align: center; font-size: 0.9rem; }
-        
+
         .order-items { flex: 1; overflow-y: auto; padding: 15px; }
         .order-item { display: flex; justify-content: space-between; align-items: center; padding: 12px 0; border-bottom: 1px dashed var(--border); }
         .item-info { flex: 1; }
         .item-name { font-weight: bold; font-size: 0.9rem; color: #333; }
         .item-price { font-size: 0.85rem; color: var(--accent); text-decoration: underline; cursor: pointer; margin-top: 3px; display: inline-block; }
-        
+
         .item-controls { display: flex; align-items: center; gap: 8px; }
         .btn-qty { width: 28px; height: 28px; border-radius: 50%; border: 1px solid var(--border); background: var(--bg); cursor: pointer; font-weight: bold; color: var(--primary); }
         .btn-qty:hover { background: #e0e0e0; }
 
         .order-footer { padding: 15px; background: #F2EFE9; border-top: 2px solid var(--border); }
         .total-display { font-size: 1.6rem; font-weight: bold; color: var(--primary); display: flex; justify-content: space-between; margin-bottom: 15px; }
-        
+
         .action-buttons { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
         .btn { padding: 12px; border: none; border-radius: 6px; color: white; font-weight: bold; cursor: pointer; font-size: 0.9rem; text-align: center; transition: 0.2s; text-transform: uppercase; letter-spacing: 0.5px; }
         .btn-split { background: var(--wood); color: #333; }
@@ -138,7 +138,7 @@
         .modal.modal-large { max-width: 750px; }
         .modal h3 { margin-bottom: 15px; color: var(--primary); font-family: 'Georgia', serif; font-size: 1.5rem; }
         .modal input[type="number"], .modal input[type="text"] { width: 100%; padding: 10px; margin-bottom: 10px; border: 1px solid var(--border); border-radius: 6px; text-align: center; font-size: 1.1rem; background: white; }
-        
+
         .payment-split-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; background: white; padding: 8px 12px; border-radius: 6px; border: 1px solid var(--border); }
         .payment-split-row label { font-weight: bold; color: #444; font-size: 0.9rem; width: 130px; text-align: left; }
         .payment-split-row input { width: 120px !important; margin-bottom: 0 !important; padding: 6px !important; font-size: 1rem !important; }
@@ -204,7 +204,7 @@
             @page { margin: 0; }
             body > *:not(.print-container) { display: none !important; }
             body { background: white; margin: 0; padding: 0; color: black; font-family: 'Courier New', Courier, monospace; }
-            
+
             body.print-mode-caixa #cupom-caixa { display: block !important; }
             body.print-mode-producao #cupom-producao { display: block !important; }
             body.print-mode-relatorio #cupom-relatorio { display: block !important; }
@@ -239,12 +239,6 @@
 </head>
 <body>
 
-    <div id="tela-pin" class="no-print" style="position:fixed; inset:0; background:var(--primary); display:flex; flex-direction:column; align-items:center; justify-content:center; z-index:9999; padding:20px; text-align:center;">
-        <h1 style="color:#fff; font-family:'Georgia', serif; margin-bottom:20px; font-size:1.8rem;">🦐 João Caiçara Tradição<br>PDV - Caixa</h1>
-        <input type="password" inputmode="numeric" pattern="[0-9]*" autocomplete="current-password" id="pin-input" placeholder="PIN de 4 dígitos" maxlength="4" style="width:220px; text-align:center; font-size:1.8rem; letter-spacing:8px; padding:12px; border-radius:8px; border:none; margin-bottom:15px;">
-        <button onclick="conferirPin()" style="background:var(--accent); color:#fff; border:none; padding:14px 30px; border-radius:8px; font-size:1.1rem; font-weight:bold; cursor:pointer;">Entrar</button>
-        <div id="pin-erro" style="color:var(--danger); background:#fff; padding:6px 12px; border-radius:6px; margin-top:10px; display:none; font-size:0.9rem;">PIN incorreto, tente de novo.</div>
-    </div>
 
     <!-- Interface c361d297: backup, fechamento diário e auditoria consultável. -->
     <header class="header no-print">
@@ -257,7 +251,7 @@
             <button class="btn-history" onclick="abrirModalAuditoria()">🛡️ Auditoria</button>
             <button class="btn-history" onclick="abrirModalBackup()">💾 Backup</button>
             <button id="btn-sair-pdv" class="btn-history" style="display:none; background:var(--danger);" onclick="sairPdv()">Sair</button>
-            <span id="usuario-logado-pdv">Não identificado</span>
+            <span id="usuario-logado-pdv">Acesso livre</span>
             <span id="status-conexao" class="status-conexao-pdv sync-pending">🟠 conectando Firebase</span>
             <span id="relogio" style="font-weight: bold; color: var(--bg); font-size: 1.1rem;"></span>
         </div>
@@ -280,7 +274,7 @@
     </div>
 
     <div class="main-container no-print">
-        
+
         <div class="tables-panel">
             <div class="tables-section-title">Salão (1 - 25)</div>
             <div class="tables-grid" id="grid-salao"></div>
@@ -293,7 +287,7 @@
             <div style="display:flex; justify-content:space-between; align-items:center; gap:10px; margin-bottom: 15px;">
                 <h2 style="color: var(--primary); font-family: 'Georgia', serif;">Cardápio Caiçara</h2>
                 <div style="display:flex; gap:8px; flex-wrap:wrap; justify-content:flex-end;">
-                    <button class="btn-history" onclick="abrirModalFuncionarios()">👥 Funcionários</button>
+
                     <button class="btn-history" onclick="abrirModalCardapio()">⚙️ Gerenciar Cardápio</button>
                 </div>
             </div>
@@ -352,7 +346,7 @@
         <div class="modal modal-large">
             <h3>Fechamento de Caixa e Relatório</h3>
             <p style="margin-bottom: 15px; font-size: 0.9rem; color: #555;">Balanço das entradas de hoje por forma de pagamento e histórico de vendas.</p>
-            
+
             <div class="report-box">
                 <h4>
                     <span>📊 Resumo de Entradas de Hoje</span>
@@ -458,7 +452,7 @@
                     <strong id="fechar-total" style="color: var(--primary);"></strong>
                 </div>
             </div>
-            
+
             <p style="font-size: 0.85rem; color: #666; margin-bottom: 15px;">Informe quanto foi pago em cada forma (Pagamento Misto):</p>
 
             <div style="display: flex; flex-direction: column;">
@@ -503,28 +497,7 @@
     </div>
 
     <!-- MODAL GERENCIAR FUNCIONÁRIOS -->
-    <div class="modal-overlay no-print" id="modal-funcionarios">
-        <div class="modal modal-large">
-            <h3>👥 Funcionários e acessos</h3>
-            <p style="margin-bottom:12px; font-size:.85rem; color:#555;">O PIN atual do caixa autoriza o cadastro e a alteração dos acessos.</p>
-            <div style="display:grid; grid-template-columns:repeat(auto-fit,minmax(150px,1fr)); gap:8px; text-align:left;">
-                <input type="text" id="func-nome" placeholder="Nome do funcionário">
-                <input type="text" id="func-login" placeholder="Identificador de login" autocomplete="off">
-                <select id="func-funcao" style="padding:10px; border:1px solid var(--border); border-radius:6px;">
-                    <option value="garcom">Garçom</option>
-                    <option value="caixa">Caixa</option>
-                    <option value="gerente">Gerente</option>
-                </select>
-                <input type="password" id="func-pin" inputmode="numeric" maxlength="4" placeholder="PIN de 4 dígitos" autocomplete="new-password">
-            </div>
-            <div style="display:flex; gap:8px; margin:10px 0; flex-wrap:wrap;">
-                <button class="btn btn-close" style="grid-column:auto; flex:1;" onclick="salvarFuncionario()">Salvar funcionário</button>
-                <button class="btn btn-split" style="flex:1;" onclick="alterarPinCaixa()">Alterar PIN do caixa</button>
-            </div>
-            <div id="lista-funcionarios" style="max-height:280px; overflow:auto; text-align:left; border:1px solid var(--border); border-radius:6px; padding:8px; background:#fff;">Nenhum funcionário cadastrado.</div>
-            <button class="btn btn-split" style="margin-top:14px; width:100%;" onclick="fecharModais()">Fechar</button>
-        </div>
-    </div>
+
 
     <!-- MODAL GERENCIAR CARDÁPIO -->
     <div class="modal-overlay no-print" id="modal-cardapio">
@@ -637,54 +610,13 @@
         // a segurança de verdade está nas Regras do Firebase, que exigem login pra ler/escrever os dados).
         const PIN_CORRETO = "1234";
 
-        async function conferirPin() {
-            const bloqueio = Number(sessionStorage.getItem('pdv_login_bloqueio') || 0);
-            if (Date.now() < bloqueio) {
-                const segundos = Math.ceil((bloqueio - Date.now()) / 1000);
-                document.getElementById('pin-erro').innerText = `Muitas tentativas. Aguarde ${segundos}s.`;
-                document.getElementById('pin-erro').style.display = 'block';
-                return;
-            }
-            const digitado = document.getElementById('pin-input').value.trim();
-            if (!/^\d{4}$/.test(digitado)) {
-                document.getElementById('pin-erro').innerText = 'O PIN deve ter exatamente 4 dígitos.';
-                document.getElementById('pin-erro').style.display = 'block';
-                return;
-            }
-            const configurado = (await db.ref('configuracoes/pinCaixaHash').once('value')).val();
-            const autorizado = configurado ? (await hashPin(digitado)) === configurado : digitado === PIN_CORRETO;
-            if (autorizado) {
-                sessionStorage.removeItem('pdv_login_tentativas');
-                sessionStorage.removeItem('pdv_login_bloqueio');
-                document.getElementById('tela-pin').style.display = 'none';
-                document.getElementById('pin-erro').style.display = 'none';
-                document.getElementById('btn-sair-pdv').style.display = 'inline-block';
-                document.getElementById('usuario-logado-pdv').innerText = 'Caixa · sessão ativa';
-                registrarAuditoriaPdv('login', {});
-            } else {
-                const tentativas = Number(sessionStorage.getItem('pdv_login_tentativas') || 0) + 1;
-                sessionStorage.setItem('pdv_login_tentativas', String(tentativas));
-                if (tentativas >= 5) {
-                    sessionStorage.setItem('pdv_login_bloqueio', String(Date.now() + 30_000));
-                    sessionStorage.removeItem('pdv_login_tentativas');
-                }
-                document.getElementById('pin-erro').innerText = 'PIN incorreto.';
-                document.getElementById('pin-erro').style.display = 'block';
-                document.getElementById('pin-input').value = '';
-            }
-        }
-        document.addEventListener('DOMContentLoaded', () => {
-            const pinInput = document.getElementById('pin-input');
-            if (pinInput) pinInput.addEventListener('keyup', (e) => { if (e.key === 'Enter') conferirPin(); });
-        });
-
         async function hashPin(pin) {
             const bytes = new TextEncoder().encode(String(pin));
             const digest = await crypto.subtle.digest('SHA-256', bytes);
             return Array.from(new Uint8Array(digest)).map(byte => byte.toString(16).padStart(2, '0')).join('');
         }
         async function obterHashPinCaixa() {
-            const snapshot = await db.ref('configuracoes/pinCaixaHash').once('value');
+            const snapshot = { val: () => null };
             return snapshot.val() || await hashPin(PIN_CORRETO);
         }
         async function autorizarAdministracao() {
@@ -694,63 +626,8 @@
             if (!autorizado) alert('PIN do caixa incorreto.');
             return autorizado;
         }
-        async function abrirModalFuncionarios() {
-            if (!(await autorizarAdministracao())) return;
-            document.getElementById('modal-funcionarios').style.display = 'flex';
-            renderizarFuncionarios();
-        }
-        async function renderizarFuncionarios() {
-            const lista = document.getElementById('lista-funcionarios');
-            const snapshot = await db.ref('funcionarios').once('value');
-            const dados = snapshot.val() || {};
-            const funcionarios = Object.entries(dados);
-            lista.innerHTML = funcionarios.length ? funcionarios.map(([chave, funcionario]) => `
-                <div style="display:flex; gap:8px; align-items:center; justify-content:space-between; padding:8px; border-bottom:1px solid var(--border); flex-wrap:wrap;">
-                    <span><strong>${funcionario.nome}</strong><br><small>${funcionario.login} · ${funcionario.funcao} · ${funcionario.ativo === false ? 'inativo' : 'ativo'}</small></span>
-                    <div style="display:flex; gap:5px;">
-                        <button class="btn btn-split" style="padding:7px 10px;" onclick="redefinirPinFuncionario('${chave}')">Novo PIN</button>
-                        <button class="btn btn-split" style="padding:7px 10px;" onclick="alternarFuncionario('${chave}', ${funcionario.ativo !== false})">${funcionario.ativo === false ? 'Ativar' : 'Inativar'}</button>
-                    </div>
-                </div>`).join('') : 'Nenhum funcionário cadastrado.';
-        }
         function registrarAuditoriaPdv(acao, detalhes) {
             return db.ref('auditoria').push({ acao, origem: 'pdv', funcionario: 'caixa', detalhes: detalhes || {}, criadoEm: Date.now() });
-        }
-        async function salvarFuncionario() {
-            const nome = document.getElementById('func-nome').value.trim().replace(/\s+/g, ' ');
-            const login = document.getElementById('func-login').value.trim().toLowerCase().replace(/\s+/g, '.');
-            const funcao = document.getElementById('func-funcao').value;
-            const pin = document.getElementById('func-pin').value.trim();
-            if (nome.length < 2 || nome.length > 80) return alert('Informe um nome entre 2 e 80 caracteres.');
-            if (!/^[a-z0-9][a-z0-9._-]{1,30}$/.test(login)) return alert('O identificador deve ter 2 a 31 caracteres: letras, números, ponto, hífen ou sublinhado.');
-            if (!['garcom', 'caixa', 'gerente'].includes(funcao)) return alert('Selecione uma função válida.');
-            if (!/^\d{4}$/.test(pin)) return alert('Informe um PIN de exatamente 4 dígitos.');
-            const confirmar = prompt('Digite novamente o PIN para confirmar o cadastro:');
-            if (confirmar !== pin) return alert('Os PINs não conferem.');
-            const snapshot = await db.ref('funcionarios').once('value');
-            const dados = snapshot.val() || {};
-            if (Object.values(dados).some(funcionario => funcionario.login === login)) return alert('Esse identificador já está cadastrado.');
-            const novoFuncionario = await db.ref('funcionarios').push({ nome, login, funcao, pinHash: await hashPin(pin), ativo: true, criadoEm: Date.now() });
-            await registrarAuditoriaPdv('cadastrar_funcionario', { id: novoFuncionario.key, login, funcao });
-            ['func-nome','func-login','func-pin'].forEach(id => document.getElementById(id).value = '');
-            await renderizarFuncionarios();
-            alert('Funcionário cadastrado.');
-        }
-        async function alternarFuncionario(chave, ativoAtual) {
-            if (!(await autorizarAdministracao())) return;
-            await db.ref(`funcionarios/${chave}`).update({ ativo: !ativoAtual, atualizadoEm: Date.now() });
-            await registrarAuditoriaPdv('alterar_status_funcionario', { id: chave, ativo: !ativoAtual });
-            renderizarFuncionarios();
-        }
-        async function redefinirPinFuncionario(chave) {
-            if (!(await autorizarAdministracao())) return;
-            const novo = prompt('Digite o novo PIN do funcionário (4 dígitos):');
-            if (!/^\d{4}$/.test(novo || '')) return alert('O PIN deve ter exatamente 4 dígitos.');
-            const confirmar = prompt('Digite novamente o novo PIN para confirmar:');
-            if (confirmar !== novo) return alert('Os PINs não conferem.');
-            await db.ref(`funcionarios/${chave}`).update({ pinHash: await hashPin(novo), atualizadoEm: Date.now() });
-            await registrarAuditoriaPdv('redefinir_pin_funcionario', { id: chave });
-            alert('PIN do funcionário redefinido.');
         }
         async function alterarPinCaixa() {
             if (!(await autorizarAdministracao())) return;
@@ -812,8 +689,6 @@
             document.getElementById('producao-painel').style.display = 'none';
             document.getElementById('btn-sair-pdv').style.display = 'none';
             document.getElementById('usuario-logado-pdv').innerText = 'Não identificado';
-            document.getElementById('tela-pin').style.display = 'flex';
-            document.getElementById('pin-input').value = '';
             gerarMesas();
             fecharModais();
         }
@@ -1178,13 +1053,13 @@
             for(let i = 1; i <= 25; i++) {
                 if(!mesas[i]) mesas[i] = { itens: [], cliente: '', abertura: null };
                 mesas[i] = normalizarMesaPDV(mesas[i]);
-                
+
                 const temPedido = mesas[i].itens.length > 0;
                 const classeAtiva = mesaAtualSelecionada === i ? 'active' : '';
                 const classeOcupada = temPedido ? 'occupied' : '';
                 const temNovoPedido = temPedido && mesas[i].itens.some(item => item.enviado === false);
                 const classeNovo = temNovoPedido ? 'novo-pedido' : '';
-                
+
                 // Alerta se mesa estiver aberta há mais de 60 minutos
                 let avisoTempo = '';
                 if(temPedido && mesas[i].abertura && (agora - mesas[i].abertura > 60 * 60 * 1000)) {
@@ -1200,7 +1075,7 @@
             for(let i = 50; i <= 65; i++) {
                 if(!mesas[i]) mesas[i] = { itens: [], cliente: '', abertura: null };
                 mesas[i] = normalizarMesaPDV(mesas[i]);
-                
+
                 const temPedido = mesas[i].itens.length > 0;
                 const classeAtiva = mesaAtualSelecionada === i ? 'active' : '';
                 const classeOcupada = temPedido ? 'occupied' : '';
@@ -1220,13 +1095,12 @@
             mesaAtualSelecionada = numero;
             document.getElementById('mesa-titulo').innerText = `Comanda - Mesa ${numero}`;
             document.getElementById('nome-cliente').value = mesas[numero].cliente || '';
-            document.getElementById('menu-panel').classList.add('active'); 
-            gerarMesas(); 
+            document.getElementById('menu-panel').classList.add('active');
+            gerarMesas();
             renderizarComanda();
         }
 
         function atualizarNomeCliente() {
-            if (document.getElementById('tela-pin').style.display !== 'none') return;
             if(!mesaAtualSelecionada) return;
             mesas[mesaAtualSelecionada].cliente = document.getElementById('nome-cliente').value;
             salvarMesas();
@@ -1302,7 +1176,6 @@
         }
 
         function adicionarProduto(produtoId) {
-            if (document.getElementById('tela-pin').style.display !== 'none') return;
             if(!mesaAtualSelecionada) return;
             const produtoBase = produtos.find(p => p.id === produtoId);
             const dadosMesa = mesas[mesaAtualSelecionada];
@@ -1337,12 +1210,10 @@
         }
 
         function alterarQtdItem(produtoId, indexOriginal, delta) {
-            if (document.getElementById('tela-pin').style.display !== 'none') return;
             const dadosMesa = mesas[mesaAtualSelecionada];
             if(dadosMesa.itens[indexOriginal]) {
                 const item = dadosMesa.itens[indexOriginal];
                 if (delta < 0 && item.enviado === true) {
-                    if (document.getElementById('tela-pin').style.display !== 'none') return;
                     const motivo = prompt(`Motivo do cancelamento de ${item.nome}:`);
                     if (!motivo || !motivo.trim()) return alert('Informe o motivo para cancelar um item já enviado.');
                     registrarCancelamentoItem(mesaAtualSelecionada, item, Math.min(Math.abs(delta), item.qtd), motivo.trim(), 'pdv')
@@ -1351,7 +1222,7 @@
                 }
                 dadosMesa.itens[indexOriginal].qtd += delta;
                 if(dadosMesa.itens[indexOriginal].qtd <= 0) {
-                    dadosMesa.itens.splice(indexOriginal, 1); 
+                    dadosMesa.itens.splice(indexOriginal, 1);
                 }
                 if(dadosMesa.itens.length === 0) {
                     dadosMesa.abertura = null;
@@ -1376,7 +1247,6 @@
         }
 
         function editarPrecoItem(indexOriginal) {
-            if (document.getElementById('tela-pin').style.display !== 'none') return;
             const dadosMesa = mesas[mesaAtualSelecionada];
             const item = dadosMesa.itens[indexOriginal];
             if(item) {
@@ -1441,7 +1311,6 @@
         }
 
         function limparMesa() {
-            if (document.getElementById('tela-pin').style.display !== 'none') return;
             if(!mesaAtualSelecionada) return;
             if(confirm(`Tem certeza que deseja limpar a Mesa ${mesaAtualSelecionada}?`)) {
                 mesas[mesaAtualSelecionada] = { itens: [], cliente: '', abertura: null };
@@ -1454,7 +1323,6 @@
         }
 
         function imprimirProducao(setor, reimprimirTudo) {
-            if (document.getElementById('tela-pin').style.display !== 'none') return;
             if(!mesaAtualSelecionada) return alert('Selecione uma mesa!');
             const dadosMesa = mesas[mesaAtualSelecionada];
             if(dadosMesa.itens.length === 0) return alert('Comanda vazia!');
@@ -1507,7 +1375,6 @@
         }
 
         function transferirMesa() {
-            if (document.getElementById('tela-pin').style.display !== 'none') return;
             if(!mesaAtualSelecionada) return alert('Selecione uma mesa!');
             const dadosMesa = mesas[mesaAtualSelecionada];
             if(dadosMesa.itens.length === 0) return alert('A comanda está vazia, não há nada para transferir!');
@@ -1559,7 +1426,6 @@
         }
 
         function abrirModalCardapio() {
-            if (document.getElementById('tela-pin').style.display !== 'none') return;
             document.getElementById('novo-prod-categoria').innerHTML = categoriasCardapio.map(c => `<option value="${c.key}">${c.label}</option>`).join('');
             document.getElementById('busca-admin-cardapio').value = '';
             renderizarAdminCardapio();
@@ -1678,10 +1544,10 @@
         function abrirModalFechar() {
             const subtotal = calcularTotalMesa();
             if(subtotal <= 0) return alert('A comanda está vazia!');
-            
+
             document.getElementById('fechar-mesa-num').innerText = mesaAtualSelecionada;
             document.getElementById('chk-taxa-servico').checked = true;
-            
+
             document.getElementById('pag-dinheiro').value = "0.00";
             document.getElementById('pag-pix').value = "0.00";
             document.getElementById('pag-credito').value = "0.00";
@@ -1719,15 +1585,15 @@
 
             const diferenca = informado - total;
 
-            if (diferenca >= -0.01) { 
+            if (diferenca >= -0.01) {
                 linhaFalta.style.display = 'none';
                 linhaTroco.style.display = 'flex';
                 document.getElementById('resumo-troco').innerText = formatarMoeda(diferenca);
-                
+
                 btnConfirmar.disabled = false;
                 btnConfirmar.style.opacity = '1';
                 btnConfirmar.style.cursor = 'pointer';
-            } else { 
+            } else {
                 linhaTroco.style.display = 'none';
                 linhaFalta.style.display = 'flex';
                 document.getElementById('resumo-falta').innerText = formatarMoeda(Math.abs(diferenca));
@@ -1743,14 +1609,13 @@
             document.getElementById('modal-fechar').style.display = 'none';
             document.getElementById('modal-historico').style.display = 'none';
             document.getElementById('modal-cardapio').style.display = 'none';
-            document.getElementById('modal-funcionarios').style.display = 'none';
             document.getElementById('modal-auditoria').style.display = 'none';
             document.getElementById('modal-backup').style.display = 'none';
         }
 
         function salvarVendaNoHistorico(mesaId, cliente, itens, total, pagamentos, troco, dataHora, subtotal, taxa) {
             let historico = JSON.parse(localStorage.getItem('historico_vendas_caicara')) || [];
-            
+
             const registro = {
                 id: `pdv-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
                 mesa: mesaId,
@@ -1823,10 +1688,8 @@
             const origem = document.getElementById('auditoria-filtro-origem').value;
             const funcionario = document.getElementById('auditoria-filtro-funcionario').value;
             const acao = document.getElementById('auditoria-filtro-acao').value.trim().toLowerCase();
-            const funcionarios = [...new Set(registros.map(registro => registro.nome || registro.funcionario).filter(Boolean))].sort((a, b) => String(a).localeCompare(String(b), 'pt-BR'));
-            const seletorFuncionario = document.getElementById('auditoria-filtro-funcionario');
-            if (seletorFuncionario && seletorFuncionario.options.length <= 1) seletorFuncionario.innerHTML = '<option value="todos">Todos os funcionários</option>' + funcionarios.map(nome => `<option value="${escaparHtmlPdv(nome)}">${escaparHtmlPdv(nome)}</option>`).join('');
-            const limiteInicio = inicio ? new Date(`${inicio}T00:00:00`).getTime() : 0;
+                const seletorFuncionario = document.getElementById('auditoria-filtro-funcionario');
+                const limiteInicio = inicio ? new Date(`${inicio}T00:00:00`).getTime() : 0;
             const limiteFim = fim ? new Date(`${fim}T23:59:59.999`).getTime() : Number.MAX_SAFE_INTEGER;
             const filtrados = registros.filter(registro => {
                 const criadoEm = Number(registro.criadoEm) || 0;
@@ -1842,7 +1705,7 @@
             document.getElementById('modal-backup').style.display = 'flex';
         }
 
-        const CAMINHOS_BACKUP_PDV = ['mesas', 'vendas', 'pedidosProducao', 'funcionarios', 'cardapio', 'configuracoes', 'auditoria', 'cancelamentos', 'fechamentosCaixa'];
+        const CAMINHOS_BACKUP_PDV = ['mesas', 'vendas', 'pedidosProducao', 'cardapio', 'configuracoes', 'auditoria', 'cancelamentos', 'fechamentosCaixa'];
         async function exportarBackupFirebase() {
             const status = document.getElementById('backup-status');
             status.innerText = 'Lendo dados do Firebase...';
@@ -2004,12 +1867,12 @@
             const dataAtualStr = new Date().toLocaleString('pt-BR');
 
             salvarVendaNoHistorico(
-                mesaAtualSelecionada, 
-                cliente, 
-                JSON.parse(JSON.stringify(mesas[mesaAtualSelecionada].itens)), 
-                total, 
-                {dinheiro, pix, credito, debito}, 
-                troco, 
+                mesaAtualSelecionada,
+                cliente,
+                JSON.parse(JSON.stringify(mesas[mesaAtualSelecionada].itens)),
+                total,
+                {dinheiro, pix, credito, debito},
+                troco,
                 dataAtualStr,
                 subtotal,
                 taxa
@@ -2043,7 +1906,7 @@
             });
 
             fecharModais();
-            
+
             setTimeout(() => {
                 document.body.classList.add('print-mode-caixa');
                 window.print();
@@ -2061,8 +1924,8 @@
         }
 
         function formatarMoeda(valor) { return valor.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }); }
-        function atualizarRelogio() { 
-            document.getElementById('relogio').innerText = new Date().toLocaleString('pt-BR'); 
+        function atualizarRelogio() {
+            document.getElementById('relogio').innerText = new Date().toLocaleString('pt-BR');
             gerarMesas(); // Atualiza o alerta de tempo das mesas periodicamente
         }
     </script>
