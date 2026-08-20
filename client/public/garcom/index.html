@@ -156,6 +156,32 @@
         .acoes-comanda-g .btn-enviar-g { flex-basis:100%; order:-1; }
     }
     @media (min-width: 601px) and (max-width: 900px) { .grid-mesas { grid-template-columns:repeat(4, minmax(0,1fr)); } }
+
+    .sr-only { position:absolute; width:1px; height:1px; padding:0; margin:-1px; overflow:hidden; clip:rect(0,0,0,0); white-space:nowrap; border:0; }
+    .mesa-btn.flash-novo { animation: mesa-novo-chegou .72s ease-out 2; }
+    @keyframes mesa-novo-chegou { 0% { transform:scale(1); } 45% { transform:scale(1.06); box-shadow:0 0 0 7px rgba(230,107,69,.24), 0 5px 0 #93351F, 0 14px 28px rgba(217,87,53,.30); } 100% { transform:scale(1); } }
+    .cardapio-toolbar-g { display:flex; align-items:center; justify-content:space-between; gap:10px; padding:12px 12px 8px; background:rgba(255,255,255,.78); border-bottom:1px solid var(--border); }
+    .cardapio-toolbar-g strong { color:var(--secondary); font-family:Georgia,serif; font-size:.95rem; }
+    #grid-produtos-g { padding:12px; grid-template-columns:repeat(auto-fit, minmax(150px,1fr)); gap:12px; background:linear-gradient(180deg,#F6FAF8,#F8F7F2); }
+    .prod-card-g { min-height:108px; display:flex; flex-direction:column; justify-content:space-between; border:2px solid rgba(11,89,99,.09); border-radius:15px; padding:13px; background:#fff; text-align:left; cursor:pointer; box-shadow:0 4px 0 rgba(18,62,72,.08),0 8px 18px rgba(18,62,72,.06); transition:transform .15s ease, border-color .15s ease, box-shadow .15s ease; }
+    .prod-card-g:hover, .prod-card-g:focus-visible { transform:translateY(-2px); border-color:var(--info); outline:none; box-shadow:0 5px 0 rgba(18,62,72,.10),0 12px 22px rgba(18,62,72,.12); }
+    .prod-card-g:active { transform:translateY(2px) scale(.98); }
+    .prod-card-g h4 { font-size:.88rem; line-height:1.25; color:var(--secondary); margin:0 0 9px; }
+    .prod-card-g p { color:var(--success); font-size:1rem; font-weight:900; margin:0; }
+    .prod-card-g small { color:var(--info); font-size:.7rem; display:block; margin-top:8px; }
+    #comanda-toggle { min-height:48px; display:flex; align-items:center; justify-content:center; gap:4px; padding:12px; letter-spacing:.01em; box-shadow:0 -3px 12px rgba(18,62,72,.08); }
+    #comanda-sheet { max-height:42vh; padding:4px 0; }
+    .item-comanda-g { min-height:58px; gap:10px; padding:10px 13px; }
+    .item-comanda-g .nome { font-size:.86rem; font-weight:800; color:var(--secondary); }
+    .item-comanda-g .obs-g { margin-top:4px; font-size:.72rem; }
+    .qty-ctrl-g { gap:7px; }
+    .qty-ctrl-g button { width:34px; height:34px; font-size:1.05rem; box-shadow:0 2px 0 rgba(18,62,72,.14); }
+    #modal-fechar-g .modal-g { border:2px solid var(--border); padding:22px; }
+    #modal-fechar-g .modal-g h3 { font-size:1.25rem; }
+    #modal-fechar-g .modal-g p { padding:12px; border-radius:10px; background:#fff; border:1px solid var(--border); }
+    #modal-fechar-g select, #modal-fechar-g input { min-height:48px; font-size:1rem; }
+    .botoes-modal-g button { min-height:52px; font-size:.84rem; box-shadow:0 3px 0 rgba(18,62,72,.12); }
+    @media (max-width:600px) { #grid-produtos-g { grid-template-columns:repeat(2,minmax(0,1fr)); } .prod-card-g { min-height:116px; } .botoes-modal-g { flex-direction:column-reverse; } }
 </style>
 <link rel="manifest" href="/garcom/manifest.json">
 <meta name="theme-color" content="#0F4C5C">
@@ -176,6 +202,7 @@
     </div>
 
     <div id="tela-mesas">
+        <div id="aviso-novo-pedido-g" class="sr-only" aria-live="polite"></div>
         <div class="legenda-mesas-g" aria-label="Legenda dos estados das mesas"><span><i></i> Livre</span><span class="ocupada"><i></i> Ocupada</span><span class="nova"><i></i> Pedido novo</span></div>
         <div class="secao-titulo">🍽️ Salão</div>
         <div class="grid-mesas" id="grid-salao-g"></div>
@@ -349,6 +376,7 @@
     let categoriaAtual = 'favoritos';
     let comandaAberta = false;
     let monitoramentoFuncionarioRef = null;
+    let mesasProntasG = false;
 
     const formatarMoeda = (v) => `R$ ${v.toFixed(2).replace('.', ',')}`;
 
@@ -364,8 +392,13 @@
     });
 
     db.ref('mesas').on('value', (snap) => {
-        mesas = normalizarMesas(snap.val());
+        const mesasAnteriores = mesas;
+        const mesasAtualizadas = normalizarMesas(snap.val());
+        const novosPedidos = mesasProntasG ? Object.keys(mesasAtualizadas).filter(numero => mesaTemPedidoNovoG(mesasAtualizadas[numero]) && !mesaTemPedidoNovoG(mesasAnteriores[numero])) : [];
+        mesas = mesasAtualizadas;
         renderizarMesasG();
+        novosPedidos.forEach(numero => notificarNovoPedidoG(numero));
+        mesasProntasG = true;
         if (mesaSelecionada && mesas[mesaSelecionada]) {
             renderizarComandaG();
         }
@@ -413,6 +446,30 @@
         return db.ref('mesas').set(mesas);
     }
 
+    function mesaTemPedidoNovoG(mesa) { return Boolean(mesa && Array.isArray(mesa.itens) && mesa.itens.some(item => item && item.enviado === false)); }
+    function tocarNovoPedidoG() {
+        try {
+            if (window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+            const AudioContextG = window.AudioContext || window.webkitAudioContext;
+            if (!AudioContextG) return;
+            const contexto = new AudioContextG();
+            const oscilador = contexto.createOscillator();
+            const ganho = contexto.createGain();
+            oscilador.type = 'sine'; oscilador.frequency.value = 660;
+            ganho.gain.setValueAtTime(0.0001, contexto.currentTime);
+            ganho.gain.exponentialRampToValueAtTime(0.035, contexto.currentTime + 0.02);
+            ganho.gain.exponentialRampToValueAtTime(0.0001, contexto.currentTime + 0.18);
+            oscilador.connect(ganho); ganho.connect(contexto.destination); oscilador.start(); oscilador.stop(contexto.currentTime + 0.2);
+            oscilador.addEventListener('ended', () => contexto.close().catch(() => {}));
+        } catch (erro) { console.debug('Sinal sonoro indisponível:', erro); }
+    }
+    function notificarNovoPedidoG(numero) {
+        const botao = document.getElementById(`mesa-btn-g-${numero}`);
+        if (botao) { botao.classList.add('flash-novo'); setTimeout(() => botao.classList.remove('flash-novo'), 1600); }
+        const aviso = document.getElementById('aviso-novo-pedido-g');
+        if (aviso) aviso.textContent = `Novo pedido recebido na mesa ${numero}.`;
+        tocarNovoPedidoG();
+    }
     function renderizarMesasG() {
         const gridSalao = document.getElementById('grid-salao-g');
         const gridDeck = document.getElementById('grid-deck-g');
@@ -428,7 +485,7 @@
             const total = mesas[i].itens.reduce((soma, item) => soma + ((Number(item.preco) || 0) * (Number(item.qtd) || 0)), 0);
             const estado = novo ? 'Pedido novo' : ocupada ? 'Ocupada' : 'Livre';
             const resumo = ocupada ? `${mesas[i].itens.length} item(ns) · ${formatarMoeda(total)}` : 'Toque para abrir';
-            gridSalao.innerHTML += `<button class="mesa-btn ${ocupada ? 'occupied' : ''} ${novo ? 'novo-pedido' : ''}" aria-label="Mesa ${i}: ${estado}" title="Mesa ${i}: ${estado}" onclick="selecionarMesaG(${i})"><span class="mesa-btn__state">${estado}</span><strong class="mesa-btn__number">${i}</strong><span class="mesa-btn__meta">${resumo}</span></button>`;
+            gridSalao.innerHTML += `<button id="mesa-btn-g-${i}" class="mesa-btn ${ocupada ? 'occupied' : ''} ${novo ? 'novo-pedido' : ''}" aria-label="Mesa ${i}: ${estado}" title="Mesa ${i}: ${estado}" onclick="selecionarMesaG(${i})"><span class="mesa-btn__state">${estado}</span><strong class="mesa-btn__number">${i}</strong><span class="mesa-btn__meta">${resumo}</span></button>`;
         }
         for (let i = 50; i <= 65; i++) {
             if (!mesas[i]) mesas[i] = mesaVazia();
@@ -438,7 +495,7 @@
             const total = mesas[i].itens.reduce((soma, item) => soma + ((Number(item.preco) || 0) * (Number(item.qtd) || 0)), 0);
             const estado = novo ? 'Pedido novo' : ocupada ? 'Ocupada' : 'Livre';
             const resumo = ocupada ? `${mesas[i].itens.length} item(ns) · ${formatarMoeda(total)}` : 'Toque para abrir';
-            gridDeck.innerHTML += `<button class="mesa-btn ${ocupada ? 'occupied' : ''} ${novo ? 'novo-pedido' : ''}" aria-label="Mesa ${i}: ${estado}" title="Mesa ${i}: ${estado}" onclick="selecionarMesaG(${i})"><span class="mesa-btn__state">${estado}</span><strong class="mesa-btn__number">${i}</strong><span class="mesa-btn__meta">${resumo}</span></button>`;
+            gridDeck.innerHTML += `<button id="mesa-btn-g-${i}" class="mesa-btn ${ocupada ? 'occupied' : ''} ${novo ? 'novo-pedido' : ''}" aria-label="Mesa ${i}: ${estado}" title="Mesa ${i}: ${estado}" onclick="selecionarMesaG(${i})"><span class="mesa-btn__state">${estado}</span><strong class="mesa-btn__number">${i}</strong><span class="mesa-btn__meta">${resumo}</span></button>`;
         }
     }
 
@@ -514,7 +571,7 @@
         }
 
         grid.innerHTML = filtrados.map(p => `
-            <div class="prod-card-g" onclick="adicionarItemG(${p.id})">
+            <div class="prod-card-g" role="button" tabindex="0" aria-label="Adicionar ${p.nome}, ${formatarMoeda(p.preco)}" onclick="adicionarItemG(${p.id})" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();adicionarItemG(${p.id})}">
                 <h4>${p.nome}</h4>
                 <p>${formatarMoeda(p.preco)}</p>
                 ${p.servePara2 ? '<small>🍽️ Serve 2 pessoas</small>' : ''}
@@ -529,7 +586,7 @@
         const resultado = produtos.filter(p => p.ativo !== false && p.nome.toLowerCase().includes(termo));
         if (resultado.length === 0) { grid.innerHTML = '<p class="msg-vazio">Nada encontrado.</p>'; return; }
         grid.innerHTML = resultado.map(p => `
-            <div class="prod-card-g" onclick="adicionarItemG(${p.id})">
+            <div class="prod-card-g" role="button" tabindex="0" aria-label="Adicionar ${p.nome}, ${formatarMoeda(p.preco)}" onclick="adicionarItemG(${p.id})" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();adicionarItemG(${p.id})}">
                 <h4>${p.nome}</h4>
                 <p>${formatarMoeda(p.preco)}</p>
                 ${p.servePara2 ? '<small>🍽️ Serve 2 pessoas</small>' : ''}
