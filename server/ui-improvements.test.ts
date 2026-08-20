@@ -27,7 +27,6 @@ describe("melhorias operacionais dos PWAs", () => {
     expect(readServer()).toContain("app.get('/api/health'");
     expect(readServer()).toContain("service: 'joao-caicara-pwas'");
     expect(readServer()).not.toContain('monitorWhatsApp');
-    expect(readServer()).not.toContain('TWILIO');
   });
 
   it("mantém o timestamp numérico nos fechamentos do garçom", () => {

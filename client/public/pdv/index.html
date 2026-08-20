@@ -608,38 +608,6 @@
 
         // ⚠️ Troque esse PIN pelo combinado com a equipe (é só uma trava simples de tela;
         // a segurança de verdade está nas Regras do Firebase, que exigem login pra ler/escrever os dados).
-        const PIN_CORRETO = "1234";
-
-        async function hashPin(pin) {
-            const bytes = new TextEncoder().encode(String(pin));
-            const digest = await crypto.subtle.digest('SHA-256', bytes);
-            return Array.from(new Uint8Array(digest)).map(byte => byte.toString(16).padStart(2, '0')).join('');
-        }
-        async function obterHashPinCaixa() {
-            const snapshot = { val: () => null };
-            return snapshot.val() || await hashPin(PIN_CORRETO);
-        }
-        async function autorizarAdministracao() {
-            const atual = prompt('Digite o PIN atual do caixa para administrar funcionários:');
-            if (!/^\d{4}$/.test(atual || '')) return false;
-            const autorizado = (await hashPin(atual)) === await obterHashPinCaixa();
-            if (!autorizado) alert('PIN do caixa incorreto.');
-            return autorizado;
-        }
-        function registrarAuditoriaPdv(acao, detalhes) {
-            return db.ref('auditoria').push({ acao, origem: 'pdv', funcionario: 'caixa', detalhes: detalhes || {}, criadoEm: Date.now() });
-        }
-        async function alterarPinCaixa() {
-            if (!(await autorizarAdministracao())) return;
-            const novo = prompt('Digite o novo PIN do caixa (4 dígitos):');
-            if (!/^\d{4}$/.test(novo || '')) return alert('O PIN deve ter exatamente 4 dígitos.');
-            const confirmar = prompt('Digite novamente o novo PIN do caixa para confirmar:');
-            if (confirmar !== novo) return alert('Os PINs não conferem.');
-            await db.ref('configuracoes/pinCaixaHash').set(await hashPin(novo));
-            await registrarAuditoriaPdv('alterar_pin_caixa', {});
-            alert('PIN do caixa alterado com sucesso.');
-        }
-
         firebase.auth().signInAnonymously().catch((erro) => {
             console.error('Erro ao autenticar no Firebase:', erro);
             const statusEl = document.getElementById('status-conexao');
@@ -660,7 +628,7 @@
             else atualizarStatusConexaoPdv('🟢 sincronizado', 'sync-ok');
         }
         firebase.auth().onAuthStateChanged((user) => {
-            if (!user) atualizarStatusConexaoPdv('🔴 sem login', 'sync-error');
+            if (!user) atualizarStatusConexaoPdv('🔴 Firebase não autenticado', 'sync-error');
             else refletirStatusConexaoPdv();
         });
         db.ref('.info/connected').on('value', snap => {
@@ -1642,7 +1610,6 @@
         }
 
         async function registrarFechamentoCaixa() {
-            if (!(await autorizarAdministracao())) return;
             const vendasHoje = vendasCacheDiario.filter(vendaEhDeHoje);
             const totais = vendasHoje.reduce((acc, venda) => {
                 const pagamentos = venda.pagamentos || {};
@@ -1664,7 +1631,6 @@
         }
 
         async function abrirModalAuditoria() {
-            if (!(await autorizarAdministracao())) return;
             const hoje = new Date().toISOString().slice(0, 10);
             document.getElementById('auditoria-data-inicio').value = hoje;
             document.getElementById('auditoria-data-fim').value = hoje;
@@ -1700,7 +1666,6 @@
         }
 
         async function abrirModalBackup() {
-            if (!(await autorizarAdministracao())) return;
             document.getElementById('backup-status').innerText = 'Pronto para exportar ou restaurar.';
             document.getElementById('modal-backup').style.display = 'flex';
         }
@@ -1729,7 +1694,6 @@
 
         async function restaurarBackupFirebase(arquivo) {
             if (!arquivo) return;
-            if (!(await autorizarAdministracao())) return;
             if (!confirm('A restauração substituirá os conjuntos presentes no arquivo. Confirma somente se este backup estiver correto?')) return;
             const status = document.getElementById('backup-status');
             status.innerText = 'Validando arquivo...';

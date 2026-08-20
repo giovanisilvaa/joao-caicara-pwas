@@ -117,13 +117,6 @@
 </head>
 <body>
 
-    <div id="tela-pin" style="display:none;">
-        <h1>🦐 João Caiçara<br>Pedidos - Garçom</h1>
-        <input type="text" id="login-input" placeholder="Identificador do funcionário" autocomplete="username" autocapitalize="none" spellcheck="false">
-        <input type="password" inputmode="numeric" pattern="[0-9]*" autocomplete="current-password" autocapitalize="off" spellcheck="false" enterkeyhint="done" id="pin-input" placeholder="PIN de 4 dígitos" maxlength="4">
-        <button type="button" id="btn-entrar-pin">Entrar</button>
-        <div id="pin-erro">PIN incorreto, tente de novo.</div>
-    </div>
 
     <div class="header">
         <h1 id="header-titulo">Selecione a mesa</h1>
@@ -184,107 +177,6 @@
 <script>
     // ⚠️ Troque esse PIN pelo combinado com a equipe (é só uma trava simples, não é a segurança de verdade -
     // a segurança de verdade está nas Regras do Firebase, que exigem login para ler/escrever os dados).
-    const PIN_CORRETO = "1234";
-
-    async function hashPinGarcom(pin) {
-        const bytes = new TextEncoder().encode(String(pin));
-        const digest = await crypto.subtle.digest('SHA-256', bytes);
-        return Array.from(new Uint8Array(digest)).map(byte => byte.toString(16).padStart(2, '0')).join('');
-    }
-
-    async function conferirPin(event) {
-        if (event) event.preventDefault();
-        const bloqueio = Number(localStorage.getItem('garcom_login_bloqueio') || 0);
-        if (Date.now() < bloqueio) {
-            const segundos = Math.ceil((bloqueio - Date.now()) / 1000);
-            document.getElementById('pin-erro').innerText = `Muitas tentativas. Aguarde ${segundos}s.`;
-            document.getElementById('pin-erro').style.display = 'block';
-            return;
-        }
-        const loginInput = document.getElementById('login-input');
-        const pinInput = document.getElementById('pin-input');
-        const pinErro = document.getElementById('pin-erro');
-        const telaPin = document.getElementById('tela-pin');
-        const login = (loginInput.value || '').trim().toLowerCase();
-        const digitado = (pinInput.value || '').trim();
-        if (!/^\d{4}$/.test(digitado)) {
-            pinErro.innerText = 'O PIN deve ter 4 dígitos.';
-            pinErro.style.display = 'block';
-            return;
-        }
-        try {
-            if (!/^[a-z0-9][a-z0-9._-]{1,30}$/.test(login)) throw new Error('invalid-login');
-            const snapshot = await db.ref('funcionarios').once('value');
-            const funcionarios = Object.entries(snapshot.val() || {});
-            if (funcionarios.length > 0) {
-                const encontrado = funcionarios.find(([, item]) => item && item.login === login && item.ativo !== false);
-                const funcionarioId = encontrado?.[0];
-                const funcionario = encontrado?.[1];
-                if (!funcionario || funcionario.pinHash !== await hashPinGarcom(digitado)) throw new Error('invalid-login');
-                localStorage.setItem('garcom_sessao', JSON.stringify({ funcionarioId, nome: funcionario.nome, login: funcionario.login, funcao: funcionario.funcao, entradaEm: Date.now() }));
-            } else {
-                throw new Error('no-staff-configured');
-            }
-            telaPin.style.display = 'none';
-            pinErro.style.display = 'none';
-            const sessaoLogada = sessaoGarcomAtual();
-            document.getElementById('usuario-logado-g').innerText = sessaoLogada ? `${sessaoLogada.nome} · ${sessaoLogada.funcao}` : 'Sessão ativa';
-            document.getElementById('btn-sair-g').style.display = 'inline-block';
-            document.getElementById('tela-mesas').style.display = 'block';
-            document.getElementById('tela-pedido').style.display = 'none';
-            document.getElementById('header-titulo').innerText = 'Selecione a mesa';
-            localStorage.removeItem('garcom_login_tentativas');
-            localStorage.removeItem('garcom_login_bloqueio');
-            monitorarSessaoGarcom();
-            pinInput.blur();
-            registrarAuditoriaGarcom('login', { login });
-        } catch (erro) {
-            console.error('Falha no login do garçom:', erro);
-            const tentativas = Number(localStorage.getItem('garcom_login_tentativas') || 0) + 1;
-            localStorage.setItem('garcom_login_tentativas', String(tentativas));
-            if (tentativas >= 5) {
-                localStorage.setItem('garcom_login_bloqueio', String(Date.now() + 30_000));
-                localStorage.removeItem('garcom_login_tentativas');
-            }
-            pinErro.innerText = erro.message === 'no-staff-configured' ? 'Cadastre um funcionário no PDV antes de entrar.' : 'Identificador ou PIN incorreto ou serviço indisponível.';
-            pinErro.style.display = 'block';
-            pinInput.value = '';
-            pinInput.focus();
-        }
-    }
-
-    document.addEventListener('DOMContentLoaded', () => {
-        const pinInput = document.getElementById('pin-input');
-        const loginInput = document.getElementById('login-input');
-        const btnEntrarPin = document.getElementById('btn-entrar-pin');
-        if (!pinInput || !loginInput || !btnEntrarPin) return;
-
-        btnEntrarPin.addEventListener('click', conferirPin);
-        pinInput.addEventListener('keydown', (event) => {
-            if (event.key === 'Enter') conferirPin(event);
-        });
-        loginInput.addEventListener('keydown', (event) => {
-            if (event.key === 'Enter') pinInput.focus();
-        });
-    });
-
-    const firebaseConfig = {
-        apiKey: "AIzaSyB7hHYHFZ3L-z-sPmgKbJI75eaWHlSGI3A",
-        authDomain: "joaocaicaratradicao.firebaseapp.com",
-        databaseURL: "https://joaocaicaratradicao-default-rtdb.firebaseio.com",
-        projectId: "joaocaicaratradicao",
-        storageBucket: "joaocaicaratradicao.firebasestorage.app",
-        messagingSenderId: "777982220663",
-        appId: "1:777982220663:web:0af4e9bcbaaec847122972"
-    };
-    firebase.initializeApp(firebaseConfig);
-    const db = firebase.database();
-
-    firebase.auth().signInAnonymously().catch((erro) => {
-        console.error('Erro ao autenticar no Firebase:', erro);
-        document.getElementById('status-conexao').innerText = 'erro de login';
-    });
-
     function atualizarStatusConexaoG(texto, estado = '') {
         const el = document.getElementById('status-conexao');
         if (!el) return;
@@ -352,7 +244,7 @@
         }
     }
     firebase.auth().onAuthStateChanged((user) => {
-        if (!user) atualizarStatusConexaoG('🔴 sem login', 'sync-error');
+        if (!user) atualizarStatusConexaoG('🔴 Firebase não autenticado', 'sync-error');
         else refletirStatusConexaoG();
     });
     db.ref('.info/connected').on('value', snap => {
@@ -474,7 +366,6 @@
     }
 
     function selecionarMesaG(numero) {
-        if (!exigirFuncaoGarcom(['garcom', 'caixa', 'gerente'])) return;
         mesaSelecionada = numero;
         const eraNova = !mesas[numero];
         if (eraNova) {
@@ -496,21 +387,7 @@
         renderizarComandaG();
     }
 
-    function sairGarcom(silencioso = false) {
-        const sessao = sessaoGarcomAtual() || {};
-        db.ref('auditoria').push({ acao: 'logout', origem: 'garcom', funcionario: sessao.login || 'desconhecido', nome: sessao.nome || '', detalhes: { silencioso }, criadoEm: Date.now() });
-        if (monitoramentoFuncionarioRef) { monitoramentoFuncionarioRef.off(); monitoramentoFuncionarioRef = null; }
-        localStorage.removeItem('garcom_sessao');
-        mesaSelecionada = null;
-        document.getElementById('tela-pedido').style.display = 'none';
-        document.getElementById('tela-mesas').style.display = 'none';
-        document.getElementById('btn-voltar').style.display = 'none';
-        document.getElementById('btn-sair-g').style.display = 'none';
-        document.getElementById('tela-pin').style.display = 'flex';
-        document.getElementById('login-input').value = '';
-        document.getElementById('pin-input').value = '';
-    }
-
+    function sairGarcom() { voltarParaMesas(); }
     function voltarParaMesas() {
         mesaSelecionada = null;
         document.getElementById('tela-mesas').style.display = 'block';
@@ -584,7 +461,6 @@
     });
 
     function adicionarItemG(produtoId) {
-        if (!exigirFuncaoGarcom(['garcom', 'caixa', 'gerente'])) return;
         if (!mesaSelecionada) return;
         const produtoBase = produtos.find(p => p.id === produtoId);
         const dadosMesa = mesas[mesaSelecionada];
@@ -606,7 +482,6 @@
     }
 
     function alterarQtdG(index, delta) {
-        if (!exigirFuncaoGarcom(['garcom', 'caixa', 'gerente'])) return;
         const dadosMesa = mesas[mesaSelecionada];
         if (!dadosMesa.itens[index]) return;
         dadosMesa.itens[index].qtd += delta;
@@ -617,7 +492,6 @@
     }
 
     function editarObsG(index) {
-        if (!exigirFuncaoGarcom(['garcom', 'caixa', 'gerente'])) return;
         const dadosMesa = mesas[mesaSelecionada];
         const item = dadosMesa.itens[index];
         if (!item) return;
@@ -678,40 +552,13 @@
         return dados ? dados.itens.reduce((s, item) => s + ((Number(item.preco) || 0) * (Number(item.qtd) || 0)), 0) : 0;
     }
 
-    function sessaoGarcomAtual() {
-        try { return JSON.parse(localStorage.getItem('garcom_sessao') || 'null'); } catch { return null; }
-    }
-    function exigirFuncaoGarcom(funcoes) {
-        const sessao = sessaoGarcomAtual();
-        const expirada = !sessao || !sessao.entradaEm || (Date.now() - sessao.entradaEm > 12 * 60 * 60 * 1000);
-        if (expirada) {
-            if (sessao) sairGarcom(true);
-            else alert('Faça login para continuar.');
-            return false;
-        }
-        if (!funcoes.includes(sessao.funcao)) { alert('Seu perfil não possui autorização para esta operação.'); return false; }
-        return true;
-    }
-    function monitorarSessaoGarcom() {
-        const sessao = sessaoGarcomAtual();
-        if (monitoramentoFuncionarioRef) monitoramentoFuncionarioRef.off();
-        if (!sessao?.funcionarioId) return;
-        monitoramentoFuncionarioRef = db.ref(`funcionarios/${sessao.funcionarioId}`);
-        monitoramentoFuncionarioRef.on('value', snap => {
-            const funcionario = snap.val();
-            if (!funcionario || funcionario.ativo === false) {
-                alert('Este acesso foi inativado no caixa.');
-                sairGarcom(true);
-            }
-        });
-    }
+    function sessaoGarcomAtual() { return { funcionarioId: 'acesso-livre', login: 'livre', nome: 'Acesso livre', funcao: 'operacao', entradaEm: Date.now() }; }
     function registrarAuditoriaGarcom(acao, detalhes) {
         const sessao = sessaoGarcomAtual() || {};
         return db.ref('auditoria').push({ acao, origem: 'garcom', funcionario: sessao.login || 'desconhecido', nome: sessao.nome || '', detalhes: detalhes || {}, criadoEm: Date.now() });
     }
 
     function enviarProducaoG() {
-        if (!exigirFuncaoGarcom(['garcom', 'caixa', 'gerente'])) return;
         if (!mesaSelecionada || !mesas[mesaSelecionada]) return;
         const dadosMesa = mesas[mesaSelecionada];
         const botaoEnviar = document.getElementById('btn-enviar-g');
@@ -757,7 +604,6 @@
     }
 
     function abrirFechamentoG() {
-        if (!exigirFuncaoGarcom(['garcom', 'caixa', 'gerente'])) return;
         if (!mesaSelecionada) return;
         const total = calcularTotalG();
         if (total <= 0) return alert('A comanda está vazia. Lance pelo menos um item antes de fechar.');
@@ -772,7 +618,6 @@
     }
 
     function limparComandaG() {
-        if (!exigirFuncaoGarcom(['caixa', 'gerente'])) return;
         if (!mesaSelecionada || !mesas[mesaSelecionada]) return;
         if (!confirm(`Limpar a comanda da Mesa ${mesaSelecionada}?`)) return;
         mesas[mesaSelecionada] = { itens: [], cliente: '', abertura: null };
@@ -782,7 +627,6 @@
     }
 
     function confirmarFechamentoG() {
-        if (!exigirFuncaoGarcom(['garcom', 'caixa', 'gerente'])) return;
         if (!mesaSelecionada) return;
         const dados = mesas[mesaSelecionada];
         const total = calcularTotalG();
