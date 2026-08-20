@@ -109,6 +109,53 @@
         .acoes-comanda-g .btn-enviar-g { flex-basis:100%; order:-1; }
     }
     @media (prefers-reduced-motion: reduce) { .mesa-btn { transition:none; animation:none; } }
+
+    /* Reestilização operacional v1: cartões de mesa legíveis e alvos de toque maiores. */
+    :root {
+        --bg: #F5F7F4;
+        --card: #FFFFFF;
+        --border: #D8E2DF;
+        --wood: #D8B07A;
+        --primary: #0B5963;
+        --secondary: #123E48;
+        --accent: #E66B45;
+        --success: #2A9D8F;
+    }
+    body { background: linear-gradient(180deg, #EEF5F2 0%, #F8F7F2 48%, #F3EEE5 100%); color:#173D45; }
+    .header { min-height: 68px; padding: 12px clamp(14px, 3vw, 28px); box-shadow: 0 8px 22px rgba(18,62,72,.14); }
+    .header h1 { font-size: clamp(1.15rem, 2.6vw, 1.55rem); letter-spacing: .01em; }
+    .header-meta-g { gap: 8px; }
+    #status-conexao { min-height: 42px; padding: 9px 12px; border-radius: 12px; font-weight: 800; }
+    #tela-mesas { padding: clamp(16px, 3vw, 30px); }
+    .secao-titulo { margin: 18px 0 10px; font-size: .78rem; color: var(--secondary); }
+    .legenda-mesas-g { gap: 8px; margin-bottom: 18px; }
+    .legenda-mesas-g span { min-height: 34px; padding: 7px 11px; font-size: .74rem; font-weight: 700; box-shadow: 0 2px 8px rgba(18,62,72,.06); }
+    .legenda-mesas-g i { width: 11px; height: 11px; }
+    .grid-mesas { grid-template-columns: repeat(auto-fit, minmax(112px, 1fr)); gap: 12px; }
+    .mesa-btn { min-height: 112px; aspect-ratio: auto; display:flex; flex-direction:column; align-items:flex-start; justify-content:center; gap:5px; padding:14px; border-radius:18px; border:2px solid rgba(18,62,72,.10); background:linear-gradient(145deg,#F0D3A7,#D2A66C); color:#173D45; text-align:left; box-shadow:0 5px 0 rgba(18,62,72,.10), 0 12px 22px rgba(18,62,72,.08); transition:transform .16s ease, box-shadow .16s ease, border-color .16s ease, background .16s ease; }
+    .mesa-btn:hover { transform:translateY(-2px); border-color:rgba(11,89,99,.38); }
+    .mesa-btn:active { transform:translateY(2px) scale(.98); box-shadow:0 2px 0 rgba(18,62,72,.10); }
+    .mesa-btn__state { font-size:.66rem; font-weight:900; letter-spacing:.12em; text-transform:uppercase; opacity:.72; }
+    .mesa-btn__number { font-family:Georgia,serif; font-size:2rem; line-height:1; }
+    .mesa-btn__meta { font-size:.68rem; font-weight:700; opacity:.76; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:100%; }
+    .mesa-btn.occupied { background:linear-gradient(145deg,#0F7180,#0B5963); color:#fff; border-color:#084A53; box-shadow:0 5px 0 #063B42, 0 12px 22px rgba(11,89,99,.22); }
+    .mesa-btn.occupied .mesa-btn__state, .mesa-btn.occupied .mesa-btn__meta { opacity:.82; }
+    .mesa-btn.novo-pedido { background:linear-gradient(145deg,#F07D55,#D95735); color:#fff; border-color:#B84227; box-shadow:0 5px 0 #93351F, 0 12px 22px rgba(217,87,53,.24); animation:pulse-novo 1.8s infinite; }
+    .mesa-btn.novo-pedido .mesa-btn__state { opacity:1; }
+    .acoes-comanda-g { gap:10px; padding:12px; }
+    .acoes-comanda-g button { min-height:54px; padding:13px 10px; border-radius:12px; font-size:.82rem; box-shadow:0 4px 0 rgba(18,62,72,.12); }
+    .acoes-comanda-g button:active { transform:translateY(2px) scale(.98); box-shadow:0 1px 0 rgba(18,62,72,.12); }
+    .btn-enviar-g { min-height:60px !important; font-size:.9rem !important; }
+    @media (max-width: 600px) {
+        #tela-mesas { padding:14px; }
+        .grid-mesas { grid-template-columns:repeat(2, minmax(0,1fr)); gap:10px; }
+        .mesa-btn { min-height:112px; padding:13px; }
+        .mesa-btn__number { font-size:1.85rem; }
+        .acoes-comanda-g { position:sticky; bottom:0; z-index:20; padding:10px; background:rgba(255,255,255,.96); backdrop-filter:blur(10px); }
+        .acoes-comanda-g button { flex:1 1 30%; min-height:56px; }
+        .acoes-comanda-g .btn-enviar-g { flex-basis:100%; order:-1; }
+    }
+    @media (min-width: 601px) and (max-width: 900px) { .grid-mesas { grid-template-columns:repeat(4, minmax(0,1fr)); } }
 </style>
 <link rel="manifest" href="/garcom/manifest.json">
 <meta name="theme-color" content="#0F4C5C">
@@ -177,6 +224,30 @@
 <script>
     // ⚠️ Troque esse PIN pelo combinado com a equipe (é só uma trava simples, não é a segurança de verdade -
     // a segurança de verdade está nas Regras do Firebase, que exigem login para ler/escrever os dados).
+    const firebaseConfig = {
+        apiKey: "AIzaSyB7hHYHFZ3L-z-sPmgKbJI75eaWHlSGI3A",
+        authDomain: "joaocaicaratradicao.firebaseapp.com",
+        databaseURL: "https://joaocaicaratradicao-default-rtdb.firebaseio.com",
+        projectId: "joaocaicaratradicao",
+        storageBucket: "joaocaicaratradicao.firebasestorage.app",
+        messagingSenderId: "777982220663",
+        appId: "1:777982220663:web:0af4e9bcbaaec847122972"
+    };
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.database();
+
+    firebase.auth().signInAnonymously().catch((erro) => {
+        console.error('Erro ao autenticar no Firebase:', erro);
+        document.getElementById('status-conexao').innerText = 'erro de login';
+    });
+
+    function atualizarStatusConexaoG(texto, estado = '') {
+        const el = document.getElementById('status-conexao');
+        if (!el) return;
+        el.innerText = texto;
+        el.classList.remove('sync-ok', 'sync-pending', 'sync-error');
+        if (estado) el.classList.add(estado);
+    }
     function atualizarStatusConexaoG(texto, estado = '') {
         const el = document.getElementById('status-conexao');
         if (!el) return;
@@ -354,14 +425,20 @@
             mesas[i] = normalizarMesa(mesas[i]);
             const ocupada = mesas[i].itens.length > 0;
             const novo = ocupada && mesas[i].itens.some(it => it.enviado === false);
-            gridSalao.innerHTML += `<button class="mesa-btn ${ocupada ? 'occupied' : ''} ${novo ? 'novo-pedido' : ''}" onclick="selecionarMesaG(${i})">${i}</button>`;
+            const total = mesas[i].itens.reduce((soma, item) => soma + ((Number(item.preco) || 0) * (Number(item.qtd) || 0)), 0);
+            const estado = novo ? 'Pedido novo' : ocupada ? 'Ocupada' : 'Livre';
+            const resumo = ocupada ? `${mesas[i].itens.length} item(ns) · ${formatarMoeda(total)}` : 'Toque para abrir';
+            gridSalao.innerHTML += `<button class="mesa-btn ${ocupada ? 'occupied' : ''} ${novo ? 'novo-pedido' : ''}" aria-label="Mesa ${i}: ${estado}" title="Mesa ${i}: ${estado}" onclick="selecionarMesaG(${i})"><span class="mesa-btn__state">${estado}</span><strong class="mesa-btn__number">${i}</strong><span class="mesa-btn__meta">${resumo}</span></button>`;
         }
         for (let i = 50; i <= 65; i++) {
             if (!mesas[i]) mesas[i] = mesaVazia();
             mesas[i] = normalizarMesa(mesas[i]);
             const ocupada = mesas[i].itens.length > 0;
             const novo = ocupada && mesas[i].itens.some(it => it.enviado === false);
-            gridDeck.innerHTML += `<button class="mesa-btn ${ocupada ? 'occupied' : ''} ${novo ? 'novo-pedido' : ''}" onclick="selecionarMesaG(${i})">${i}</button>`;
+            const total = mesas[i].itens.reduce((soma, item) => soma + ((Number(item.preco) || 0) * (Number(item.qtd) || 0)), 0);
+            const estado = novo ? 'Pedido novo' : ocupada ? 'Ocupada' : 'Livre';
+            const resumo = ocupada ? `${mesas[i].itens.length} item(ns) · ${formatarMoeda(total)}` : 'Toque para abrir';
+            gridDeck.innerHTML += `<button class="mesa-btn ${ocupada ? 'occupied' : ''} ${novo ? 'novo-pedido' : ''}" aria-label="Mesa ${i}: ${estado}" title="Mesa ${i}: ${estado}" onclick="selecionarMesaG(${i})"><span class="mesa-btn__state">${estado}</span><strong class="mesa-btn__number">${i}</strong><span class="mesa-btn__meta">${resumo}</span></button>`;
         }
     }
 
