@@ -551,6 +551,17 @@
         </div>
     </div>
 
+    <div class="modal-overlay no-print" id="modal-confirmar-limpeza" role="dialog" aria-modal="true" aria-labelledby="titulo-confirmar-limpeza">
+        <div class="modal" style="max-width:430px;">
+            <h3 id="titulo-confirmar-limpeza">Confirmar limpeza da mesa</h3>
+            <p id="texto-confirmar-limpeza" style="margin:12px 0; line-height:1.5;">A comanda será esvaziada e o cliente será removido.</p>
+            <div class="modal-btns">
+                <button class="btn" style="background:var(--primary);" onclick="cancelarLimpezaMesa()">Cancelar</button>
+                <button class="btn" style="background:var(--danger);" onclick="confirmarLimpezaMesa()">Confirmar limpeza</button>
+            </div>
+        </div>
+    </div>
+
     <div class="modal-overlay no-print" id="modal-confirmar-preco" role="dialog" aria-modal="true" aria-labelledby="titulo-confirmar-preco">
         <div class="modal" style="max-width:430px;">
             <h3 id="titulo-confirmar-preco">Confirmar alteração de preço</h3>
@@ -998,6 +1009,7 @@
         let mesas = JSON.parse(localStorage.getItem('mesas_abertas_caicara_cache')) || {};
         let mesaAtualSelecionada = null;
         let alteracaoPrecoPendente = null;
+        let mesaLimpezaPendente = null;
         let categoriaAtual = 'favoritos';
         let vendasCacheDiario = [];
         const formatarDataPainel = (data) => data.toLocaleDateString('pt-BR', { weekday:'short', day:'2-digit', month:'2-digit' });
@@ -1363,14 +1375,26 @@
 
         function limparMesa() {
             if(!mesaAtualSelecionada) return;
-            if(confirm(`Tem certeza que deseja limpar a Mesa ${mesaAtualSelecionada}?`)) {
-                mesas[mesaAtualSelecionada] = { itens: [], cliente: '', abertura: null };
+            mesaLimpezaPendente = mesaAtualSelecionada;
+            document.getElementById('texto-confirmar-limpeza').innerHTML = `A comanda da <strong>Mesa ${mesaAtualSelecionada}</strong> será esvaziada e o nome do cliente será removido. Deseja continuar?`;
+            document.getElementById('modal-confirmar-limpeza').style.display = 'flex';
+        }
+        function cancelarLimpezaMesa() {
+            mesaLimpezaPendente = null;
+            document.getElementById('modal-confirmar-limpeza').style.display = 'none';
+        }
+        function confirmarLimpezaMesa() {
+            const numeroMesa = mesaLimpezaPendente;
+            if(!numeroMesa || !mesas[numeroMesa]) return cancelarLimpezaMesa();
+            mesas[numeroMesa] = { itens: [], cliente: '', abertura: null };
+            if(mesaAtualSelecionada === numeroMesa) {
                 document.getElementById('nome-cliente').value = '';
                 renderizarComanda();
-                gerarMesas();
-                salvarMesas();
-                registrarAuditoriaPdv('limpar_mesa', { mesa: mesaAtualSelecionada });
             }
+            gerarMesas();
+            salvarMesas();
+            registrarAuditoriaPdv('limpar_mesa', { mesa: numeroMesa });
+            cancelarLimpezaMesa();
         }
 
         function imprimirProducao(setor, reimprimirTudo) {
@@ -1690,7 +1714,9 @@
             document.getElementById('modal-auditoria').style.display = 'none';
             document.getElementById('modal-backup').style.display = 'none';
             document.getElementById('modal-confirmar-preco').style.display = 'none';
+            document.getElementById('modal-confirmar-limpeza').style.display = 'none';
             alteracaoPrecoPendente = null;
+            mesaLimpezaPendente = null;
         }
 
         function salvarVendaNoHistorico(mesaId, cliente, itens, total, pagamentos, troco, dataHora, subtotal, taxa) {
