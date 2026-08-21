@@ -313,7 +313,7 @@
                 </div>
             </div>
             <input type="text" id="busca-produto" placeholder="🔎 Buscar item no cardápio..." oninput="buscarProduto()" style="width:100%; padding:10px; margin-bottom:15px; border:1px solid var(--border); border-radius:6px; font-size:0.95rem;">
-            <div class="tabs categoria-tabs">
+            <div class="tabs">
                 <button class="tab active" onclick="filtrarCardapio('favoritos')">Favoritos ⭐</button>
                 <button class="tab" onclick="filtrarCardapio('todos')">Todos</button>
                 <button class="tab" onclick="filtrarCardapio('aperitivos')">Aperitivos</button>
@@ -331,12 +331,6 @@
                 <button class="tab" onclick="filtrarCardapio('destilados')">Destilados</button>
                 <button class="tab" onclick="filtrarCardapio('aguas_refrigerantes')">Águas e Refrigerantes</button>
                 <button class="tab" onclick="filtrarCardapio('sucos')">Sucos</button>
-            </div>
-            <div class="tabs setor-tabs" aria-label="Filtrar produtos por setor">
-                <strong style="align-self:center; color:var(--primary); font-size:.85rem;">Setor:</strong>
-                <button class="tab setor-tab active" onclick="filtrarSetor('todos', this)">Todos</button>
-                <button class="tab setor-tab" onclick="filtrarSetor('cozinha', this)">Cozinha</button>
-                <button class="tab setor-tab" onclick="filtrarSetor('bar', this)">Bar</button>
             </div>
             <div class="products-grid" id="products-grid"></div>
         </div>
@@ -1028,7 +1022,6 @@
         let alteracaoPrecoPendente = null;
         let mesaLimpezaPendente = null;
         let categoriaAtual = 'favoritos';
-        let setorAtual = 'todos';
         let vendasCacheDiario = [];
         const formatarDataPainel = (data) => data.toLocaleDateString('pt-BR', { weekday:'short', day:'2-digit', month:'2-digit' });
         const chaveDataPainel = (data) => `${data.getFullYear()}-${String(data.getMonth()+1).padStart(2,'0')}-${String(data.getDate()).padStart(2,'0')}`;
@@ -1200,7 +1193,7 @@
                 filtrados = produtos.filter(p => p.categoria === categoria);
             }
 
-            filtrados = filtrados.filter(p => p.ativo !== false && (setorAtual === 'todos' || (p.setor || 'cozinha') === setorAtual));
+            filtrados = filtrados.filter(p => p.ativo !== false);
 
             if(filtrados.length === 0) {
                 grid.innerHTML = '<p style="color:#999; grid-column: 1 / -1;">Nenhum item nesta categoria.</p>';
@@ -1221,17 +1214,9 @@
         function filtrarCardapio(categoria) {
             categoriaAtual = categoria;
             document.getElementById('busca-produto').value = '';
-            document.querySelectorAll('.categoria-tabs .tab').forEach(btn => btn.classList.remove('active'));
+            document.querySelectorAll('.tab').forEach(btn => btn.classList.remove('active'));
             if (typeof event !== 'undefined' && event && event.target) event.target.classList.add('active');
             renderizarCardapio(categoria);
-        }
-        function filtrarSetor(setor, botao) {
-            setorAtual = setor;
-            document.querySelectorAll('.setor-tab').forEach(btn => btn.classList.remove('active'));
-            if (botao) botao.classList.add('active');
-            const termo = document.getElementById('busca-produto').value.trim();
-            if (termo) buscarProduto();
-            else renderizarCardapio(categoriaAtual);
         }
 
         function buscarProduto() {
@@ -1243,9 +1228,9 @@
                 return;
             }
 
-            document.querySelectorAll('.categoria-tabs .tab').forEach(btn => btn.classList.remove('active'));
+            document.querySelectorAll('.tab').forEach(btn => btn.classList.remove('active'));
 
-            const resultado = produtos.filter(p => p.ativo !== false && (setorAtual === 'todos' || (p.setor || 'cozinha') === setorAtual) && p.nome.toLowerCase().includes(termo));
+            const resultado = produtos.filter(p => p.ativo !== false && p.nome.toLowerCase().includes(termo));
             grid.innerHTML = '';
 
             if(resultado.length === 0) {
