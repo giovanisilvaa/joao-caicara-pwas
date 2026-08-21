@@ -1085,7 +1085,7 @@
                 const temPedido = mesas[i].itens.length > 0;
                 const classeAtiva = mesaAtualSelecionada === i ? 'active' : '';
                 const classeOcupada = temPedido ? 'occupied' : '';
-                const temNovoPedido = temPedido && mesas[i].itens.some(item => item.enviado === false);
+                const temNovoPedido = temPedido && mesas[i].itens.some(item => item.enviado === false && item.rascunho !== true);
                 const classeNovo = temNovoPedido ? 'novo-pedido' : '';
 
                 // Alerta se mesa estiver aberta há mais de 60 minutos
@@ -1107,7 +1107,7 @@
                 const temPedido = mesas[i].itens.length > 0;
                 const classeAtiva = mesaAtualSelecionada === i ? 'active' : '';
                 const classeOcupada = temPedido ? 'occupied' : '';
-                const temNovoPedido = temPedido && mesas[i].itens.some(item => item.enviado === false);
+                const temNovoPedido = temPedido && mesas[i].itens.some(item => item.enviado === false && item.rascunho !== true);
                 const classeNovo = temNovoPedido ? 'novo-pedido' : '';
 
                 let avisoTempo = '';
