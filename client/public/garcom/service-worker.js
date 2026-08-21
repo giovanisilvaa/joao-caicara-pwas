@@ -1,5 +1,5 @@
-const CACHE_NAME = 'joao-caicara-garcom-v1';
-const APP_SHELL = ['/garcom/', '/garcom/manifest.json', '/manus-storage/joao-caicara-mark_eadc19d3.png'];
+const CACHE_NAME = 'joao-caicara-garcom-v2';
+const APP_SHELL = ['/garcom/', '/garcom/manifest.json', '/tradicao-caicara-logo.webp'];
 self.addEventListener('install', event => {
   event.waitUntil(caches.open(CACHE_NAME).then(cache => cache.addAll(APP_SHELL)).then(() => self.skipWaiting()));
 });
