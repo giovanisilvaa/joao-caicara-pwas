@@ -25,6 +25,7 @@
 
     /* ===== CABEÇALHO ===== */
     .header { background: var(--primary); color: #fff; padding: 12px 15px; display: flex; align-items: center; justify-content: space-between; border-bottom: 3px solid var(--accent); flex-shrink: 0; }
+    .marca-garcom { width: 48px; height: 48px; object-fit: contain; border-radius: 10px; background:#fff; border:2px solid rgba(244,241,222,.9); flex:0 0 auto; }
     .header h1 { font-size: 1.1rem; font-family: 'Georgia', serif; }
     .header .status { font-size: 0.7rem; opacity: 0.9; }
     .header-meta-g { display:flex; align-items:center; gap:8px; margin-left:auto; margin-right:8px; }
@@ -102,6 +103,7 @@
     @media (max-width: 600px) {
         .header { flex-wrap:wrap; gap:6px; }
         .header h1 { max-width:38%; font-size:1rem; }
+        .marca-garcom { width:42px; height:42px; }
         .header-meta-g { gap:4px; margin-right:0; }
         #usuario-logado-g { max-width:116px; overflow:hidden; text-overflow:ellipsis; }
         .acoes-comanda-g { flex-wrap:wrap; }
@@ -204,6 +206,7 @@
 
 
     <div class="header">
+        <img class="marca-garcom" src="/tradicao-caicara-logo.webp" alt="Logo João Caiçara Tradição">
         <h1 id="header-titulo">Selecione a mesa</h1>
         <div class="header-meta-g">
             <span id="usuario-logado-g">Acesso livre</span>
