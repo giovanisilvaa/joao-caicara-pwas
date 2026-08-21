@@ -288,6 +288,8 @@
         const el = document.getElementById('status-conexao');
         if (!el) return;
         el.innerText = texto;
+        el.title = texto;
+        el.setAttribute('aria-label', texto);
         el.classList.remove('sync-ok', 'sync-pending', 'sync-error');
         if (estado) el.classList.add(estado);
     }
@@ -306,7 +308,7 @@
         const pendencias = lerPendenciasG().filter(item => item.tipo !== tipo);
         pendencias.push({ tipo, criadoEm: Date.now(), ...detalhes });
         localStorage.setItem(CHAVE_PENDENCIAS_G, JSON.stringify(pendencias));
-        atualizarStatusConexaoG(`🟠 ${pendencias.length} pendência(s) local(is)`, 'sync-pending');
+        refletirStatusConexaoG();
     }
     function limparPendenciaG(tipo) {
         const pendencias = lerPendenciasG().filter(item => item.tipo !== tipo);
@@ -336,11 +338,11 @@
                 }
                 limparPendenciaG(pendencia.tipo);
             }
-            atualizarStatusConexaoG('🟢 sincronizado', 'sync-ok');
+            atualizarStatusConexaoG('🟢 Firebase online · sincronizado', 'sync-ok');
             alert('Pendência(s) reenviada(s) com sucesso.');
         } catch (erro) {
             console.error('Falha ao reenviar pendências:', erro);
-            atualizarStatusConexaoG('🔴 falha no reenvio', 'sync-error');
+            atualizarStatusConexaoG('🔴 falha ao sincronizar', 'sync-error');
             alert('Não foi possível concluir o reenvio. A pendência foi mantida neste aparelho.');
         }
     }
@@ -351,9 +353,9 @@
         } else if (!firebaseConectadoG) {
             atualizarStatusConexaoG('🟠 conectando Firebase', 'sync-pending');
         } else if (pendencias.length) {
-            atualizarStatusConexaoG(`🟠 ${pendencias.length} pendência(s) local(is)`, 'sync-pending');
+            atualizarStatusConexaoG(`🟠 Firebase online · ${pendencias.length} pendência(s) local(is)`, 'sync-pending');
         } else {
-            atualizarStatusConexaoG('🟢 sincronizado', 'sync-ok');
+            atualizarStatusConexaoG('🟢 Firebase online · sincronizado', 'sync-ok');
         }
     }
     firebase.auth().onAuthStateChanged((user) => {
@@ -741,7 +743,7 @@
             renderizarMesasG();
             registrarAuditoriaGarcom('enviar_producao', { mesa: mesaSelecionada, setores: Object.keys(porSetor).filter(setor => porSetor[setor].length) });
             limparPendenciaG('producao');
-            atualizarStatusConexaoG('🟢 sincronizado', 'sync-ok');
+            atualizarStatusConexaoG('🟢 Firebase online · sincronizado', 'sync-ok');
             if (botaoEnviar) { botaoEnviar.disabled = false; botaoEnviar.classList.remove('is-sending'); }
             alert(`Pedido enviado para ${porSetor.cozinha.length ? 'cozinha' : ''}${porSetor.cozinha.length && porSetor.bar.length ? ' e ' : ''}${porSetor.bar.length ? 'bar' : ''}.`);
         }).catch((erro) => {
