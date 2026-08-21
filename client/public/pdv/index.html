@@ -231,6 +231,21 @@
         .total-display { font-family: Georgia, serif; font-size:1.8rem; }
         .btn-close { box-shadow:0 4px 0 #1d7469; }
         @media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation:none !important; transition:none !important; }         }
+
+        .sr-only { position:absolute; width:1px; height:1px; padding:0; margin:-1px; overflow:hidden; clip:rect(0,0,0,0); white-space:nowrap; border:0; }
+        .btn-alerta-producao { border:2px solid rgba(255,255,255,.55); background:rgba(255,255,255,.12); color:#fff; border-radius:10px; min-height:42px; padding:7px 11px; font-weight:800; cursor:pointer; display:inline-flex; align-items:center; gap:6px; transition:transform .16s ease, background .16s ease, box-shadow .16s ease; }
+        .btn-alerta-producao b { min-width:23px; min-height:23px; display:inline-flex; align-items:center; justify-content:center; border-radius:999px; background:var(--accent); color:#fff; font-size:.75rem; }
+        .btn-alerta-producao.has-new { background:var(--accent); border-color:#fff; box-shadow:0 0 0 4px rgba(230,107,69,.25), 0 7px 16px rgba(0,0,0,.15); animation:pdv-alerta-pulso 1.6s ease-in-out 2; }
+        .btn-alerta-producao:active { transform:scale(.96); }
+        @keyframes pdv-alerta-pulso { 0%,100% { transform:scale(1); } 50% { transform:scale(1.06); } }
+        .producao-painel-heading { display:flex; align-items:center; justify-content:space-between; gap:8px; margin-bottom:10px; }
+        .producao-painel-heading h3 { margin-bottom:0; }
+        #producao-novos-badge { display:none; background:#fff0eb; color:#b84227; border-radius:999px; padding:5px 8px; font-size:.7rem; font-weight:900; }
+        #producao-novos-badge.has-new { display:inline-block; }
+        .producao-card.is-new { border-left-color:var(--accent); animation:pdv-card-novo .65s ease-out 1; }
+        @keyframes pdv-card-novo { 0% { transform:translateX(7px); opacity:.65; } 100% { transform:none; opacity:1; } }
+        @media (prefers-reduced-motion: reduce) { .btn-alerta-producao.has-new, .producao-card.is-new { animation:none; } }
+        @media (max-width:600px) { .btn-alerta-producao { flex:1 1 auto; justify-content:center; order:5; } }
     </style>
 <link rel="manifest" href="/pdv/manifest.json">
 <meta name="theme-color" content="#0F4C5C">
@@ -250,6 +265,9 @@
             <button class="btn-history" onclick="abrirModalHistorico()">📜 Relatório e Histórico</button>
             <button class="btn-history" onclick="abrirModalAuditoria()">🛡️ Auditoria</button>
             <button class="btn-history" onclick="abrirModalBackup()">💾 Backup</button>
+            <button id="btn-alerta-producao" class="btn-alerta-producao" type="button" onclick="abrirPainelProducaoAlertado()" aria-live="polite" aria-label="Pedidos novos da produção">
+                <span aria-hidden="true">🔔</span> <span id="alerta-producao-texto">Produção</span><b id="alerta-producao-count">0</b>
+            </button>
             <button id="btn-sair-pdv" class="btn-history" style="display:none; background:var(--danger);" onclick="sairPdv()">Sair</button>
             <span id="usuario-logado-pdv">Acesso livre</span>
             <span id="status-conexao" class="status-conexao-pdv sync-pending">🟠 conectando Firebase</span>
@@ -263,8 +281,9 @@
         <div class="indicador-diario mesas"><small>Mesas abertas</small><strong id="indicador-mesas">0</strong></div>
     </section>
 
+    <div id="aviso-pedido-pdv" class="sr-only" aria-live="assertive"></div>
     <div id="producao-painel" class="no-print">
-        <h3>Pedidos da produção</h3>
+        <div class="producao-painel-heading"><h3>Pedidos da produção</h3><span id="producao-novos-badge">0 novo(s)</span></div>
         <div class="producao-filtros" aria-label="Filtros da produção">
             <select id="filtro-producao-setor" onchange="alterarFiltroProducao()" aria-label="Filtrar por setor"><option value="todos">Todos os setores</option><option value="cozinha">Cozinha</option><option value="bar">Bar</option></select>
             <select id="filtro-producao-status" onchange="alterarFiltroProducao()" aria-label="Filtrar por status"><option value="pendentes">Pendentes</option><option value="todos">Todos os status</option><option value="recebido">Recebido</option><option value="impresso">Impresso</option><option value="em_preparo">Em preparo</option><option value="pronto">Pronto</option><option value="entregue">Entregue</option><option value="cancelado">Cancelado</option></select>
@@ -641,6 +660,45 @@
         const producaoCache = {};
         let producaoFiltroSetor = 'todos';
         let producaoFiltroStatus = 'pendentes';
+        let producaoInicializada = false;
+        let pedidosNovosPdv = new Set();
+        let pedidoAnteriorPdv = {};
+        function abrirPainelProducaoAlertado() {
+            document.getElementById('producao-painel').style.display = 'block';
+            pedidosNovosPdv.clear(); atualizarAlertaProducaoPdv(); renderizarPainelProducao();
+        }
+        function atualizarAlertaProducaoPdv() {
+            const quantidade = pedidosNovosPdv.size;
+            const botao = document.getElementById('btn-alerta-producao');
+            const contador = document.getElementById('alerta-producao-count');
+            const badge = document.getElementById('producao-novos-badge');
+            const texto = document.getElementById('alerta-producao-texto');
+            if (contador) contador.innerText = quantidade;
+            if (texto) texto.innerText = quantidade ? `${quantidade} novo(s)` : 'Produção';
+            botao?.classList.toggle('has-new', quantidade > 0);
+            if (badge) { badge.innerText = `${quantidade} novo(s)`; badge.classList.toggle('has-new', quantidade > 0); }
+        }
+        function sinalSonoroPedidoPdv() {
+            try {
+                if (window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+                const AudioContextPdv = window.AudioContext || window.webkitAudioContext;
+                if (!AudioContextPdv) return;
+                const contexto = new AudioContextPdv(), oscilador = contexto.createOscillator(), ganho = contexto.createGain();
+                oscilador.type = 'sine'; oscilador.frequency.value = 740; ganho.gain.setValueAtTime(.0001, contexto.currentTime); ganho.gain.exponentialRampToValueAtTime(.035, contexto.currentTime+.02); ganho.gain.exponentialRampToValueAtTime(.0001, contexto.currentTime+.2);
+                oscilador.connect(ganho); ganho.connect(contexto.destination); oscilador.start(); oscilador.stop(contexto.currentTime+.22); oscilador.addEventListener('ended', () => contexto.close().catch(() => {}));
+            } catch (erro) { console.debug('Som de pedido indisponível:', erro); }
+        }
+        function registrarNovosPedidosPdv(cacheAtual) {
+            if (!producaoInicializada) { pedidoAnteriorPdv = JSON.parse(JSON.stringify(cacheAtual)); producaoInicializada = true; return; }
+            const novos = Object.keys(cacheAtual).filter(chave => cacheAtual[chave]?.origem === 'garcom' && !pedidoAnteriorPdv[chave]);
+            if (!novos.length) { pedidoAnteriorPdv = JSON.parse(JSON.stringify(cacheAtual)); return; }
+            novos.forEach(chave => pedidosNovosPdv.add(chave));
+            const mesas = novos.map(chave => cacheAtual[chave]?.mesa).filter(Boolean);
+            const aviso = document.getElementById('aviso-pedido-pdv');
+            if (aviso) aviso.textContent = `${novos.length} novo pedido recebido${mesas.length ? ` da mesa ${mesas.join(', ')}` : ''}.`;
+            sinalSonoroPedidoPdv(); atualizarAlertaProducaoPdv();
+            pedidoAnteriorPdv = JSON.parse(JSON.stringify(cacheAtual));
+        }
         function alterarFiltroProducao() {
             producaoFiltroSetor = document.getElementById('filtro-producao-setor').value;
             producaoFiltroStatus = document.getElementById('filtro-producao-status').value;
@@ -665,6 +723,7 @@
             painel.style.display = painel.style.display === 'block' ? 'none' : 'block';
         }
         function atualizarStatusProducao(chave, status) {
+            if (status !== 'recebido') { pedidosNovosPdv.delete(chave); atualizarAlertaProducaoPdv(); }
             return db.ref(`pedidosProducao/${chave}`).update({ status, atualizadoEm: Date.now() });
         }
         function imprimirPedidoProducao(chave, reimpressao = false) {
@@ -702,7 +761,7 @@
             atualizarPainelDiario();
             document.getElementById('producao-resumo').innerText = `${pedidos.length} pedido(s) no filtro · ${pendentes} pendente(s) no total`;
             document.getElementById('producao-lista').innerHTML = pedidos.slice(0, 12).map(([chave, pedido]) => `
-                <div class="producao-card"><strong>Mesa ${pedido.mesa} · ${String(pedido.setor || '').toUpperCase()}</strong>
+                <div class="producao-card ${typeof pedidosNovosPdv !== 'undefined' && pedidosNovosPdv.has(chave) ? 'is-new' : ''}"><strong>Mesa ${pedido.mesa} · ${String(pedido.setor || '').toUpperCase()}</strong>
                 <small>${(pedido.itens || []).map(item => `${item.qtd}x ${item.nome}`).join(', ')}</small>
                 <select onchange="atualizarStatusProducao('${chave}', this.value)">
                     ${['recebido','impresso','em_preparo','pronto','entregue','cancelado'].map(status => `<option value="${status}" ${pedido.status === status ? 'selected' : ''}>${status.replace('_',' ')}</option>`).join('')}
@@ -715,6 +774,7 @@
         db.ref('pedidosProducao').on('value', snap => {
             Object.keys(producaoCache).forEach(chave => delete producaoCache[chave]);
             snap.forEach(child => { producaoCache[child.key] = child.val() || {}; });
+            registrarNovosPedidosPdv(producaoCache);
             renderizarPainelProducao();
         });
     </script>
