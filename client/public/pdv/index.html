@@ -549,6 +549,17 @@
         </div>
     </div>
 
+    <div class="modal-overlay no-print" id="modal-confirmar-preco" role="dialog" aria-modal="true" aria-labelledby="titulo-confirmar-preco">
+        <div class="modal" style="max-width:430px;">
+            <h3 id="titulo-confirmar-preco">Confirmar alteração de preço</h3>
+            <p id="texto-confirmar-preco" style="margin:12px 0; line-height:1.5;"></p>
+            <div class="modal-btns">
+                <button class="btn" style="background:var(--danger);" onclick="cancelarAlteracaoPreco()">Cancelar</button>
+                <button class="btn" style="background:var(--success);" onclick="confirmarAlteracaoPreco()">Confirmar alteração</button>
+            </div>
+        </div>
+    </div>
+
     <!-- TICKET 1: FECHAMENTO DE CONTA (CAIXA) -->
     <div id="cupom-caixa" class="print-container">
         <div class="t-header">
@@ -975,6 +986,7 @@
         // de um garçom aparece na hora na tela do caixa (e em qualquer outro aparelho conectado).
         let mesas = JSON.parse(localStorage.getItem('mesas_abertas_caicara_cache')) || {};
         let mesaAtualSelecionada = null;
+        let alteracaoPrecoPendente = null;
         let categoriaAtual = 'favoritos';
         let vendasCacheDiario = [];
         const formatarDataPainel = (data) => data.toLocaleDateString('pt-BR', { weekday:'short', day:'2-digit', month:'2-digit' });
@@ -1494,16 +1506,43 @@
             const p = produtos.find(x => x.id === id);
             if(!p) return;
             if(campo === 'preco') {
-                valor = parseFloat(valor);
-                if(isNaN(valor) || valor < 0) {
+                const novoPreco = parseFloat(valor);
+                if(isNaN(novoPreco) || novoPreco < 0) {
                     alert('Preço inválido!');
                     renderizarAdminCardapio(document.getElementById('busca-admin-cardapio').value);
                     return;
                 }
+                const precoAnterior = Number(p.preco) || 0;
+                if(novoPreco !== precoAnterior) {
+                    alteracaoPrecoPendente = { id, novoPreco, precoAnterior, nome: p.nome };
+                    document.getElementById('texto-confirmar-preco').innerHTML = `Deseja realmente alterar o preço de <strong>${p.nome}</strong> de <strong>${formatarMoeda(precoAnterior)}</strong> para <strong>${formatarMoeda(novoPreco)}</strong>?`;
+                    document.getElementById('modal-confirmar-preco').style.display = 'flex';
+                    renderizarAdminCardapio(document.getElementById('busca-admin-cardapio').value);
+                    return;
+                }
+                return;
             }
             p[campo] = valor;
             salvarProdutos();
             renderizarCardapio(categoriaAtual);
+        }
+        function cancelarAlteracaoPreco() {
+            alteracaoPrecoPendente = null;
+            document.getElementById('modal-confirmar-preco').style.display = 'none';
+            renderizarAdminCardapio(document.getElementById('busca-admin-cardapio').value);
+        }
+        function confirmarAlteracaoPreco() {
+            if(!alteracaoPrecoPendente) return;
+            const pendente = alteracaoPrecoPendente;
+            const p = produtos.find(x => x.id === pendente.id);
+            if(p) {
+                p.preco = pendente.novoPreco;
+                salvarProdutos();
+                renderizarCardapio(categoriaAtual);
+            }
+            alteracaoPrecoPendente = null;
+            document.getElementById('modal-confirmar-preco').style.display = 'none';
+            renderizarAdminCardapio(document.getElementById('busca-admin-cardapio').value);
         }
 
         function excluirProdutoAdmin(id) {
@@ -1639,6 +1678,8 @@
             document.getElementById('modal-cardapio').style.display = 'none';
             document.getElementById('modal-auditoria').style.display = 'none';
             document.getElementById('modal-backup').style.display = 'none';
+            document.getElementById('modal-confirmar-preco').style.display = 'none';
+            alteracaoPrecoPendente = null;
         }
 
         function salvarVendaNoHistorico(mesaId, cliente, itens, total, pagamentos, troco, dataHora, subtotal, taxa) {
