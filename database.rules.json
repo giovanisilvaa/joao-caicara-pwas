@@ -1,0 +1,60 @@
+{
+  "rules": {
+    ".read": false,
+    ".write": false,
+
+    "mesas": {
+      ".read": "auth != null",
+      ".write": "auth != null && newData.exists()"
+    },
+
+    "pedidosProducao": {
+      ".read": "auth != null",
+      "$pedidoId": {
+        ".write": "auth != null && newData.exists()",
+        ".validate": "newData.hasChildren(['mesa', 'setor', 'status', 'itens', 'criadoEm']) && newData.child('mesa').isNumber() && (newData.child('setor').val() == 'cozinha' || newData.child('setor').val() == 'bar') && (newData.child('status').val() == 'recebido' || newData.child('status').val() == 'impresso' || newData.child('status').val() == 'em_preparo' || newData.child('status').val() == 'pronto' || newData.child('status').val() == 'entregue' || newData.child('status').val() == 'cancelado') && newData.child('itens').hasChildren() && newData.child('criadoEm').isNumber()"
+      }
+    },
+
+    "cardapio": {
+      ".read": "auth != null",
+      ".write": "auth != null && newData.exists()"
+    },
+
+    "vendas": {
+      ".read": "auth != null",
+      "$vendaId": {
+        ".write": "auth != null && newData.exists()",
+        ".validate": "newData.hasChildren(['mesa', 'itens', 'total', 'criadoEm']) && newData.child('mesa').isNumber() && newData.child('itens').hasChildren() && newData.child('total').isNumber() && newData.child('total').val() >= 0 && newData.child('criadoEm').isNumber()"
+      }
+    },
+
+    "auditoria": {
+      ".read": "auth != null",
+      "$registroId": {
+        ".write": "auth != null && newData.exists()",
+        ".validate": "newData.hasChildren(['acao', 'origem', 'criadoEm']) && newData.child('acao').isString() && newData.child('origem').isString() && newData.child('criadoEm').isNumber()"
+      }
+    },
+
+    "cancelamentos": {
+      ".read": "auth != null",
+      "$cancelamentoId": {
+        ".write": "auth != null && newData.exists()"
+      }
+    },
+
+    "fechamentosCaixa": {
+      ".read": "auth != null",
+      "$fechamentoId": {
+        ".write": "auth != null && newData.exists()",
+        ".validate": "newData.hasChildren(['fechadoEm', 'data', 'vendas']) && newData.child('fechadoEm').isNumber() && newData.child('data').isString() && newData.child('vendas').isNumber()"
+      }
+    },
+
+    "configuracoes": {
+      ".read": false,
+      ".write": false
+    }
+  }
+}
