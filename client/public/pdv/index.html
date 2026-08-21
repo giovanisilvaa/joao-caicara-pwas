@@ -1386,6 +1386,8 @@
         function confirmarLimpezaMesa() {
             const numeroMesa = mesaLimpezaPendente;
             if(!numeroMesa || !mesas[numeroMesa]) return cancelarLimpezaMesa();
+            // Fechar imediatamente para não deixar o diálogo preso caso a rede/auditoria demore.
+            cancelarLimpezaMesa();
             mesas[numeroMesa] = { itens: [], cliente: '', abertura: null };
             if(mesaAtualSelecionada === numeroMesa) {
                 document.getElementById('nome-cliente').value = '';
@@ -1394,7 +1396,6 @@
             gerarMesas();
             salvarMesas();
             registrarAuditoriaPdv('limpar_mesa', { mesa: numeroMesa });
-            cancelarLimpezaMesa();
         }
 
         function imprimirProducao(setor, reimprimirTudo) {
