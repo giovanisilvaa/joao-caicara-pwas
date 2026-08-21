@@ -2,7 +2,7 @@
 <html lang="pt-BR">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>João Caiçara - Pedidos (Garçom)</title>
 <style>
     :root {
@@ -181,7 +181,18 @@
     #modal-fechar-g .modal-g p { padding:12px; border-radius:10px; background:#fff; border:1px solid var(--border); }
     #modal-fechar-g select, #modal-fechar-g input { min-height:48px; font-size:1rem; }
     .botoes-modal-g button { min-height:52px; font-size:.84rem; box-shadow:0 3px 0 rgba(18,62,72,.12); }
-    @media (max-width:600px) { #grid-produtos-g { grid-template-columns:repeat(2,minmax(0,1fr)); } .prod-card-g { min-height:116px; } .botoes-modal-g { flex-direction:column-reverse; } }
+    @media (max-width:600px) {
+        body { height:auto; min-height:100dvh; overflow-x:hidden; overflow-y:auto; }
+        #tela-pedido { min-height:calc(100dvh - 68px); height:auto; overflow:visible; }
+        #grid-produtos-g { flex:0 0 auto; grid-template-columns:repeat(2,minmax(0,1fr)); min-height:0; max-height:none; overflow:visible; }
+        .prod-card-g { min-height:116px; min-width:0; touch-action:manipulation; }
+        .prod-card-g h4 { overflow-wrap:anywhere; }
+        #comanda-toggle { position:relative; z-index:2; padding-bottom:13px; }
+        #comanda-sheet { max-height:42dvh; overflow-y:auto; -webkit-overflow-scrolling:touch; }
+        .acoes-comanda-g { position:sticky; bottom:0; padding:10px 10px calc(10px + env(safe-area-inset-bottom)); }
+        .acoes-comanda-g button { touch-action:manipulation; }
+        .botoes-modal-g { flex-direction:column-reverse; }
+    }
 </style>
 <link rel="manifest" href="/garcom/manifest.json">
 <meta name="theme-color" content="#0F4C5C">
