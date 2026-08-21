@@ -512,7 +512,18 @@
 
             <div class="modal-btns">
                 <button class="btn" style="background: var(--danger);" onclick="fecharModais()">Cancelar</button>
-                <button class="btn" id="btn-confirmar-pagamento" style="background: var(--success);" onclick="imprimirCaixa()" disabled style="opacity: 0.5; cursor: not-allowed;">Confirmar e Imprimir</button>
+                <button class="btn" id="btn-confirmar-pagamento" style="background: var(--success);" onclick="solicitarFechamentoConta()" disabled style="opacity: 0.5; cursor: not-allowed;">Confirmar e Imprimir</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal-overlay no-print" id="modal-confirmar-fechamento" role="dialog" aria-modal="true" aria-labelledby="titulo-confirmar-fechamento">
+        <div class="modal" style="max-width:430px;">
+            <h3 id="titulo-confirmar-fechamento">Confirmar fechamento da conta</h3>
+            <p id="texto-confirmar-fechamento" style="margin:12px 0; line-height:1.5;"></p>
+            <div class="modal-btns">
+                <button class="btn" style="background:var(--primary);" onclick="cancelarFechamentoConta()">Voltar</button>
+                <button class="btn" style="background:var(--success);" onclick="confirmarFechamentoConta()">Confirmar fechamento</button>
             </div>
         </div>
     </div>
@@ -1716,6 +1727,7 @@
             document.getElementById('modal-backup').style.display = 'none';
             document.getElementById('modal-confirmar-preco').style.display = 'none';
             document.getElementById('modal-confirmar-limpeza').style.display = 'none';
+            document.getElementById('modal-confirmar-fechamento').style.display = 'none';
             alteracaoPrecoPendente = null;
             mesaLimpezaPendente = null;
         }
@@ -1958,6 +1970,20 @@
             document.body.classList.remove('print-mode-relatorio');
         }
 
+        function solicitarFechamentoConta() {
+            if(!mesaAtualSelecionada || !mesas[mesaAtualSelecionada]) return alert('Selecione uma mesa!');
+            const { total } = calcularTotalComTaxa('chk-taxa-servico');
+            const mesa = mesaAtualSelecionada;
+            document.getElementById('texto-confirmar-fechamento').innerHTML = `A <strong>Mesa ${mesa}</strong> será fechada e o pagamento de <strong>${formatarMoeda(total)}</strong> será registrado. Deseja continuar?`;
+            document.getElementById('modal-confirmar-fechamento').style.display = 'flex';
+        }
+        function cancelarFechamentoConta() {
+            document.getElementById('modal-confirmar-fechamento').style.display = 'none';
+        }
+        function confirmarFechamentoConta() {
+            document.getElementById('modal-confirmar-fechamento').style.display = 'none';
+            imprimirCaixa();
+        }
         function imprimirCaixa() {
             const { subtotal, taxa, total } = calcularTotalComTaxa('chk-taxa-servico');
             const cliente = mesas[mesaAtualSelecionada].cliente;
