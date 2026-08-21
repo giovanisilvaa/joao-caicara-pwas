@@ -713,7 +713,8 @@
             const ref = db.ref('pedidosProducao').push();
             refsCriadas.push(ref);
             pedido.chave = ref.key;
-            return ref.set({ ...pedido, chave: undefined });
+            const { chave, ...payload } = pedido;
+            return ref.set(payload);
         });
         comTimeoutG(Promise.all(gravacoes)).then(() => {
             // Só confirma no Firebase depois que todos os pedidos por setor foram criados.
