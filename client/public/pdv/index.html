@@ -240,6 +240,8 @@
         @keyframes pdv-alerta-pulso { 0%,100% { transform:scale(1); } 50% { transform:scale(1.06); } }
         .producao-painel-heading { display:flex; align-items:center; justify-content:space-between; gap:8px; margin-bottom:10px; }
         .producao-painel-heading h3 { margin-bottom:0; }
+        .btn-fechar-producao { border:0; border-radius:8px; background:var(--primary); color:#fff; min-height:36px; padding:7px 11px; font-weight:800; cursor:pointer; }
+        .btn-fechar-producao:active { transform:scale(.96); }
         #producao-novos-badge { display:none; background:#fff0eb; color:#b84227; border-radius:999px; padding:5px 8px; font-size:.7rem; font-weight:900; }
         #producao-novos-badge.has-new { display:inline-block; }
         .producao-card.is-new { border-left-color:var(--accent); animation:pdv-card-novo .65s ease-out 1; }
@@ -283,7 +285,7 @@
 
     <div id="aviso-pedido-pdv" class="sr-only" aria-live="assertive"></div>
     <div id="producao-painel" class="no-print">
-        <div class="producao-painel-heading"><h3>Pedidos da produção</h3><span id="producao-novos-badge">0 novo(s)</span></div>
+        <div class="producao-painel-heading"><h3>Pedidos da produção</h3><span id="producao-novos-badge">0 novo(s)</span><button type="button" class="btn-fechar-producao" onclick="fecharPainelProducao()" aria-label="Fechar painel de produção">Fechar</button></div>
         <div class="producao-filtros" aria-label="Filtros da produção">
             <select id="filtro-producao-setor" onchange="alterarFiltroProducao()" aria-label="Filtrar por setor"><option value="todos">Todos os setores</option><option value="cozinha">Cozinha</option><option value="bar">Bar</option></select>
             <select id="filtro-producao-status" onchange="alterarFiltroProducao()" aria-label="Filtrar por status"><option value="pendentes">Pendentes</option><option value="todos">Todos os status</option><option value="recebido">Recebido</option><option value="impresso">Impresso</option><option value="em_preparo">Em preparo</option><option value="pronto">Pronto</option><option value="entregue">Entregue</option><option value="cancelado">Cancelado</option></select>
@@ -729,10 +731,19 @@
             gerarMesas();
             fecharModais();
         }
+        function fecharPainelProducao() {
+            const painel = document.getElementById('producao-painel');
+            if (painel) painel.style.display = 'none';
+        }
         function toggleProducao() {
             const painel = document.getElementById('producao-painel');
-            painel.style.display = painel.style.display === 'block' ? 'none' : 'block';
+            if (!painel) return;
+            if (painel.style.display === 'block') fecharPainelProducao();
+            else abrirPainelProducaoAlertado();
         }
+        document.addEventListener('keydown', event => {
+            if (event.key === 'Escape') fecharPainelProducao();
+        });
         function atualizarStatusProducao(chave, status) {
             if (status !== 'recebido') { pedidosNovosPdv.delete(chave); atualizarAlertaProducaoPdv(); }
             return db.ref(`pedidosProducao/${chave}`).update({ status, atualizadoEm: Date.now() });
