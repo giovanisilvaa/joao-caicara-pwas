@@ -14,6 +14,14 @@ describe("melhorias operacionais dos PWAs", () => {
     expect(html).toContain("atualizarStatusConexaoG");
   });
 
+  it("mantém resumo fixo do envio separado por setor", () => {
+    const html = readPwa("garcom");
+    expect(html).toContain("resumo-envio-g");
+    expect(html).toContain("novosCozinha");
+    expect(html).toContain("novosBar");
+    expect(html).toContain("Todos os itens já foram enviados");
+  });
+
   it("mostra estados detalhados de conexão nos dois PWAs", () => {
     const garcom = readPwa("garcom");
     const pdv = readPwa("pdv");
@@ -47,7 +55,7 @@ describe("melhorias operacionais dos PWAs", () => {
         setItem: (chave: string, valor: string) => armazenamento.set(chave, valor),
       },
       navigator: { onLine: true },
-      document: { getElementById: () => ({ innerText: "", classList: { remove() {}, add() {} } }) },
+      document: { getElementById: () => ({ innerText: "", title: "", setAttribute() {}, classList: { remove() {}, add() {} } }) },
       db: { ref: (caminho: string) => ({ set: async (payload: unknown) => { escritas.push({ caminho, payload }); } }) },
       alert: () => {},
       console,
@@ -79,7 +87,7 @@ describe("melhorias operacionais dos PWAs", () => {
         setItem: (chave: string, valor: string) => armazenamento.set(chave, valor),
       },
       navigator: { onLine: true },
-      document: { getElementById: () => ({ innerText: "", classList: { remove() {}, add() {} } }) },
+      document: { getElementById: () => ({ innerText: "", title: "", setAttribute() {}, classList: { remove() {}, add() {} } }) },
       db: { ref: (caminho: string) => ({
         set: async (payload: unknown) => { escritas.push({ caminho, payload }); },
       }) },
@@ -131,6 +139,14 @@ describe("melhorias operacionais dos PWAs", () => {
     expect(html).toContain("renderizarAuditoria");
     expect(html).toContain("fechamentosCaixa");
     expect(html).toContain("CAMINHOS_BACKUP_PDV");
+  });
+
+  it("mantém no PDV resumo operacional fixo da comanda", () => {
+    const html = readPwa("pdv");
+    expect(html).toContain("resumo-operacional-pdv");
+    expect(html).toContain("pendentesCozinha");
+    expect(html).toContain("pendentesBar");
+    expect(html).toContain("Comanda sincronizada");
   });
 
   it("mantém no PDV os filtros de produção e a identificação do operador", () => {

@@ -249,7 +249,8 @@
         @media (prefers-reduced-motion: reduce) { .btn-alerta-producao.has-new, .producao-card.is-new { animation:none; } }
         @media (max-width:600px) { .btn-alerta-producao { flex:1 1 auto; justify-content:center; order:5; } }
     </style>
-<link rel="manifest" href="/pdv/manifest.json">
+    <link rel="stylesheet" href="/shared/pwa-theme.css">
+    <link rel="manifest" href="/pdv/manifest.json">
 <meta name="theme-color" content="#0F4C5C">
 <link rel="apple-touch-icon" href="/tradicao-caicara-logo.webp">
 <style>body{background-image:linear-gradient(rgba(247,244,236,.9),rgba(247,244,236,.9)),url("/manus-storage/joao-caicara-pdv-bg_e9179969.jpg");background-size:cover;background-attachment:fixed;}</style>
@@ -344,6 +345,7 @@
                 <p style="text-align:center; color:#999; margin-top: 20px;">Nenhuma mesa selecionada.</p>
             </div>
             <div class="order-footer">
+                <div id="resumo-operacional-pdv" class="resumo-operacional-pdv" role="status" aria-live="polite">Selecione uma mesa para visualizar a comanda</div>
                 <div class="total-display">
                     <span>Total:</span>
                     <span id="total-valor">R$ 0,00</span>
@@ -749,6 +751,11 @@
             document.getElementById('nome-cliente').value = '';
             document.getElementById('order-items').innerHTML = '<p style="text-align:center; color:#999; margin-top:20px;">Nenhuma mesa selecionada.</p>';
             document.getElementById('total-valor').innerText = formatarMoeda(0);
+            const resumoOperacional = document.getElementById('resumo-operacional-pdv');
+            if (resumoOperacional) {
+                resumoOperacional.classList.remove('has-pending');
+                resumoOperacional.innerText = 'Selecione uma mesa para visualizar a comanda';
+            }
             document.getElementById('producao-painel').style.display = 'none';
             document.getElementById('btn-sair-pdv').style.display = 'none';
             document.getElementById('usuario-logado-pdv').innerText = 'Não identificado';
@@ -1346,13 +1353,24 @@
             return mesas[mesaAtualSelecionada].itens.reduce((acc, item) => acc + (item.preco * item.qtd), 0);
         }
 
-        function renderizarComanda() {
+                function renderizarComanda() {
             const container = document.getElementById('order-items');
+            const resumo = document.getElementById('resumo-operacional-pdv');
             const dadosMesa = mesas[mesaAtualSelecionada];
             const total = calcularTotalMesa();
-
             document.getElementById('total-valor').innerText = formatarMoeda(total);
-
+            const itens = dadosMesa?.itens || [];
+            const pendentes = itens.filter(item => item.enviado === false);
+            const pendentesCozinha = pendentes.filter(item => item.setor !== 'bar').reduce((soma, item) => soma + (Number(item.qtd) || 0), 0);
+            const pendentesBar = pendentes.filter(item => item.setor === 'bar').reduce((soma, item) => soma + (Number(item.qtd) || 0), 0);
+            if (resumo) {
+                resumo.classList.toggle('has-pending', pendentes.length > 0);
+                resumo.innerHTML = !dadosMesa
+                    ? 'Selecione uma mesa para visualizar a comanda'
+                    : pendentes.length
+                        ? `<strong>${pendentes.reduce((soma, item) => soma + (Number(item.qtd) || 0), 0)} item(ns) pendente(s)</strong> · ${pendentesCozinha} cozinha · ${pendentesBar} bar`
+                        : 'Comanda sincronizada · nenhum item pendente';
+            }
             if(!dadosMesa || dadosMesa.itens.length === 0) {
                 container.innerHTML = '<p style="text-align:center; color:#999; margin-top: 20px;">Comanda vazia.</p>';
                 return;

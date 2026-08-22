@@ -67,3 +67,34 @@
 - [x] Validar no PDV publicado a restauração controlada de um backup seguro, sem substituir dados operacionais reais; usuário confirmou que funcionou.
 - [x] Validar no PDV publicado o fluxo Registrar Fechamento, incluindo valor esperado, valor contado e diferença; usuário confirmou que funcionou.
 - [x] Salvar o checkpoint final somente após essas duas confirmações específicas.
+
+- [ ] Migrar o login anônimo dos PWAs para contas identificadas do Firebase e custom claims (`garcom`/`caixa`); etapa adiada pelo usuário.
+- [ ] Revisar e publicar regras do Realtime Database por perfil somente após a migração de autenticação.
+- [x] Manter as regras atuais e o login sem alterações enquanto a autenticação por perfis estiver adiada.
+
+---
+
+Nota de decisão: o alerta de segurança do Firebase permanece pendente. As regras atuais exigem autenticação anônima, mas ainda não diferenciam funções; não publicar novas regras restritivas por perfil antes de existir uma identidade confiável para cada funcionário.
+
+---
+
+Nota técnica: após a última revisão, os testes automatizados estão 12/12 aprovados, o TypeScript passa e o build de produção passa sem os avisos de analytics.
+
+- [x] Criar fundação visual compartilhada para os PWAs do Garçom e do PDV, com tokens, foco acessível, estados de sincronização, controles, superfícies e responsividade comum.
+- [x] Vincular `client/public/shared/pwa-theme.css` aos dois PWAs e validar links, TypeScript, testes, build e integridade do diff.
+
+- [x] Fixar a comanda do Garçom na parte inferior da tela, com total e ação de envio sempre acessíveis.
+- [x] Adicionar resumo de itens pendentes separado por cozinha e bar, com estado visual e acessibilidade.
+- [x] Validar o controle expansível da comanda, responsividade, TypeScript, testes e build.
+
+- [x] Aplicar no Caixa/PDV uma comanda rolável com rodapé financeiro e ações persistentes em telas menores.
+- [x] Adicionar resumo operacional com itens pendentes separados entre cozinha e bar.
+- [x] Adicionar teste do resumo operacional do PDV e validar 14 testes, TypeScript e build.
+
+- [x] Aplicar a direção visual moderno caiçara aos dois PWAs por meio da fundação compartilhada.
+- [x] Refinar cabeçalhos, superfícies, cartões, mesas, abas, campos e ações sem alterar os fluxos operacionais.
+- [x] Validar a renovação visual com `git diff --check`, TypeScript, 14 testes automatizados e build de produção.
+
+- [x] Publicar a versão sem senha/PIN no Firebase Hosting do projeto `joaocaicaratradicao`.
+- [x] Validar `https://joaocaicaratradicao.web.app/garcom/` e `/pdv/` sem campos de login/PIN.
+- [ ] Atualizar ou substituir o domínio antigo do Manus (`joaopwas-a8qonrlr.manus.space`), que continua servindo a versão anterior com PIN.

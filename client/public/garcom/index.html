@@ -46,7 +46,8 @@
     @keyframes pulse-novo { 0%,100% { box-shadow: 0 0 0 0 rgba(220,53,69,.6); } 50% { box-shadow: 0 0 0 6px rgba(220,53,69,0); } }
 
     /* ===== TELA 2: CARDÁPIO + COMANDA ===== */
-    #tela-pedido { flex: 1; display: none; flex-direction: column; overflow: hidden; }
+    #tela-pedido { flex: 1; display: none; flex-direction: column; overflow: hidden; position: relative; }
+    #grid-produtos-g { flex: 1; overflow-y: auto; padding-bottom: 120px; }
     .cliente-row { padding: 8px 12px; background: #fff; border-bottom: 1px solid var(--border); flex-shrink: 0; }
     .cliente-row input { width: 100%; padding: 8px; border: 1px solid var(--border); border-radius: 6px; font-size: 0.9rem; }
     #busca-produto-g { width: 100%; padding: 12px; border: none; border-bottom: 1px solid var(--border); font-size: 1rem; flex-shrink: 0; }
@@ -60,8 +61,9 @@
     .prod-card-g small { color: var(--info); font-size: 0.68rem; display: block; margin-top: 3px; }
 
     /* ===== COMANDA (bottom sheet) ===== */
-    #comanda-toggle { background: var(--accent); color: #fff; text-align: center; padding: 10px; font-weight: bold; flex-shrink: 0; }
+    #comanda-toggle { background: var(--accent); color: #fff; text-align: center; padding: 10px; font-weight: bold; flex-shrink: 0; cursor: pointer; }
     #comanda-sheet { max-height: 45vh; overflow-y: auto; background: #fff; border-top: 2px solid var(--accent); display: none; flex-shrink: 0; }
+    .comanda-fixa-container { position: absolute; bottom: 0; left: 0; right: 0; z-index: 30; display: flex; flex-direction: column; background: #fff; box-shadow: 0 -4px 16px rgba(18,62,72,.15); }
     .item-comanda-g { display: flex; align-items: center; gap: 8px; padding: 8px 12px; border-bottom: 1px solid var(--border); }
     .item-comanda-g .nome { flex: 1; font-size: 0.85rem; }
     .item-comanda-g .obs-g { font-size: 0.7rem; color: var(--danger); }
@@ -197,6 +199,7 @@
         .botoes-modal-g { flex-direction:column-reverse; }
     }
 </style>
+<link rel="stylesheet" href="/shared/pwa-theme.css">
 <link rel="manifest" href="/garcom/manifest.json">
 <meta name="theme-color" content="#0F4C5C">
 <link rel="apple-touch-icon" href="/tradicao-caicara-logo.webp">
@@ -232,12 +235,15 @@
         <input type="text" id="busca-produto-g" placeholder="🔎 Buscar item...">
         <div class="tabs-g" id="tabs-g"></div>
         <div id="grid-produtos-g"></div>
-        <div id="comanda-toggle" onclick="toggleComanda()">🧾 Ver comanda desta mesa (<span id="qtd-itens-comanda">0</span> itens) - Total: <span id="total-comanda-g">R$ 0,00</span></div>
-        <div id="comanda-sheet"></div>
-        <div class="acoes-comanda-g">
-            <button class="btn-limpar-g" onclick="limparComandaG()">Limpar</button>
-            <button id="btn-enviar-g" class="btn-enviar-g" onclick="enviarProducaoG()">Enviar cozinha/bar</button>
-            <button class="btn-fechar-g" onclick="abrirFechamentoG()">Fechar conta</button>
+        <div class="comanda-fixa-container">
+            <button type="button" id="comanda-toggle" aria-controls="comanda-sheet" aria-expanded="false" onclick="toggleComanda()">🧾 Ver comanda desta mesa (<span id="qtd-itens-comanda">0</span> itens) - Total: <span id="total-comanda-g">R$ 0,00</span></button>
+            <div id="comanda-sheet" role="region" aria-label="Itens da comanda da mesa"></div>
+            <div class="acoes-comanda-g">
+                <div id="resumo-envio-g" class="resumo-envio-g" role="status" aria-live="polite">Adicione itens para começar</div>
+                <button class="btn-limpar-g" onclick="limparComandaG()">Limpar</button>
+                <button id="btn-enviar-g" class="btn-enviar-g" onclick="enviarProducaoG()">Enviar cozinha/bar</button>
+                <button class="btn-fechar-g" onclick="abrirFechamentoG()">Fechar conta</button>
+            </div>
         </div>
     </div>
 
@@ -687,16 +693,28 @@
         document.getElementById('qtd-itens-comanda').innerText = qtdTotal;
         document.getElementById('total-comanda-g').innerText = formatarMoeda(total);
         const botaoEnviar = document.getElementById('btn-enviar-g');
-        const temNovos = dadosMesa.itens.some(item => item.enviado === false);
+        const resumoEnvio = document.getElementById('resumo-envio-g');
+        const itensNovos = dadosMesa.itens.filter(item => item.enviado === false);
+        const novosCozinha = itensNovos.filter(item => item.setor !== 'bar').length;
+        const novosBar = itensNovos.filter(item => item.setor === 'bar').length;
+        const temNovos = itensNovos.length > 0;
+        if (resumoEnvio) {
+            resumoEnvio.classList.toggle('has-pending', temNovos);
+            resumoEnvio.innerHTML = temNovos
+                ? `<strong>${itensNovos.length} item(ns) pendente(s)</strong> · ${novosCozinha} cozinha · ${novosBar} bar`
+                : 'Tudo enviado para cozinha e bar';
+        }
         if (botaoEnviar) {
             botaoEnviar.classList.toggle('has-new', temNovos);
-            botaoEnviar.innerText = temNovos ? `Enviar ${dadosMesa.itens.filter(item => item.enviado === false).length} novo(s)` : 'Tudo enviado';
+            botaoEnviar.innerText = temNovos ? `Enviar ${itensNovos.length} novo(s)` : 'Tudo enviado';
+            botaoEnviar.setAttribute('aria-label', temNovos ? `Enviar ${itensNovos.length} item(ns) para produção` : 'Todos os itens já foram enviados');
         }
     }
 
     function toggleComanda() {
         comandaAberta = !comandaAberta;
         document.getElementById('comanda-sheet').style.display = comandaAberta ? 'block' : 'none';
+        document.getElementById('comanda-toggle').setAttribute('aria-expanded', String(comandaAberta));
     }
 
     function calcularTotalG() {
