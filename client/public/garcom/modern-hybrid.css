@@ -1,0 +1,71 @@
+/* João Caiçara — Tema Híbrido Moderno (Garçom)
+   Visual premium + identidade caiçara, otimizado para toque. */
+:root{
+  --primary:#0B5963;
+  --secondary:#123E48;
+  --accent:#E66B45;
+  --success:#2A9D8F;
+  --danger:#D85B46;
+  --info:#477C96;
+  --border:#DCE5E1;
+  --wood:#D7B07A;
+  --bg:#F4F6F3;
+  --ink:#18383F;
+  --muted:#718084;
+}
+body{
+  background:
+    radial-gradient(circle at top right,rgba(230,107,69,.08),transparent 26%),
+    linear-gradient(180deg,#EEF4F1 0%,#F8F7F2 46%,#F3EEE6 100%) !important;
+  color:var(--ink);
+}
+.header{
+  min-height:72px;padding:11px 13px;background:linear-gradient(135deg,#0A4C56,#0F6570 58%,#123E48);
+  border-bottom:0;box-shadow:0 9px 24px rgba(8,55,62,.20);position:relative;z-index:40;
+}
+.header::after{content:"";position:absolute;left:0;right:0;bottom:0;height:3px;background:linear-gradient(90deg,var(--wood),var(--accent),var(--wood))}
+.marca-garcom{width:46px;height:46px;border-radius:14px;border:1px solid rgba(255,255,255,.75);box-shadow:0 5px 14px rgba(0,0,0,.16)}
+.header h1{font-size:1.05rem;letter-spacing:.01em;text-shadow:none}
+.header-meta-g{gap:6px}.btn-voltar,#status-conexao{border-radius:11px;min-height:40px}
+#usuario-logado-g{border-radius:999px;background:rgba(255,255,255,.10);border:1px solid rgba(255,255,255,.10)}
+#status-conexao{background:rgba(255,255,255,.10);border:1px solid rgba(255,255,255,.12);font-weight:800}
+#tela-mesas{padding:16px;background:transparent}.secao-titulo{font-size:.74rem;letter-spacing:.16em;margin:18px 2px 10px;color:var(--secondary)}
+.legenda-mesas-g{gap:7px;margin-bottom:16px}.legenda-mesas-g span{border-radius:999px;border:1px solid var(--border);background:rgba(255,255,255,.88);box-shadow:0 2px 8px rgba(18,62,72,.05);padding:6px 9px}
+.grid-mesas{grid-template-columns:repeat(2,minmax(0,1fr));gap:11px}
+.mesa-btn{
+  min-height:118px;border-radius:20px;padding:14px;background:linear-gradient(145deg,#E9CAA0,#D5AE77);color:#18383F;
+  border:1px solid rgba(18,62,72,.12);box-shadow:0 5px 0 rgba(18,62,72,.10),0 11px 22px rgba(18,62,72,.09);
+  display:flex;flex-direction:column;align-items:flex-start;justify-content:center;gap:5px;
+}
+.mesa-btn:hover{transform:translateY(-2px)}.mesa-btn:active{transform:translateY(2px) scale(.98)}
+.mesa-btn__state{font-size:.62rem;letter-spacing:.13em;font-weight:900}.mesa-btn__number{font-size:2rem;font-family:Georgia,serif}.mesa-btn__meta{font-size:.7rem;opacity:.76}
+.mesa-btn.occupied{background:linear-gradient(145deg,#13717D,#0B5963);color:#fff;border-color:#247B85;box-shadow:0 5px 0 #073C43,0 12px 22px rgba(11,89,99,.20)}
+.mesa-btn.novo-pedido{background:linear-gradient(145deg,#F08058,#D95433);border-color:#F29C7E;box-shadow:0 5px 0 #973A24,0 12px 24px rgba(217,84,51,.24)}
+#tela-pedido{background:transparent}.cliente-row{padding:9px 11px;background:rgba(255,255,255,.92);border-bottom:1px solid var(--border)}
+.cliente-row input,#busca-produto-g{min-height:46px;border-radius:13px !important;border:1px solid var(--border) !important;background:#fff !important;padding:0 13px !important}
+#busca-produto-g{margin:0;background:#fff}
+.tabs-g{padding:9px 10px;gap:7px;background:rgba(255,255,255,.92);border-bottom:1px solid var(--border)}
+.tab-g{border-radius:999px;border:1px solid var(--border);background:#fff;padding:8px 13px;color:var(--secondary);box-shadow:0 2px 7px rgba(18,62,72,.04)}
+.tab-g.active{background:linear-gradient(135deg,#0B5963,#14707C);border-color:#0B5963;color:#fff;box-shadow:0 5px 14px rgba(11,89,99,.18)}
+#grid-produtos-g{padding:12px;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;background:transparent}
+.prod-card-g{
+  min-height:112px;border-radius:17px;padding:13px;border:1px solid var(--border);background:linear-gradient(180deg,#fff,#FCFDFC);
+  box-shadow:0 5px 15px rgba(18,62,72,.07);display:flex;flex-direction:column;justify-content:center;
+}
+.prod-card-g:hover{border-color:#7FB1B3;transform:translateY(-2px)}.prod-card-g h4{font-size:.88rem;line-height:1.25;color:var(--secondary)}.prod-card-g p{font-size:1rem;color:var(--success)}
+.comanda-fixa-container{background:rgba(255,255,255,.97);box-shadow:0 -12px 28px rgba(18,62,72,.12);border-radius:18px 18px 0 0;overflow:hidden}
+#comanda-toggle{min-height:50px;background:linear-gradient(135deg,#E66B45,#D95A37);box-shadow:none;border:0;font-size:.82rem}
+#comanda-sheet{background:#fff;border-top:0}.item-comanda-g{min-height:60px;padding:10px 12px;border-bottom:1px solid #ECF0EE}.item-comanda-g .nome{color:var(--secondary);font-weight:800}.qty-ctrl-g button{width:34px;height:34px;background:linear-gradient(135deg,#0B5963,#14707C);box-shadow:0 2px 7px rgba(11,89,99,.16)}
+.acoes-comanda-g{gap:7px;padding:9px;background:#F7F9F7;border-top:1px solid var(--border)}.acoes-comanda-g button{min-height:50px;border-radius:11px;font-size:.72rem;box-shadow:0 3px 9px rgba(18,62,72,.08)}
+.btn-limpar-g{background:linear-gradient(135deg,#D85B46,#C64C39)}.btn-enviar-g{background:linear-gradient(135deg,#4E8198,#386C84)}.btn-enviar-g.has-new{background:linear-gradient(135deg,#EF7B55,#D95433)}.btn-fechar-g{background:linear-gradient(135deg,#2A9D8F,#238678)}
+#resumo-envio-g{font-size:.7rem;color:var(--muted)}
+#modal-fechar-g{backdrop-filter:blur(5px)}#modal-fechar-g .modal-g{border:0;border-radius:20px;background:#F8FAF8;box-shadow:0 24px 55px rgba(8,45,51,.28)}
+#modal-fechar-g select,#modal-fechar-g input{border-radius:11px;border:1px solid var(--border);background:#fff}
+@media(min-width:601px){.grid-mesas{grid-template-columns:repeat(4,minmax(0,1fr))}#grid-produtos-g{grid-template-columns:repeat(auto-fit,minmax(160px,1fr))}}
+@media(max-width:600px){
+  body{background-attachment:fixed}.header{padding:9px 10px;gap:6px}.header h1{font-size:.96rem}.marca-garcom{width:42px;height:42px}.header-meta-g{gap:4px}
+  #tela-mesas{padding:13px}.grid-mesas{gap:9px}.mesa-btn{min-height:110px;padding:12px;border-radius:17px}.mesa-btn__number{font-size:1.82rem}
+  #grid-produtos-g{padding:10px;gap:8px;padding-bottom:190px}.prod-card-g{min-height:105px;padding:11px;border-radius:15px}
+  .acoes-comanda-g{padding-bottom:calc(9px + env(safe-area-inset-bottom))}.acoes-comanda-g button{min-height:52px}
+}
+@media(prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
