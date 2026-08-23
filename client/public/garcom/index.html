@@ -2,38 +2,846 @@
 <html lang="pt-BR">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<title>João Caiçara - Garçom</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>João Caiçara - Pedidos (Garçom)</title>
+<style>
+    :root {
+        --primary: #0F4C5C;
+        --secondary: #133C4A;
+        --accent: #D95D39;
+        --success: #2A9D8F;
+        --danger: #E76F51;
+        --info: #457B9D;
+        --border: #E0DDCF;
+        --wood: #C49A6C;
+        --warning: #f39c12;
+        --bg: #F7F4EC;
+    }
+    * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; -webkit-tap-highlight-color: transparent; }
+    body { background: var(--bg); color: #222; height: 100vh; display: flex; flex-direction: column; overflow: hidden; }
+
+    /* ===== TELA DE PIN ===== */
+    #pin-erro { color: var(--danger); background: #fff; padding: 6px 12px; border-radius: 6px; margin-top: 10px; display: none; font-size: 0.9rem; }
+
+    /* ===== CABEÇALHO ===== */
+    .header { background: var(--primary); color: #fff; padding: 12px 15px; display: flex; align-items: center; justify-content: space-between; border-bottom: 3px solid var(--accent); flex-shrink: 0; }
+    .marca-garcom { width: 48px; height: 48px; object-fit: contain; border-radius: 10px; background:#fff; border:2px solid rgba(244,241,222,.9); flex:0 0 auto; }
+    .header h1 { font-size: 1.1rem; font-family: 'Georgia', serif; }
+    .header .status { font-size: 0.7rem; opacity: 0.9; }
+    .header-meta-g { display:flex; align-items:center; gap:8px; margin-left:auto; margin-right:8px; }
+    #usuario-logado-g { font-size:.72rem; background:rgba(255,255,255,.12); padding:6px 8px; border-radius:999px; white-space:nowrap; }
+    #status-conexao { border:0; cursor:pointer; padding:6px 8px; border-radius:999px; background:rgba(255,255,255,.1); white-space:nowrap; transition:background .2s, color .2s; }
+    #status-conexao.sync-ok { color:#b8f1df; background:rgba(42,157,143,.25); }
+    #status-conexao.sync-pending { color:#ffe0a3; background:rgba(243,156,18,.22); }
+    #status-conexao.sync-error { color:#ffd0c7; background:rgba(231,111,81,.28); }
+    .btn-voltar { background: var(--wood); color: #333; border: none; padding: 8px 12px; border-radius: 6px; font-weight: bold; font-size: 0.85rem; }
+
+    /* ===== TELA 1: ESCOLHER MESA ===== */
+    #tela-mesas { flex: 1; overflow-y: auto; padding: 15px; }
+    .secao-titulo { font-size: 0.8rem; text-transform: uppercase; color: var(--secondary); font-weight: bold; letter-spacing: 1px; margin: 15px 0 8px; }
+    .grid-mesas { display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px; }
+    .mesa-btn { aspect-ratio: 1; background: var(--wood); border: none; border-radius: 8px; font-weight: bold; font-size: 1rem; color: #333; position: relative; }
+    .mesa-btn.occupied { background: var(--primary); color: #fff; }
+    .mesa-btn.novo-pedido { animation: pulse-novo 1.5s infinite; }
+    @keyframes pulse-novo { 0%,100% { box-shadow: 0 0 0 0 rgba(220,53,69,.6); } 50% { box-shadow: 0 0 0 6px rgba(220,53,69,0); } }
+
+    /* ===== TELA 2: CARDÁPIO + COMANDA ===== */
+    #tela-pedido { flex: 1; display: none; flex-direction: column; overflow: hidden; position: relative; }
+    #grid-produtos-g { flex: 1; overflow-y: auto; padding-bottom: 120px; }
+    .cliente-row { padding: 8px 12px; background: #fff; border-bottom: 1px solid var(--border); flex-shrink: 0; }
+    .cliente-row input { width: 100%; padding: 8px; border: 1px solid var(--border); border-radius: 6px; font-size: 0.9rem; }
+    #busca-produto-g { width: 100%; padding: 12px; border: none; border-bottom: 1px solid var(--border); font-size: 1rem; flex-shrink: 0; }
+    .tabs-g { display: flex; gap: 6px; overflow-x: auto; padding: 8px 10px; background: #fff; border-bottom: 1px solid var(--border); flex-shrink: 0; }
+    .tab-g { flex-shrink: 0; padding: 7px 14px; border-radius: 20px; border: 1px solid var(--border); background: #fff; font-size: 0.8rem; white-space: nowrap; }
+    .tab-g.active { background: var(--primary); color: #fff; border-color: var(--primary); }
+    #grid-produtos-g { flex: 1; overflow-y: auto; padding: 10px; display: grid; grid-template-columns: 1fr 1fr; gap: 8px; align-content: start; }
+    .prod-card-g { background: #fff; border: 1px solid var(--border); border-radius: 8px; padding: 10px; text-align: left; }
+    .prod-card-g h4 { font-size: 0.85rem; margin-bottom: 4px; }
+    .prod-card-g p { color: var(--success); font-weight: bold; font-size: 0.9rem; }
+    .prod-card-g small { color: var(--info); font-size: 0.68rem; display: block; margin-top: 3px; }
+
+    /* ===== COMANDA (bottom sheet) ===== */
+    #comanda-toggle { background: var(--accent); color: #fff; text-align: center; padding: 10px; font-weight: bold; flex-shrink: 0; cursor: pointer; }
+    #comanda-sheet { max-height: 45vh; overflow-y: auto; background: #fff; border-top: 2px solid var(--accent); display: none; flex-shrink: 0; }
+    .comanda-fixa-container { position: absolute; bottom: 0; left: 0; right: 0; z-index: 30; display: flex; flex-direction: column; background: #fff; box-shadow: 0 -4px 16px rgba(18,62,72,.15); }
+    .item-comanda-g { display: flex; align-items: center; gap: 8px; padding: 8px 12px; border-bottom: 1px solid var(--border); }
+    .item-comanda-g .nome { flex: 1; font-size: 0.85rem; }
+    .item-comanda-g .obs-g { font-size: 0.7rem; color: var(--danger); }
+    .qty-ctrl-g { display: flex; align-items: center; gap: 6px; }
+    .qty-ctrl-g button { width: 28px; height: 28px; border-radius: 50%; border: none; background: var(--primary); color: #fff; font-size: 1rem; }
+    .acoes-comanda-g { display:flex; gap:8px; padding:8px 10px; background:#fff; border-top:1px solid var(--border); }
+    .acoes-comanda-g button { flex:1; border:none; border-radius:8px; padding:11px 6px; font-weight:bold; color:#fff; font-size:.78rem; min-height:44px; transition:transform .16s ease, filter .16s ease, box-shadow .16s ease; }
+    .acoes-comanda-g button:active { transform:scale(.97); }
+    .btn-enviar-g { background:var(--info); border:2px solid #2d627e !important; box-shadow:0 4px 0 #2d627e, 0 8px 16px rgba(69,123,157,.2); }
+    .btn-enviar-g.has-new { background:var(--accent); border-color:#b94528 !important; box-shadow:0 4px 0 #8e341f, 0 8px 16px rgba(217,93,57,.24); }
+    .btn-enviar-g.is-sending { opacity:.7; pointer-events:none; }
+    .btn-fechar-g { background:var(--success); }
+    .btn-limpar-g { background:var(--danger); }
+    #modal-fechar-g { display:none; position:fixed; inset:0; z-index:1000; background:rgba(15,76,92,.8); align-items:center; justify-content:center; padding:18px; }
+    #modal-fechar-g .modal-g { width:100%; max-width:380px; background:var(--bg); border-radius:12px; padding:18px; box-shadow:0 10px 25px rgba(0,0,0,.3); }
+    #modal-fechar-g h3 { color:var(--primary); margin-bottom:12px; font-family:Georgia,serif; }
+    #modal-fechar-g select, #modal-fechar-g input { width:100%; padding:10px; margin:8px 0; border:1px solid var(--border); border-radius:6px; background:#fff; }
+    .botoes-modal-g { display:flex; gap:8px; margin-top:12px; }
+    .botoes-modal-g button { flex:1; border:0; border-radius:6px; padding:11px; font-weight:bold; color:#fff; }
+
+    .msg-vazio { text-align: center; color: #999; padding: 30px; grid-column: 1/-1; }
+    /* Maré Operacional: sinalização tátil de mesa, status claros e coral reservado para atenção. */
+    .secao-titulo { font-family: Georgia, serif; font-size: .95rem; letter-spacing: .14em; }
+    .legenda-mesas-g { display:flex; flex-wrap:wrap; gap:6px; margin:0 0 12px; }
+    .legenda-mesas-g span { display:inline-flex; align-items:center; gap:5px; background:rgba(255,255,255,.78); border:1px solid var(--border); border-radius:999px; padding:5px 8px; font-size:.68rem; color:var(--secondary); }
+    .legenda-mesas-g i { width:10px; height:10px; border-radius:50%; display:inline-block; background:var(--wood); }
+    .legenda-mesas-g .ocupada i { background:var(--primary); }
+    .legenda-mesas-g .nova i { background:var(--accent); }
+    .grid-mesas { gap: 10px; }
+    .mesa-btn { min-height: 64px; border-radius: 14px 14px 8px 8px; border: 2px solid rgba(15,76,92,.08); box-shadow: 0 4px 0 rgba(15,76,92,.08), 0 8px 18px rgba(15,76,92,.06); transition: transform .16s ease, box-shadow .16s ease, background .16s ease; }
+    .mesa-btn::before { content: 'LIVRE'; display:block; font-size:.55rem; letter-spacing:.12em; opacity:.6; margin-bottom:3px; }
+    .mesa-btn.occupied::before { content: 'OCUPADA'; color:#fff; opacity:.78; }
+    .mesa-btn.novo-pedido::before { content: 'NOVA'; color:#fff; opacity:1; }
+    .mesa-btn:active { transform:scale(.96); box-shadow:0 2px 0 rgba(15,76,92,.08); }
+    .mesa-btn.occupied { border-color: #0F4C5C; box-shadow:0 4px 0 #092f39, 0 10px 20px rgba(15,76,92,.18); }
+    .mesa-btn.novo-pedido { background: #D95D39; border-color:#b94528; box-shadow:0 4px 0 #8e341f, 0 10px 20px rgba(217,93,57,.22); }
+    .header h1 { font-size:1.2rem; }
+    #comanda-toggle { font-family:Georgia,serif; letter-spacing:.02em; }
+    @media (max-width: 600px) {
+        .header { flex-wrap:wrap; gap:6px; }
+        .header h1 { max-width:38%; font-size:1rem; }
+        .marca-garcom { width:42px; height:42px; }
+        .header-meta-g { gap:4px; margin-right:0; }
+        #usuario-logado-g { max-width:116px; overflow:hidden; text-overflow:ellipsis; }
+        .acoes-comanda-g { flex-wrap:wrap; }
+        .acoes-comanda-g button { flex:1 1 30%; }
+        .acoes-comanda-g .btn-enviar-g { flex-basis:100%; order:-1; }
+    }
+    @media (prefers-reduced-motion: reduce) { .mesa-btn { transition:none; animation:none; } }
+
+    /* Reestilização operacional v1: cartões de mesa legíveis e alvos de toque maiores. */
+    :root {
+        --bg: #F5F7F4;
+        --card: #FFFFFF;
+        --border: #D8E2DF;
+        --wood: #D8B07A;
+        --primary: #0B5963;
+        --secondary: #123E48;
+        --accent: #E66B45;
+        --success: #2A9D8F;
+    }
+    body { background: linear-gradient(180deg, #EEF5F2 0%, #F8F7F2 48%, #F3EEE5 100%); color:#173D45; }
+    .header { min-height: 68px; padding: 12px clamp(14px, 3vw, 28px); box-shadow: 0 8px 22px rgba(18,62,72,.14); }
+    .header h1 { font-size: clamp(1.15rem, 2.6vw, 1.55rem); letter-spacing: .01em; }
+    .header-meta-g { gap: 8px; }
+    #status-conexao { min-height: 42px; padding: 9px 12px; border-radius: 12px; font-weight: 800; }
+    #tela-mesas { padding: clamp(16px, 3vw, 30px); }
+    .secao-titulo { margin: 18px 0 10px; font-size: .78rem; color: var(--secondary); }
+    .legenda-mesas-g { gap: 8px; margin-bottom: 18px; }
+    .legenda-mesas-g span { min-height: 34px; padding: 7px 11px; font-size: .74rem; font-weight: 700; box-shadow: 0 2px 8px rgba(18,62,72,.06); }
+    .legenda-mesas-g i { width: 11px; height: 11px; }
+    .grid-mesas { grid-template-columns: repeat(auto-fit, minmax(112px, 1fr)); gap: 12px; }
+    .mesa-btn { min-height: 112px; aspect-ratio: auto; display:flex; flex-direction:column; align-items:flex-start; justify-content:center; gap:5px; padding:14px; border-radius:18px; border:2px solid rgba(18,62,72,.10); background:linear-gradient(145deg,#F0D3A7,#D2A66C); color:#173D45; text-align:left; box-shadow:0 5px 0 rgba(18,62,72,.10), 0 12px 22px rgba(18,62,72,.08); transition:transform .16s ease, box-shadow .16s ease, border-color .16s ease, background .16s ease; }
+    .mesa-btn:hover { transform:translateY(-2px); border-color:rgba(11,89,99,.38); }
+    .mesa-btn:active { transform:translateY(2px) scale(.98); box-shadow:0 2px 0 rgba(18,62,72,.10); }
+    .mesa-btn__state { font-size:.66rem; font-weight:900; letter-spacing:.12em; text-transform:uppercase; opacity:.72; }
+    .mesa-btn__number { font-family:Georgia,serif; font-size:2rem; line-height:1; }
+    .mesa-btn__meta { font-size:.68rem; font-weight:700; opacity:.76; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:100%; }
+    .mesa-btn.occupied { background:linear-gradient(145deg,#0F7180,#0B5963); color:#fff; border-color:#084A53; box-shadow:0 5px 0 #063B42, 0 12px 22px rgba(11,89,99,.22); }
+    .mesa-btn.occupied .mesa-btn__state, .mesa-btn.occupied .mesa-btn__meta { opacity:.82; }
+    .mesa-btn.novo-pedido { background:linear-gradient(145deg,#F07D55,#D95735); color:#fff; border-color:#B84227; box-shadow:0 5px 0 #93351F, 0 12px 22px rgba(217,87,53,.24); animation:pulse-novo 1.8s infinite; }
+    .mesa-btn.novo-pedido .mesa-btn__state { opacity:1; }
+    .acoes-comanda-g { gap:10px; padding:12px; }
+    .acoes-comanda-g button { min-height:54px; padding:13px 10px; border-radius:12px; font-size:.82rem; box-shadow:0 4px 0 rgba(18,62,72,.12); }
+    .acoes-comanda-g button:active { transform:translateY(2px) scale(.98); box-shadow:0 1px 0 rgba(18,62,72,.12); }
+    .btn-enviar-g { min-height:60px !important; font-size:.9rem !important; }
+    @media (max-width: 600px) {
+        #tela-mesas { padding:14px; }
+        .grid-mesas { grid-template-columns:repeat(2, minmax(0,1fr)); gap:10px; }
+        .mesa-btn { min-height:112px; padding:13px; }
+        .mesa-btn__number { font-size:1.85rem; }
+        .acoes-comanda-g { position:sticky; bottom:0; z-index:20; padding:10px; background:rgba(255,255,255,.96); backdrop-filter:blur(10px); }
+        .acoes-comanda-g button { flex:1 1 30%; min-height:56px; }
+        .acoes-comanda-g .btn-enviar-g { flex-basis:100%; order:-1; }
+    }
+    @media (min-width: 601px) and (max-width: 900px) { .grid-mesas { grid-template-columns:repeat(4, minmax(0,1fr)); } }
+
+    .sr-only { position:absolute; width:1px; height:1px; padding:0; margin:-1px; overflow:hidden; clip:rect(0,0,0,0); white-space:nowrap; border:0; }
+    .mesa-btn.flash-novo { animation: mesa-novo-chegou .72s ease-out 2; }
+    @keyframes mesa-novo-chegou { 0% { transform:scale(1); } 45% { transform:scale(1.06); box-shadow:0 0 0 7px rgba(230,107,69,.24), 0 5px 0 #93351F, 0 14px 28px rgba(217,87,53,.30); } 100% { transform:scale(1); } }
+    .cardapio-toolbar-g { display:flex; align-items:center; justify-content:space-between; gap:10px; padding:12px 12px 8px; background:rgba(255,255,255,.78); border-bottom:1px solid var(--border); }
+    .cardapio-toolbar-g strong { color:var(--secondary); font-family:Georgia,serif; font-size:.95rem; }
+    #grid-produtos-g { padding:12px; grid-template-columns:repeat(auto-fit, minmax(150px,1fr)); gap:12px; background:linear-gradient(180deg,#F6FAF8,#F8F7F2); }
+    .prod-card-g { min-height:108px; display:flex; flex-direction:column; justify-content:space-between; border:2px solid rgba(11,89,99,.09); border-radius:15px; padding:13px; background:#fff; text-align:left; cursor:pointer; box-shadow:0 4px 0 rgba(18,62,72,.08),0 8px 18px rgba(18,62,72,.06); transition:transform .15s ease, border-color .15s ease, box-shadow .15s ease; }
+    .prod-card-g:hover, .prod-card-g:focus-visible { transform:translateY(-2px); border-color:var(--info); outline:none; box-shadow:0 5px 0 rgba(18,62,72,.10),0 12px 22px rgba(18,62,72,.12); }
+    .prod-card-g:active { transform:translateY(2px) scale(.98); }
+    .prod-card-g h4 { font-size:.88rem; line-height:1.25; color:var(--secondary); margin:0 0 9px; }
+    .prod-card-g p { color:var(--success); font-size:1rem; font-weight:900; margin:0; }
+    .prod-card-g small { color:var(--info); font-size:.7rem; display:block; margin-top:8px; }
+    #comanda-toggle { min-height:48px; display:flex; align-items:center; justify-content:center; gap:4px; padding:12px; letter-spacing:.01em; box-shadow:0 -3px 12px rgba(18,62,72,.08); }
+    #comanda-sheet { max-height:42vh; padding:4px 0; }
+    .item-comanda-g { min-height:58px; gap:10px; padding:10px 13px; }
+    .item-comanda-g .nome { font-size:.86rem; font-weight:800; color:var(--secondary); }
+    .item-comanda-g .obs-g { margin-top:4px; font-size:.72rem; }
+    .qty-ctrl-g { gap:7px; }
+    .qty-ctrl-g button { width:34px; height:34px; font-size:1.05rem; box-shadow:0 2px 0 rgba(18,62,72,.14); }
+    #modal-fechar-g .modal-g { border:2px solid var(--border); padding:22px; }
+    #modal-fechar-g .modal-g h3 { font-size:1.25rem; }
+    #modal-fechar-g .modal-g p { padding:12px; border-radius:10px; background:#fff; border:1px solid var(--border); }
+    #modal-fechar-g select, #modal-fechar-g input { min-height:48px; font-size:1rem; }
+    .botoes-modal-g button { min-height:52px; font-size:.84rem; box-shadow:0 3px 0 rgba(18,62,72,.12); }
+    @media (max-width:600px) {
+        body { height:auto; min-height:100dvh; overflow-x:hidden; overflow-y:auto; }
+        #tela-pedido { min-height:calc(100dvh - 68px); height:auto; overflow:visible; }
+        #grid-produtos-g { flex:0 0 auto; grid-template-columns:repeat(2,minmax(0,1fr)); min-height:0; max-height:none; overflow:visible; }
+        .prod-card-g { min-height:116px; min-width:0; touch-action:manipulation; }
+        .prod-card-g h4 { overflow-wrap:anywhere; }
+        #comanda-toggle { position:relative; z-index:2; padding-bottom:13px; }
+        #comanda-sheet { max-height:42dvh; overflow-y:auto; -webkit-overflow-scrolling:touch; }
+        .acoes-comanda-g { position:sticky; bottom:0; z-index:20; flex-wrap:nowrap; gap:7px; padding:8px 8px calc(8px + env(safe-area-inset-bottom)); background:rgba(255,255,255,.98); }
+        .acoes-comanda-g button { flex:1 1 0; min-width:0; min-height:54px; padding:9px 4px; font-size:.72rem; line-height:1.1; white-space:normal; touch-action:manipulation; }
+        .acoes-comanda-g .btn-enviar-g { flex-basis:auto; order:initial; min-height:54px !important; font-size:.78rem !important; }
+        .botoes-modal-g { flex-direction:column-reverse; }
+    }
+</style>
+<link rel="stylesheet" href="/shared/pwa-theme.css">
 <link rel="manifest" href="/garcom/manifest.json">
 <meta name="theme-color" content="#0F4C5C">
-<style>
-:root{--p:#0F4C5C;--a:#D95D39;--ok:#2A9D8F;--bg:#F7F4EC;--card:#fff;--line:#ddd6c7;--txt:#173d45}*{box-sizing:border-box}body{margin:0;font-family:Arial,sans-serif;background:var(--bg);color:var(--txt)}button,input{font:inherit}.header{position:sticky;top:0;z-index:20;background:var(--p);color:#fff;padding:12px;display:flex;align-items:center;gap:10px;border-bottom:3px solid var(--a)}.header img{width:44px;height:44px;object-fit:contain;background:#fff;border-radius:10px}.header h1{font-size:1.05rem;margin:0;flex:1}.status{border:0;border-radius:999px;padding:7px 10px;background:#ffffff20;color:#fff;font-size:.72rem}.back{border:0;border-radius:8px;padding:9px 11px;background:#d8b07a;font-weight:bold;display:none}.wrap{padding:14px}.section{font-size:.78rem;font-weight:900;letter-spacing:.12em;margin:16px 0 8px}.grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}.mesa{min-height:105px;border:2px solid #caa875;border-radius:16px;background:#e5c18d;padding:12px;text-align:left;display:flex;flex-direction:column;justify-content:center}.mesa.aberta{background:var(--p);color:#fff;border-color:#083b44}.mesa.nova{background:var(--a);border-color:#a43e24;color:#fff}.mesa small{font-size:.68rem;font-weight:bold;opacity:.8;text-transform:uppercase;letter-spacing:.08em}.mesa strong{font-size:1.8rem}.mesa span{font-size:.72rem;margin-top:4px}.pedido{display:none}.cliente,.busca{width:100%;padding:12px;border:1px solid var(--line);background:#fff}.tabs{display:flex;gap:6px;overflow:auto;padding:9px;background:#fff;border-bottom:1px solid var(--line)}.tab{border:1px solid var(--line);background:#fff;border-radius:999px;padding:7px 12px;white-space:nowrap}.tab.active{background:var(--p);color:#fff}.produtos{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;padding:12px 12px 190px}.produto{border:1px solid var(--line);border-radius:12px;background:#fff;padding:12px;text-align:left;min-height:95px}.produto b{display:block}.produto em{display:block;color:var(--ok);font-style:normal;font-weight:bold;margin-top:8px}.bottom{position:fixed;left:0;right:0;bottom:0;background:#fff;border-top:2px solid var(--a);z-index:30}.resumo{padding:10px 12px;background:var(--a);color:#fff;font-weight:bold;text-align:center}.itens{max-height:32vh;overflow:auto;display:none}.linha{display:flex;gap:8px;align-items:center;padding:9px 10px;border-bottom:1px solid var(--line)}.linha .nome{flex:1}.q{display:flex;align-items:center;gap:5px}.q button{width:30px;height:30px;border:0;border-radius:50%;background:var(--p);color:#fff}.acoes{display:flex;gap:7px;padding:8px}.acoes button{flex:1;border:0;border-radius:9px;padding:12px 6px;color:#fff;font-weight:bold}.limpar{background:#b94d3c}.enviar{background:#457B9D}.fechar{background:var(--ok)}.vazio{text-align:center;color:#777;padding:25px;grid-column:1/-1}@media(min-width:700px){.grid{grid-template-columns:repeat(5,minmax(0,1fr))}.produtos{grid-template-columns:repeat(4,minmax(0,1fr))}}
-</style>
+<link rel="apple-touch-icon" href="/tradicao-caicara-logo.webp">
+<style>body{background-image:linear-gradient(rgba(247,244,236,.9),rgba(247,244,236,.9)),url("/manus-storage/joao-caicara-garcom-bg_46b937d2.jpg");background-size:cover;background-attachment:fixed;}</style>
 </head>
 <body>
-<header class="header"><img src="/tradicao-caicara-logo.webp" alt="Logo"><h1 id="titulo">Selecione a mesa</h1><button id="status" class="status">conectando...</button><button id="voltar" class="back" onclick="voltar()">← Mesas</button></header>
-<section id="mesasTela" class="wrap"><div class="section">SALÃO · 1 A 25</div><div id="salao" class="grid"></div><div class="section">DECK / PRAIA · 50 A 65</div><div id="deck" class="grid"></div></section>
-<section id="pedidoTela" class="pedido"><input id="cliente" class="cliente" placeholder="Nome do cliente (opcional)"><input id="busca" class="busca" placeholder="🔎 Buscar item..."><div id="tabs" class="tabs"></div><div id="produtos" class="produtos"></div><div class="bottom"><div id="resumo" class="resumo" onclick="toggleItens()">Comanda · 0 itens · R$ 0,00</div><div id="itens" class="itens"></div><div class="acoes"><button class="limpar" onclick="limpar()">Limpar</button><button id="enviar" class="enviar" onclick="enviar()">Enviar</button><button class="fechar" onclick="fecharConta()">Fechar</button></div></div></section>
+
+
+    <div class="header">
+        <img class="marca-garcom" src="/tradicao-caicara-logo.webp" alt="Logo João Caiçara Tradição">
+        <h1 id="header-titulo">Selecione a mesa</h1>
+        <div class="header-meta-g">
+            <span id="usuario-logado-g">Acesso livre</span>
+                <button type="button" id="status-conexao" title="Tocar para tentar reenviar pendências" onclick="reprocessarPendenciasG()">conectando...</button>
+        </div>
+        <button class="btn-voltar" id="btn-voltar" style="display:none;" onclick="voltarParaMesas()">← Mesas</button>
+        <button id="btn-sair-g" style="display:none; background:var(--danger); color:#fff; border:0; border-radius:6px; padding:7px 10px; font-weight:bold;" onclick="sairGarcom()">Sair</button>
+    </div>
+
+    <div id="tela-mesas">
+        <div id="aviso-novo-pedido-g" class="sr-only" aria-live="polite"></div>
+        <div class="legenda-mesas-g" aria-label="Legenda dos estados das mesas"><span><i></i> Livre</span><span class="ocupada"><i></i> Ocupada</span><span class="nova"><i></i> Pedido novo</span></div>
+        <div class="secao-titulo">🍽️ Salão</div>
+        <div class="grid-mesas" id="grid-salao-g"></div>
+        <div class="secao-titulo">🏖️ Deck / Praia</div>
+        <div class="grid-mesas" id="grid-deck-g"></div>
+    </div>
+
+    <div id="tela-pedido">
+        <div class="cliente-row">
+            <input type="text" id="nome-cliente-g" placeholder="Nome do cliente (opcional)" oninput="atualizarNomeClienteG()">
+        </div>
+        <input type="text" id="busca-produto-g" placeholder="🔎 Buscar item...">
+        <div class="tabs-g" id="tabs-g"></div>
+        <div id="grid-produtos-g"></div>
+        <div class="comanda-fixa-container">
+            <button type="button" id="comanda-toggle" aria-controls="comanda-sheet" aria-expanded="false" onclick="toggleComanda()">🧾 Ver comanda desta mesa (<span id="qtd-itens-comanda">0</span> itens) - Total: <span id="total-comanda-g">R$ 0,00</span></button>
+            <div id="comanda-sheet" role="region" aria-label="Itens da comanda da mesa"></div>
+            <div class="acoes-comanda-g">
+                <div id="resumo-envio-g" class="resumo-envio-g" role="status" aria-live="polite">Adicione itens para começar</div>
+                <button class="btn-limpar-g" onclick="limparComandaG()">Limpar</button>
+                <button id="btn-enviar-g" class="btn-enviar-g" onclick="enviarProducaoG()">Enviar cozinha/bar</button>
+                <button class="btn-fechar-g" onclick="abrirFechamentoG()">Fechar conta</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="modal-fechar-g">
+        <div class="modal-g">
+            <h3>Fechar conta — Mesa <span id="mesa-fechar-g"></span></h3>
+            <p>Subtotal: <strong id="subtotal-fechar-g">R$ 0,00</strong></p>
+            <label>Forma de pagamento</label>
+            <select id="pagamento-fechar-g">
+                <option value="pix">PIX</option>
+                <option value="dinheiro">Dinheiro</option>
+                <option value="credito">Cartão crédito</option>
+                <option value="debito">Cartão débito</option>
+            </select>
+            <input id="valor-recebido-g" type="number" min="0" step="0.01" placeholder="Valor recebido (opcional)">
+            <div class="botoes-modal-g">
+                <button style="background:var(--danger)" onclick="fecharModalG()">Cancelar</button>
+                <button style="background:var(--success)" onclick="confirmarFechamentoG()">Confirmar fechamento</button>
+            </div>
+        </div>
+    </div>
+
 <script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-database-compat.js"></script>
 <script>
-const firebaseConfig={apiKey:"AIzaSyB7hHYHFZ3L-z-sPmgKbJI75eaWHlSGI3A",authDomain:"joaocaicaratradicao.firebaseapp.com",databaseURL:"https://joaocaicaratradicao-default-rtdb.firebaseio.com",projectId:"joaocaicaratradicao",storageBucket:"joaocaicaratradicao.firebasestorage.app",messagingSenderId:"777982220663",appId:"1:777982220663:web:0af4e9bcbaaec847122972"};
-firebase.initializeApp(firebaseConfig);const db=firebase.database();let authOK=false,conectado=false;firebase.auth().signInAnonymously().catch(console.error);firebase.auth().onAuthStateChanged(u=>{authOK=!!u;status()});db.ref('.info/connected').on('value',s=>{conectado=!!s.val();status()});function status(){const e=document.getElementById('status');e.textContent=authOK&&conectado?'🟢 online':navigator.onLine?'🟠 conectando':'🔴 offline'}
-const cats=[['favoritos','⭐ Favoritos'],['todos','Todos'],['aperitivos','Aperitivos'],['saladas','Saladas'],['peixe_epoca','Peixe da Época'],['file_badejo','Filé de Badejo'],['salmao','Salmão'],['peixes_camaroes','Peixes e Camarões'],['massas_risotos','Massas/Risotos'],['carnes','Carnes'],['frango','Frango'],['acompanhamentos','Acompanhamentos'],['cervejas','Cervejas'],['caipirinhas','Drinks'],['destilados','Destilados'],['aguas_refrigerantes','Águas/Refrigerantes'],['sucos','Sucos']];
-let produtos=[],mesas={},mesa=null,categoria='favoritos',itensAbertos=false;const moeda=v=>`R$ ${Number(v||0).toFixed(2).replace('.',',')}`;const vazia=()=>({itens:[],cliente:'',abertura:null,origemAbertura:null});function norm(m){m=m&&typeof m==='object'?m:{};let itens=Array.isArray(m.itens)?m.itens:(m.itens&&typeof m.itens==='object'?Object.values(m.itens):[]);return {...m,itens:itens.filter(Boolean),cliente:typeof m.cliente==='string'?m.cliente:'',abertura:m.abertura||null,origemAbertura:m.origemAbertura||null}}
-db.ref('cardapio').on('value',s=>{const v=s.val();produtos=Array.isArray(v)?v.filter(Boolean):(v?Object.values(v).filter(Boolean):[]);renderProdutos()});db.ref('mesas').on('value',s=>{const v=s.val()||{};mesas={};Object.keys(v).forEach(k=>mesas[k]=norm(v[k]));renderMesas();if(mesa&&mesas[mesa]){renderComanda();if(document.activeElement!==document.getElementById('cliente'))document.getElementById('cliente').value=mesas[mesa].cliente||''}});
-function mesaAberta(m){return !!(m&&(m.abertura||m.itens?.length))}function renderMesas(){const salao=document.getElementById('salao'),deck=document.getElementById('deck');salao.innerHTML='';deck.innerHTML='';const add=(n,alvo)=>{const m=norm(mesas[n]||vazia()),aberta=mesaAberta(m),nova=m.itens.some(i=>i&&i.enviado===false&&i.rascunho!==true),tot=m.itens.reduce((a,i)=>a+(Number(i.preco)||0)*(Number(i.qtd)||0),0);alvo.insertAdjacentHTML('beforeend',`<button class="mesa ${aberta?'aberta':''} ${nova?'nova':''}" onclick="abrirMesa(${n})"><small>${nova?'pedido novo':aberta?'aberta':'livre'}</small><strong>${n}</strong><span>${aberta?(m.itens.length?`${m.itens.length} item(ns) · ${moeda(tot)}`:'Comanda aberta'):'Toque para abrir'}</span></button>`)};for(let i=1;i<=25;i++)add(i,salao);for(let i=50;i<=65;i++)add(i,deck)}
-async function abrirMesa(n){mesa=n;let atual=norm(mesas[n]||vazia());const precisaAbrir=!atual.abertura;if(precisaAbrir){atual={...atual,abertura:Date.now(),origemAbertura:'garcom'};mesas[n]=atual;try{await db.ref(`mesas/${n}`).set(atual);db.ref('auditoria').push({acao:'abrir_mesa',origem:'garcom',funcionario:'livre',detalhes:{mesa:n},criadoEm:Date.now()})}catch(e){console.error(e);alert('Não foi possível abrir a mesa no servidor. Verifique a conexão.');mesa=null;return}}else mesas[n]=atual;document.getElementById('mesasTela').style.display='none';document.getElementById('pedidoTela').style.display='block';document.getElementById('voltar').style.display='inline-block';document.getElementById('titulo').textContent=`Mesa ${n}`;document.getElementById('cliente').value=atual.cliente||'';renderTabs();renderProdutos();renderComanda()}
-function voltar(){mesa=null;document.getElementById('mesasTela').style.display='block';document.getElementById('pedidoTela').style.display='none';document.getElementById('voltar').style.display='none';document.getElementById('titulo').textContent='Selecione a mesa'}
-async function salvarMesa(){if(!mesa||!mesas[mesa])return;return db.ref(`mesas/${mesa}`).set(mesas[mesa])}document.getElementById('cliente').addEventListener('input',e=>{if(!mesa)return;mesas[mesa].cliente=e.target.value;salvarMesa().catch(console.error)});document.getElementById('busca').addEventListener('input',renderProdutos);
-function renderTabs(){document.getElementById('tabs').innerHTML=cats.map(c=>`<button class="tab ${categoria===c[0]?'active':''}" onclick="setCat('${c[0]}')">${c[1]}</button>`).join('')}function setCat(c){categoria=c;document.getElementById('busca').value='';renderTabs();renderProdutos()}function renderProdutos(){const g=document.getElementById('produtos');if(!g)return;const termo=document.getElementById('busca')?.value.trim().toLowerCase()||'';let arr=produtos.filter(p=>p&&p.ativo!==false);if(termo)arr=arr.filter(p=>String(p.nome||'').toLowerCase().includes(termo));else if(categoria==='favoritos')arr=arr.filter(p=>p.favorito);else if(categoria!=='todos')arr=arr.filter(p=>p.categoria===categoria);g.innerHTML=arr.length?arr.map(p=>`<button class="produto" onclick="add(${Number(p.id)})"><b>${p.nome}</b><em>${moeda(p.preco)}</em></button>`).join(''):'<div class="vazio">Nenhum item encontrado.</div>'}
-async function add(id){if(!mesa)return;const p=produtos.find(x=>Number(x.id)===Number(id));if(!p)return;const m=mesas[mesa]||vazia();if(!m.abertura)m.abertura=Date.now();const igual=m.itens.find(i=>Number(i.id)===Number(id)&&Number(i.preco)===Number(p.preco)&&!i.obs&&i.enviado===false&&i.rascunho===true);if(igual)igual.qtd=(Number(igual.qtd)||0)+1;else m.itens.push({...p,qtd:1,obs:'',enviado:false,rascunho:true,origem:'garcom'});mesas[mesa]=m;renderComanda();renderMesas();try{await salvarMesa()}catch(e){console.error(e);alert('Falha ao sincronizar o item. Ele continua visível neste aparelho, mas confirme a conexão.') }}
-function renderComanda(){if(!mesa||!mesas[mesa])return;const m=mesas[mesa],box=document.getElementById('itens');let qtd=0,total=0;box.innerHTML=m.itens.length?m.itens.map((i,idx)=>{qtd+=Number(i.qtd)||0;total+=(Number(i.preco)||0)*(Number(i.qtd)||0);return `<div class="linha"><div class="nome"><b>${i.qtd}x ${i.nome}</b><div>${i.enviado?'✅ enviado':i.rascunho?'📝 no caixa / aguardando envio':'🆕 novo'}</div></div><div class="q"><button onclick="qtdItem(${idx},-1)">-</button><span>${i.qtd}</span><button onclick="qtdItem(${idx},1)">+</button></div></div>`}).join(''):'<div class="vazio">Comanda aberta, sem itens.</div>';document.getElementById('resumo').textContent=`Comanda · ${qtd} item(ns) · ${moeda(total)}`;const pend=m.itens.filter(i=>i.enviado===false);document.getElementById('enviar').textContent=pend.length?`Enviar ${pend.length}`:'Tudo enviado'}function toggleItens(){itensAbertos=!itensAbertos;document.getElementById('itens').style.display=itensAbertos?'block':'none'}
-async function qtdItem(idx,d){if(!mesa)return;const m=mesas[mesa],i=m.itens[idx];if(!i)return;i.qtd=(Number(i.qtd)||0)+d;if(i.qtd<=0)m.itens.splice(idx,1);renderComanda();renderMesas();await salvarMesa().catch(console.error)}
-async function limpar(){if(!mesa||!confirm(`Limpar a comanda da Mesa ${mesa}?`))return;mesas[mesa]={itens:[],cliente:'',abertura:null,origemAbertura:null};document.getElementById('cliente').value='';await salvarMesa().catch(console.error);db.ref('auditoria').push({acao:'limpar_comanda',origem:'garcom',funcionario:'livre',detalhes:{mesa},criadoEm:Date.now()});renderComanda();renderMesas()}
-async function enviar(){if(!mesa||!authOK)return alert('Aguarde a conexão com o Firebase.');const m=mesas[mesa],novos=m.itens.filter(i=>i.enviado===false);if(!novos.length)return alert('Não há itens novos para enviar.');const agora=Date.now(),envioId=`envio_${agora}_${Math.random().toString(36).slice(2,8)}`;const grupos={cozinha:[],bar:[]};novos.forEach(i=>{i.envioId=envioId;(i.setor==='bar'?grupos.bar:grupos.cozinha).push(i)});try{for(const setor of ['cozinha','bar'])if(grupos[setor].length)await db.ref('pedidosProducao').push({mesa,cliente:m.cliente||'',setor,itens:JSON.parse(JSON.stringify(grupos[setor])),status:'recebido',origem:'garcom',criadoEm:agora,atualizadoEm:agora});novos.forEach(i=>{i.enviado=true;i.rascunho=false});await salvarMesa();db.ref('auditoria').push({acao:'enviar_producao',origem:'garcom',funcionario:'livre',detalhes:{mesa,quantidade:novos.length},criadoEm:Date.now()});renderComanda();renderMesas();alert('Pedido enviado para produção.') }catch(e){console.error(e);alert('Falha no envio. Os itens foram mantidos na comanda para nova tentativa.') }}
-async function fecharConta(){if(!mesa)return;const m=mesas[mesa],subtotal=m.itens.reduce((a,i)=>a+(Number(i.preco)||0)*(Number(i.qtd)||0),0);if(subtotal<=0)return alert('A comanda está vazia.');const forma=prompt('Forma de pagamento: pix, dinheiro, credito ou debito','pix');if(!forma)return;const f=forma.toLowerCase().trim();if(!['pix','dinheiro','credito','debito'].includes(f))return alert('Forma de pagamento inválida.');if(!confirm(`Fechar Mesa ${mesa} por ${moeda(subtotal)} em ${f}?`))return;const venda={id:`garcom-${Date.now()}-${Math.random().toString(36).slice(2,8)}`,mesa,cliente:m.cliente||'Não informado',itens:JSON.parse(JSON.stringify(m.itens)),subtotal,taxa:0,total:subtotal,pagamentos:{dinheiro:f==='dinheiro'?subtotal:0,pix:f==='pix'?subtotal:0,credito:f==='credito'?subtotal:0,debito:f==='debito'?subtotal:0},troco:0,dataHora:new Date().toLocaleString('pt-BR'),criadoEm:Date.now(),origem:'garcom'};try{await db.ref('vendas').push(venda);mesas[mesa]={itens:[],cliente:'',abertura:null,origemAbertura:null};await salvarMesa();db.ref('auditoria').push({acao:'fechar_conta',origem:'garcom',funcionario:'livre',detalhes:{mesa,total:subtotal},criadoEm:Date.now()});alert('Conta fechada com sucesso.');voltar()}catch(e){console.error(e);alert('Não foi possível fechar a conta. Tente novamente.') }}
-renderMesas();if('serviceWorker'in navigator)window.addEventListener('load',()=>navigator.serviceWorker.register('/garcom/service-worker.js',{scope:'/garcom/'}));
+    // ⚠️ Troque esse PIN pelo combinado com a equipe (é só uma trava simples, não é a segurança de verdade -
+    // a segurança de verdade está nas Regras do Firebase, que exigem login para ler/escrever os dados).
+    const firebaseConfig = {
+        apiKey: "AIzaSyB7hHYHFZ3L-z-sPmgKbJI75eaWHlSGI3A",
+        authDomain: "joaocaicaratradicao.firebaseapp.com",
+        databaseURL: "https://joaocaicaratradicao-default-rtdb.firebaseio.com",
+        projectId: "joaocaicaratradicao",
+        storageBucket: "joaocaicaratradicao.firebasestorage.app",
+        messagingSenderId: "777982220663",
+        appId: "1:777982220663:web:0af4e9bcbaaec847122972"
+    };
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.database();
+
+    let firebaseAuthReadyG = false;
+    firebase.auth().signInAnonymously().catch((erro) => {
+        console.error('Erro ao autenticar no Firebase:', erro);
+        atualizarStatusConexaoG('🔴 erro de conexão', 'sync-error');
+    });
+
+    function atualizarStatusConexaoG(texto, estado = '') {
+        const el = document.getElementById('status-conexao');
+        if (!el) return;
+        el.innerText = texto;
+        el.title = texto;
+        el.setAttribute('aria-label', texto);
+        el.classList.remove('sync-ok', 'sync-pending', 'sync-error');
+        if (estado) el.classList.add(estado);
+    }
+    function comTimeoutG(promessa, ms = 12000) {
+        return Promise.race([
+            promessa,
+            new Promise((_, rejeitar) => setTimeout(() => rejeitar(new Error('Tempo esgotado ao sincronizar com o Firebase.')), ms))
+        ]);
+    }
+    let firebaseConectadoG = false;
+    const CHAVE_PENDENCIAS_G = 'garcom_pendencias_firebase';
+    function lerPendenciasG() {
+        try { return JSON.parse(localStorage.getItem(CHAVE_PENDENCIAS_G) || '[]'); } catch { return []; }
+    }
+    function registrarPendenciaG(tipo, detalhes = {}) {
+        const pendencias = lerPendenciasG().filter(item => item.tipo !== tipo);
+        pendencias.push({ tipo, criadoEm: Date.now(), ...detalhes });
+        localStorage.setItem(CHAVE_PENDENCIAS_G, JSON.stringify(pendencias));
+        refletirStatusConexaoG();
+    }
+    function limparPendenciaG(tipo) {
+        const pendencias = lerPendenciasG().filter(item => item.tipo !== tipo);
+        localStorage.setItem(CHAVE_PENDENCIAS_G, JSON.stringify(pendencias));
+        refletirStatusConexaoG();
+    }
+    async function reprocessarPendenciasG() {
+        const pendencias = lerPendenciasG();
+        if (!pendencias.length) return;
+        if (!navigator.onLine || !firebaseConectadoG) return alert('Ainda não há conexão estável com o Firebase.');
+        atualizarStatusConexaoG('🟠 reenviando pendência(s)', 'sync-pending');
+        try {
+            for (const pendencia of pendencias) {
+                if (pendencia.tipo === 'producao') {
+                    await Promise.all((pendencia.pedidos || []).map(pedido => {
+                        const payload = { ...pedido };
+                        delete payload.chave;
+                        return db.ref(`pedidosProducao/${pedido.chave}`).set(payload);
+                    }));
+                    const mesaRef = db.ref(`mesas/${pendencia.mesa}`);
+                    const mesaCompleta = JSON.parse(JSON.stringify(pendencia.mesaCompleta || {}));
+                    const itens = Array.isArray(mesaCompleta.itens) ? mesaCompleta.itens : Object.values(mesaCompleta.itens || {});
+                    await mesaRef.set({ ...mesaCompleta, itens: itens.map(item => item.envioId === pendencia.envioId ? { ...item, enviado: true } : item) });
+                } else if (pendencia.tipo === 'fechamento') {
+                    await db.ref(`vendas/${pendencia.vendaChave}`).set(pendencia.venda);
+                    await db.ref(`mesas/${pendencia.mesa}`).set(pendencia.mesaFechada);
+                }
+                limparPendenciaG(pendencia.tipo);
+            }
+            atualizarStatusConexaoG('🟢 Firebase online · sincronizado', 'sync-ok');
+            alert('Pendência(s) reenviada(s) com sucesso.');
+        } catch (erro) {
+            console.error('Falha ao reenviar pendências:', erro);
+            atualizarStatusConexaoG('🔴 falha ao sincronizar', 'sync-error');
+            alert('Não foi possível concluir o reenvio. A pendência foi mantida neste aparelho.');
+        }
+    }
+    function refletirStatusConexaoG() {
+        const pendencias = lerPendenciasG();
+        if (!navigator.onLine) {
+            atualizarStatusConexaoG(pendencias.length ? `🔴 sem internet · ${pendencias.length} pendência(s)` : '🔴 sem internet', 'sync-error');
+        } else if (!firebaseConectadoG) {
+            atualizarStatusConexaoG('🟠 conectando Firebase', 'sync-pending');
+        } else if (pendencias.length) {
+            atualizarStatusConexaoG(`🟠 Firebase online · ${pendencias.length} pendência(s) local(is)`, 'sync-pending');
+        } else {
+            atualizarStatusConexaoG('🟢 Firebase online · sincronizado', 'sync-ok');
+        }
+    }
+    firebase.auth().onAuthStateChanged((user) => {
+        firebaseAuthReadyG = Boolean(user);
+        if (!user) atualizarStatusConexaoG('🔴 aguardando conexão', 'sync-error');
+        else refletirStatusConexaoG();
+    });
+    db.ref('.info/connected').on('value', snap => {
+        firebaseConectadoG = Boolean(snap.val());
+        refletirStatusConexaoG();
+    });
+    window.addEventListener('online', refletirStatusConexaoG);
+    window.addEventListener('offline', refletirStatusConexaoG);
+
+    const categoriasCardapio = [
+        { key: 'aperitivos', label: 'Aperitivos' },
+        { key: 'saladas', label: 'Saladas' },
+        { key: 'peixe_epoca', label: 'Peixe da Época' },
+        { key: 'file_badejo', label: 'Filé de Badejo' },
+        { key: 'salmao', label: 'Salmão' },
+        { key: 'peixes_camaroes', label: 'Peixes e Camarões' },
+        { key: 'massas_risotos', label: 'Massas, Risotos, Polvos e Lulas' },
+        { key: 'carnes', label: 'Carnes' },
+        { key: 'frango', label: 'Frango' },
+        { key: 'acompanhamentos', label: 'Acompanhamentos' },
+        { key: 'cervejas', label: 'Cervejas' },
+        { key: 'caipirinhas', label: 'Caipirinhas e Drinks' },
+        { key: 'destilados', label: 'Destilados' },
+        { key: 'aguas_refrigerantes', label: 'Águas e Refrigerantes' },
+        { key: 'sucos', label: 'Sucos' }
+    ];
+
+    let produtos = [];
+    let mesas = {};
+    let mesaSelecionada = null;
+    let categoriaAtual = 'favoritos';
+    let comandaAberta = false;
+    let monitoramentoFuncionarioRef = null;
+    let mesasProntasG = false;
+
+    const formatarMoeda = (v) => `R$ ${v.toFixed(2).replace('.', ',')}`;
+
+    db.ref('cardapio').on('value', (snap) => {
+        const dados = snap.val();
+        produtos = Array.isArray(dados) ? dados : (dados && typeof dados === 'object' ? Object.values(dados) : []);
+        produtos = produtos.filter(Boolean);
+        if (mesaSelecionada) renderizarProdutosG();
+    }, (erro) => {
+        console.error('Erro ao carregar cardápio:', erro);
+        produtos = [];
+        if (mesaSelecionada) renderizarProdutosG();
+    });
+
+    db.ref('mesas').on('value', (snap) => {
+        const mesasAnteriores = mesas;
+        const mesasAtualizadas = normalizarMesas(snap.val());
+        const novosPedidos = mesasProntasG ? Object.keys(mesasAtualizadas).filter(numero => mesaTemPedidoNovoG(mesasAtualizadas[numero]) && !mesaTemPedidoNovoG(mesasAnteriores[numero])) : [];
+        mesas = mesasAtualizadas;
+        renderizarMesasG();
+        novosPedidos.forEach(numero => notificarNovoPedidoG(numero));
+        mesasProntasG = true;
+        if (mesaSelecionada && mesas[mesaSelecionada]) {
+            renderizarComandaG();
+        }
+    }, (erro) => {
+        console.error('Erro ao carregar mesas:', erro);
+        atualizarStatusConexaoG('🔴 erro nas mesas', 'sync-error');
+        mesas = normalizarMesas(null);
+        renderizarMesasG();
+    });
+
+    function mesaVazia() {
+        return { itens: [], cliente: '', abertura: null };
+    }
+
+    function normalizarMesa(valor) {
+        const mesa = valor && typeof valor === 'object' ? valor : {};
+        let itens = Array.isArray(mesa.itens) ? mesa.itens : [];
+        // O Realtime Database pode devolver listas como objetos numerados.
+        if (!Array.isArray(mesa.itens) && mesa.itens && typeof mesa.itens === 'object') {
+            itens = Object.values(mesa.itens);
+        }
+        return {
+            ...mesa,
+            itens: itens.filter(Boolean),
+            cliente: typeof mesa.cliente === 'string' ? mesa.cliente : '',
+            abertura: mesa.abertura || null
+        };
+    }
+
+    function normalizarMesas(valor) {
+        const origem = valor && typeof valor === 'object' ? valor : {};
+        const resultado = {};
+        Object.keys(origem).forEach((numero) => {
+            resultado[numero] = normalizarMesa(origem[numero]);
+        });
+        return resultado;
+    }
+
+    function salvarMesas() {
+        // Nunca substitui o mapa inteiro quando uma mesa específica está aberta.
+        // Isso evita que alterações simultâneas do PDV e do garçom se sobrescrevam.
+        if (mesaSelecionada !== null && mesas[mesaSelecionada]) {
+            return db.ref(`mesas/${mesaSelecionada}`).set(mesas[mesaSelecionada]);
+        }
+        return db.ref('mesas').set(mesas);
+    }
+
+    function mesaTemPedidoNovoG(mesa) { return Boolean(mesa && Array.isArray(mesa.itens) && mesa.itens.some(item => item && item.enviado === false)); }
+    function tocarNovoPedidoG() {
+        try {
+            if (window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+            const AudioContextG = window.AudioContext || window.webkitAudioContext;
+            if (!AudioContextG) return;
+            const contexto = new AudioContextG();
+            const oscilador = contexto.createOscillator();
+            const ganho = contexto.createGain();
+            oscilador.type = 'sine'; oscilador.frequency.value = 660;
+            ganho.gain.setValueAtTime(0.0001, contexto.currentTime);
+            ganho.gain.exponentialRampToValueAtTime(0.035, contexto.currentTime + 0.02);
+            ganho.gain.exponentialRampToValueAtTime(0.0001, contexto.currentTime + 0.18);
+            oscilador.connect(ganho); ganho.connect(contexto.destination); oscilador.start(); oscilador.stop(contexto.currentTime + 0.2);
+            oscilador.addEventListener('ended', () => contexto.close().catch(() => {}));
+        } catch (erro) { console.debug('Sinal sonoro indisponível:', erro); }
+    }
+    function notificarNovoPedidoG(numero) {
+        const botao = document.getElementById(`mesa-btn-g-${numero}`);
+        if (botao) { botao.classList.add('flash-novo'); setTimeout(() => botao.classList.remove('flash-novo'), 1600); }
+        const aviso = document.getElementById('aviso-novo-pedido-g');
+        if (aviso) aviso.textContent = `Novo pedido recebido na mesa ${numero}.`;
+        tocarNovoPedidoG();
+    }
+    function renderizarMesasG() {
+        const gridSalao = document.getElementById('grid-salao-g');
+        const gridDeck = document.getElementById('grid-deck-g');
+        if (!gridSalao || !gridDeck) return;
+        gridSalao.innerHTML = '';
+        gridDeck.innerHTML = '';
+
+        for (let i = 1; i <= 25; i++) {
+            if (!mesas[i]) mesas[i] = mesaVazia();
+            mesas[i] = normalizarMesa(mesas[i]);
+            const ocupada = mesas[i].itens.length > 0;
+            const novo = ocupada && mesas[i].itens.some(it => it.enviado === false);
+            const total = mesas[i].itens.reduce((soma, item) => soma + ((Number(item.preco) || 0) * (Number(item.qtd) || 0)), 0);
+            const estado = novo ? 'Pedido novo' : ocupada ? 'Ocupada' : 'Livre';
+            const resumo = ocupada ? `${mesas[i].itens.length} item(ns) · ${formatarMoeda(total)}` : 'Toque para abrir';
+            gridSalao.innerHTML += `<button id="mesa-btn-g-${i}" class="mesa-btn ${ocupada ? 'occupied' : ''} ${novo ? 'novo-pedido' : ''}" aria-label="Mesa ${i}: ${estado}" title="Mesa ${i}: ${estado}" onclick="selecionarMesaG(${i})"><span class="mesa-btn__state">${estado}</span><strong class="mesa-btn__number">${i}</strong><span class="mesa-btn__meta">${resumo}</span></button>`;
+        }
+        for (let i = 50; i <= 65; i++) {
+            if (!mesas[i]) mesas[i] = mesaVazia();
+            mesas[i] = normalizarMesa(mesas[i]);
+            const ocupada = mesas[i].itens.length > 0;
+            const novo = ocupada && mesas[i].itens.some(it => it.enviado === false);
+            const total = mesas[i].itens.reduce((soma, item) => soma + ((Number(item.preco) || 0) * (Number(item.qtd) || 0)), 0);
+            const estado = novo ? 'Pedido novo' : ocupada ? 'Ocupada' : 'Livre';
+            const resumo = ocupada ? `${mesas[i].itens.length} item(ns) · ${formatarMoeda(total)}` : 'Toque para abrir';
+            gridDeck.innerHTML += `<button id="mesa-btn-g-${i}" class="mesa-btn ${ocupada ? 'occupied' : ''} ${novo ? 'novo-pedido' : ''}" aria-label="Mesa ${i}: ${estado}" title="Mesa ${i}: ${estado}" onclick="selecionarMesaG(${i})"><span class="mesa-btn__state">${estado}</span><strong class="mesa-btn__number">${i}</strong><span class="mesa-btn__meta">${resumo}</span></button>`;
+        }
+    }
+
+    function selecionarMesaG(numero) {
+        mesaSelecionada = numero;
+        const eraNova = !mesas[numero];
+        if (eraNova) {
+            mesas[numero] = { itens: [], cliente: '', abertura: Date.now() };
+            salvarMesas();
+            registrarAuditoriaGarcom('abrir_mesa', { mesa: numero });
+        } else {
+            mesas[numero] = normalizarMesa(mesas[numero]);
+        }
+
+        document.getElementById('tela-mesas').style.display = 'none';
+        document.getElementById('tela-pedido').style.display = 'flex';
+        document.getElementById('btn-voltar').style.display = 'inline-block';
+        document.getElementById('header-titulo').innerText = `Mesa ${numero}`;
+        document.getElementById('nome-cliente-g').value = mesas[numero].cliente || '';
+
+        renderizarTabsG();
+        filtrarCardapioG('favoritos');
+        renderizarComandaG();
+    }
+
+    function sairGarcom() { voltarParaMesas(); }
+    function voltarParaMesas() {
+        mesaSelecionada = null;
+        document.getElementById('tela-mesas').style.display = 'block';
+        document.getElementById('tela-pedido').style.display = 'none';
+        document.getElementById('btn-voltar').style.display = 'none';
+        document.getElementById('header-titulo').innerText = 'Selecione a mesa';
+        document.getElementById('comanda-sheet').style.display = 'none';
+        comandaAberta = false;
+    }
+
+    function atualizarNomeClienteG() {
+        if (!mesaSelecionada) return;
+        mesas[mesaSelecionada].cliente = document.getElementById('nome-cliente-g').value;
+        salvarMesas();
+    }
+
+    function renderizarTabsG() {
+        const tabsDiv = document.getElementById('tabs-g');
+        let html = `<button class="tab-g active" onclick="filtrarCardapioG('favoritos', this)">⭐ Favoritos</button>`;
+        html += `<button class="tab-g" onclick="filtrarCardapioG('todos', this)">Todos</button>`;
+        categoriasCardapio.forEach(c => {
+            html += `<button class="tab-g" onclick="filtrarCardapioG('${c.key}', this)">${c.label}</button>`;
+        });
+        tabsDiv.innerHTML = html;
+    }
+
+    function filtrarCardapioG(categoria, btnEl) {
+        categoriaAtual = categoria;
+        document.getElementById('busca-produto-g').value = '';
+        document.querySelectorAll('.tab-g').forEach(b => b.classList.remove('active'));
+        if (btnEl) btnEl.classList.add('active');
+        renderizarProdutosG();
+    }
+
+    function renderizarProdutosG() {
+        const grid = document.getElementById('grid-produtos-g');
+        let filtrados;
+        if (categoriaAtual === 'favoritos') filtrados = produtos.filter(p => p.favorito);
+        else if (categoriaAtual === 'todos') filtrados = produtos;
+        else filtrados = produtos.filter(p => p.categoria === categoriaAtual);
+
+        filtrados = filtrados.filter(p => p.ativo !== false);
+
+        if (filtrados.length === 0) {
+            grid.innerHTML = '<p class="msg-vazio">Nenhum item aqui.</p>';
+            return;
+        }
+
+        grid.innerHTML = filtrados.map(p => `
+            <div class="prod-card-g" role="button" tabindex="0" aria-label="Adicionar ${p.nome}, ${formatarMoeda(p.preco)}" onclick="adicionarItemG(${p.id})" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();adicionarItemG(${p.id})}">
+                <h4>${p.nome}</h4>
+                <p>${formatarMoeda(p.preco)}</p>
+                ${p.servePara2 ? '<small>🍽️ Serve 2 pessoas</small>' : ''}
+            </div>
+        `).join('');
+    }
+
+    document.getElementById('busca-produto-g').addEventListener('input', function() {
+        const termo = this.value.trim().toLowerCase();
+        const grid = document.getElementById('grid-produtos-g');
+        if (termo.length === 0) { renderizarProdutosG(); return; }
+        const resultado = produtos.filter(p => p.ativo !== false && p.nome.toLowerCase().includes(termo));
+        if (resultado.length === 0) { grid.innerHTML = '<p class="msg-vazio">Nada encontrado.</p>'; return; }
+        grid.innerHTML = resultado.map(p => `
+            <div class="prod-card-g" role="button" tabindex="0" aria-label="Adicionar ${p.nome}, ${formatarMoeda(p.preco)}" onclick="adicionarItemG(${p.id})" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();adicionarItemG(${p.id})}">
+                <h4>${p.nome}</h4>
+                <p>${formatarMoeda(p.preco)}</p>
+                ${p.servePara2 ? '<small>🍽️ Serve 2 pessoas</small>' : ''}
+            </div>
+        `).join('');
+    });
+
+    function adicionarItemG(produtoId) {
+        if (!mesaSelecionada) return;
+        const produtoBase = produtos.find(p => p.id === produtoId);
+        const dadosMesa = mesas[mesaSelecionada];
+
+        if (dadosMesa.itens.length === 0) dadosMesa.abertura = Date.now();
+
+        const itemJaExiste = dadosMesa.itens.find(it => it.id === produtoId && it.preco === produtoBase.preco && !it.obs && it.enviado === false);
+        if (itemJaExiste) {
+            itemJaExiste.qtd++;
+        } else {
+            dadosMesa.itens.push({ ...produtoBase, qtd: 1, obs: '', enviado: false, rascunho: true });
+        }
+        salvarMesas();
+        renderizarComandaG();
+        if (!comandaAberta) {
+            document.getElementById('comanda-toggle').style.background = 'var(--success)';
+            setTimeout(() => { document.getElementById('comanda-toggle').style.background = 'var(--accent)'; }, 400);
+        }
+    }
+
+    function alterarQtdG(index, delta) {
+        const dadosMesa = mesas[mesaSelecionada];
+        if (!dadosMesa.itens[index]) return;
+        dadosMesa.itens[index].qtd += delta;
+        if (dadosMesa.itens[index].qtd <= 0) dadosMesa.itens.splice(index, 1);
+        if (dadosMesa.itens.length === 0) dadosMesa.abertura = null;
+        salvarMesas();
+        renderizarComandaG();
+    }
+
+    function editarObsG(index) {
+        const dadosMesa = mesas[mesaSelecionada];
+        const item = dadosMesa.itens[index];
+        if (!item) return;
+        const novaObs = prompt(`Observação para: ${item.nome}`, item.obs || '');
+        if (novaObs !== null) {
+            item.obs = novaObs.trim();
+            registrarAuditoriaGarcom('editar_observacao', { mesa: mesaSelecionada, item: item.nome });
+            salvarMesas();
+            renderizarComandaG();
+        }
+    }
+
+    function renderizarComandaG() {
+        const dadosMesa = mesas[mesaSelecionada];
+        if (!dadosMesa) return;
+        const sheet = document.getElementById('comanda-sheet');
+        let total = 0, qtdTotal = 0;
+
+        if (dadosMesa.itens.length === 0) {
+            sheet.innerHTML = '<p class="msg-vazio">Nenhum item lançado ainda nesta mesa.</p>';
+        } else {
+            sheet.innerHTML = dadosMesa.itens.map((item, index) => {
+                total += item.preco * item.qtd;
+                qtdTotal += item.qtd;
+                return `
+                    <div class="item-comanda-g">
+                        <div style="flex:1;">
+                            <div class="nome">${item.qtd}x ${item.nome} ${item.enviado ? '✅' : '🆕'}</div>
+                            <div class="obs-g" onclick="editarObsG(${index})">${item.obs ? '📝 ' + item.obs : '+ observação'}</div>
+                        </div>
+                        <div class="qty-ctrl-g">
+                            <button onclick="alterarQtdG(${index}, -1)">-</button>
+                            <span>${item.qtd}</span>
+                            <button onclick="alterarQtdG(${index}, 1)">+</button>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        document.getElementById('qtd-itens-comanda').innerText = qtdTotal;
+        document.getElementById('total-comanda-g').innerText = formatarMoeda(total);
+        const botaoEnviar = document.getElementById('btn-enviar-g');
+        const resumoEnvio = document.getElementById('resumo-envio-g');
+        const itensNovos = dadosMesa.itens.filter(item => item.enviado === false);
+        const novosCozinha = itensNovos.filter(item => item.setor !== 'bar').length;
+        const novosBar = itensNovos.filter(item => item.setor === 'bar').length;
+        const temNovos = itensNovos.length > 0;
+        if (resumoEnvio) {
+            resumoEnvio.classList.toggle('has-pending', temNovos);
+            resumoEnvio.innerHTML = temNovos
+                ? `<strong>${itensNovos.length} item(ns) pendente(s)</strong> · ${novosCozinha} cozinha · ${novosBar} bar`
+                : 'Tudo enviado para cozinha e bar';
+        }
+        if (botaoEnviar) {
+            botaoEnviar.classList.toggle('has-new', temNovos);
+            botaoEnviar.innerText = temNovos ? `Enviar ${itensNovos.length} novo(s)` : 'Tudo enviado';
+            botaoEnviar.setAttribute('aria-label', temNovos ? `Enviar ${itensNovos.length} item(ns) para produção` : 'Todos os itens já foram enviados');
+        }
+    }
+
+    function toggleComanda() {
+        comandaAberta = !comandaAberta;
+        document.getElementById('comanda-sheet').style.display = comandaAberta ? 'block' : 'none';
+        document.getElementById('comanda-toggle').setAttribute('aria-expanded', String(comandaAberta));
+    }
+
+    function calcularTotalG() {
+        const dados = mesas[mesaSelecionada];
+        return dados ? dados.itens.reduce((s, item) => s + ((Number(item.preco) || 0) * (Number(item.qtd) || 0)), 0) : 0;
+    }
+
+    function sessaoGarcomAtual() { return { funcionarioId: 'acesso-livre', login: 'livre', nome: 'Acesso livre', funcao: 'operacao', entradaEm: Date.now() }; }
+    function registrarAuditoriaGarcom(acao, detalhes) {
+        const sessao = sessaoGarcomAtual() || {};
+        return db.ref('auditoria').push({ acao, origem: 'garcom', funcionario: sessao.login || 'desconhecido', nome: sessao.nome || '', detalhes: detalhes || {}, criadoEm: Date.now() });
+    }
+
+    function enviarProducaoG() {
+        if (!mesaSelecionada || !mesas[mesaSelecionada]) return;
+        if (!firebaseAuthReadyG || !firebase.auth().currentUser) return alert('Aguarde a conexão ser confirmada antes de enviar o pedido.');
+        const dadosMesa = mesas[mesaSelecionada];
+        const botaoEnviar = document.getElementById('btn-enviar-g');
+        const itensNovos = dadosMesa.itens.filter(item => item.enviado === false);
+        if (itensNovos.length === 0) return alert('Não há itens novos para enviar.');
+        if (botaoEnviar) { botaoEnviar.disabled = true; botaoEnviar.classList.add('is-sending'); botaoEnviar.innerText = 'Enviando...'; }
+        atualizarStatusConexaoG('🟠 sincronizando', 'sync-pending');
+        const porSetor = { cozinha: [], bar: [] };
+        itensNovos.forEach(item => (item.setor === 'bar' ? porSetor.bar : porSetor.cozinha).push(item));
+        const agora = Date.now();
+        const envioId = `envio_${agora}_${Math.random().toString(36).slice(2, 8)}`;
+        itensNovos.forEach(item => { item.envioId = envioId; });
+        const pedidosEnviados = Object.entries(porSetor).filter(([, itens]) => itens.length).map(([setor, itens]) => ({ mesa: mesaSelecionada, cliente: dadosMesa.cliente || '', setor, itens: JSON.parse(JSON.stringify(itens)), status: 'recebido', origem: 'garcom', criadoEm: agora, atualizadoEm: agora }));
+        const refsCriadas = [];
+        const gravacoes = pedidosEnviados.map((pedido) => {
+            const ref = db.ref('pedidosProducao').push();
+            refsCriadas.push(ref);
+            pedido.chave = ref.key;
+            const { chave, ...payload } = pedido;
+            return ref.set(payload);
+        });
+        comTimeoutG(Promise.all(gravacoes)).then(() => {
+            // Só confirma no Firebase depois que todos os pedidos por setor foram criados.
+            // A mesa recebe a nova versão com enviado=true na mesma operação lógica.
+            itensNovos.forEach(item => { item.enviado = true; item.rascunho = false; });
+            return comTimeoutG(salvarMesas());
+        }).then(() => {
+            renderizarComandaG();
+            renderizarMesasG();
+            registrarAuditoriaGarcom('enviar_producao', { mesa: mesaSelecionada, setores: Object.keys(porSetor).filter(setor => porSetor[setor].length) });
+            limparPendenciaG('producao');
+            atualizarStatusConexaoG('🟢 Firebase online · sincronizado', 'sync-ok');
+            if (botaoEnviar) { botaoEnviar.disabled = false; botaoEnviar.classList.remove('is-sending'); }
+            alert(`Pedido enviado para ${porSetor.cozinha.length ? 'cozinha' : ''}${porSetor.cozinha.length && porSetor.bar.length ? ' e ' : ''}${porSetor.bar.length ? 'bar' : ''}.`);
+        }).catch((erro) => {
+            console.error('Falha ao enviar produção:', erro);
+            itensNovos.forEach(item => { item.enviado = false; });
+            if (botaoEnviar) { botaoEnviar.disabled = false; botaoEnviar.classList.remove('is-sending'); }
+            atualizarStatusConexaoG('🔴 falha ao enviar', 'sync-error');
+            registrarPendenciaG('producao', { mesa: mesaSelecionada, quantidadeItens: itensNovos.length, envioId, pedidos: pedidosEnviados, mesaCompleta: JSON.parse(JSON.stringify(dadosMesa)) });
+            renderizarComandaG();
+            renderizarMesasG();
+            return Promise.all(refsCriadas.map(ref => ref.remove()))
+                .finally(() => alert('Não foi possível confirmar o envio. Os itens foram mantidos como novos.'));
+        });
+    }
+
+    function abrirFechamentoG() {
+        if (!mesaSelecionada) return;
+        const total = calcularTotalG();
+        if (total <= 0) return alert('A comanda está vazia. Lance pelo menos um item antes de fechar.');
+        document.getElementById('mesa-fechar-g').innerText = mesaSelecionada;
+        document.getElementById('subtotal-fechar-g').innerText = formatarMoeda(total);
+        document.getElementById('valor-recebido-g').value = total.toFixed(2);
+        document.getElementById('modal-fechar-g').style.display = 'flex';
+    }
+
+    function fecharModalG() {
+        document.getElementById('modal-fechar-g').style.display = 'none';
+    }
+
+    function limparComandaG() {
+        if (!mesaSelecionada || !mesas[mesaSelecionada]) return;
+        if (!confirm(`Limpar a comanda da Mesa ${mesaSelecionada}?`)) return;
+        mesas[mesaSelecionada] = { itens: [], cliente: '', abertura: null };
+        salvarMesas();
+        registrarAuditoriaGarcom('limpar_comanda', { mesa: mesaSelecionada });
+        renderizarComandaG();
+    }
+
+    function confirmarFechamentoG() {
+        if (!mesaSelecionada) return;
+        const dados = mesas[mesaSelecionada];
+        const total = calcularTotalG();
+        if (!dados || total <= 0) return;
+        const forma = document.getElementById('pagamento-fechar-g').value;
+        const recebido = parseFloat(document.getElementById('valor-recebido-g').value) || total;
+        if (recebido < total) return alert(`Valor recebido insuficiente. Falta ${formatarMoeda(total - recebido)}.`);
+        const venda = {
+            id: `garcom-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
+            mesa: mesaSelecionada,
+            cliente: dados.cliente || 'Não informado',
+            itens: JSON.parse(JSON.stringify(dados.itens)),
+            subtotal: total,
+            taxa: 0,
+            total,
+            pagamentos: { dinheiro: forma === 'dinheiro' ? total : 0, pix: forma === 'pix' ? total : 0, credito: forma === 'credito' ? total : 0, debito: forma === 'debito' ? total : 0 },
+            troco: recebido - total,
+            dataHora: new Date().toLocaleString('pt-BR'),
+            criadoEm: Date.now(),
+            origem: 'garcom'
+        };
+        const mesaFechada = { itens: [], cliente: '', abertura: null };
+        const vendaRef = db.ref('vendas').push();
+        const mesaRef = db.ref(`mesas/${mesaSelecionada}`);
+        Promise.all([vendaRef.set(venda), mesaRef.set(mesaFechada)])
+            .then(() => {
+                mesas[mesaSelecionada] = mesaFechada;
+                fecharModalG();
+                registrarAuditoriaGarcom('fechar_conta', { mesa: venda.mesa, total: venda.total });
+                alert(`Mesa ${venda.mesa} fechada. Troco: ${formatarMoeda(venda.troco)}`);
+                limparPendenciaG('fechamento');
+                voltarParaMesas();
+            })
+            .catch((erro) => {
+                console.error('Falha ao confirmar fechamento:', erro);
+                registrarPendenciaG('fechamento', { mesa: mesaSelecionada, total: venda.total, vendaChave: vendaRef.key, venda, mesaFechada });
+                alert('Não foi possível confirmar o fechamento no servidor. A mesa foi mantida aberta e a pendência foi registrada neste aparelho; tente novamente quando o status estiver sincronizado.');
+            });
+    }
 </script>
-</body></html>
+
+<script>if ('serviceWorker' in navigator) { window.addEventListener('load', () => navigator.serviceWorker.register('/garcom/service-worker.js', {scope: '/garcom/'})); }</script>
+</body>
+</html>
