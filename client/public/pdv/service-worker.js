@@ -1,11 +1,9 @@
-const CACHE_NAME = 'joao-caicara-pdv-v6';
-const APP_SHELL = ['/pdv/', '/pdv/manifest.json', '/pdv/hotfix-sync.js', '/pdv/modern-hybrid.css', '/pdv/production-status.js', '/pdv/production-status.css', '/tradicao-caicara-logo.webp'];
+const CACHE_NAME = 'joao-caicara-pdv-v7';
+const APP_SHELL = ['/pdv/', '/pdv/manifest.json', '/pdv/hotfix-sync.js', '/pdv/modern-hybrid.css', '/tradicao-caicara-logo.webp'];
 const respostaHtmlComHotfix = async (response) => {
   let html = await response.text();
   if (!html.includes('/pdv/modern-hybrid.css')) html = html.replace('</head>', '<link rel="stylesheet" href="/pdv/modern-hybrid.css"></head>');
-  if (!html.includes('/pdv/production-status.css')) html = html.replace('</head>', '<link rel="stylesheet" href="/pdv/production-status.css"></head>');
   if (!html.includes('/pdv/hotfix-sync.js')) html = html.replace('</body>', '<script src="/pdv/hotfix-sync.js"></script></body>');
-  if (!html.includes('/pdv/production-status.js')) html = html.replace('</body>', '<script src="/pdv/production-status.js"></script></body>');
   const headers = new Headers(response.headers);
   headers.delete('content-length');
   headers.delete('content-encoding');
