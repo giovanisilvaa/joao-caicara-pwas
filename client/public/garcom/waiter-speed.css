@@ -1,0 +1,31 @@
+/* Garçom Rápido — camada visual focada em toque e leitura rápida. */
+#speed-hint{display:flex;gap:8px;overflow-x:auto;padding:7px 10px;background:#f7fbf9;border-bottom:1px solid var(--border);font-size:.68rem;font-weight:800;color:#4f676d;white-space:nowrap;flex-shrink:0}
+#speed-hint span{background:#fff;border:1px solid #dce8e4;border-radius:999px;padding:5px 8px}
+.speed-product{position:relative;min-height:94px;cursor:pointer;appearance:none;width:100%;font-family:inherit;transition:transform .12s ease,box-shadow .12s ease,background .12s ease}
+.speed-product:active{transform:scale(.975)}
+.speed-product.speed-favorite{border:2px solid #e7c67d;background:linear-gradient(160deg,#fffdf5,#fff)}
+.speed-product .speed-star{position:absolute;right:9px;top:7px;font-size:.85rem;color:#d59a1d}
+.speed-product .speed-add{display:block;margin-top:7px;font-size:.65rem;font-weight:900;text-transform:uppercase;letter-spacing:.045em;color:var(--accent)}
+.speed-product.speed-added{animation:speed-added .42s ease}
+@keyframes speed-added{0%{box-shadow:0 0 0 0 rgba(42,157,143,.5);background:#fff}45%{box-shadow:0 0 0 7px rgba(42,157,143,.12);background:#ecfaf5}100%{box-shadow:0 0 0 0 rgba(42,157,143,0)}}
+.speed-empty-search{grid-column:1/-1;display:flex;flex-direction:column;align-items:center;gap:5px;padding:32px 12px;color:#65777b}
+.speed-empty-search strong{color:var(--secondary)}
+.speed-obs-modal{position:fixed;inset:0;z-index:6000;background:rgba(10,40,48,.68);display:none;align-items:flex-end;justify-content:center;padding:10px}
+.speed-obs-modal.open{display:flex}
+.speed-obs-box{width:min(100%,520px);background:#fff;border-radius:20px 20px 14px 14px;padding:14px;box-shadow:0 -14px 50px rgba(0,0,0,.22);max-height:86vh;overflow:auto}
+.speed-obs-head{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:12px}
+.speed-obs-head>div{display:flex;flex-direction:column;gap:2px}
+.speed-obs-head small{text-transform:uppercase;letter-spacing:.08em;color:#718084;font-weight:800;font-size:.62rem}
+.speed-obs-head strong{color:var(--secondary);font-size:1rem}
+#speed-obs-close{width:38px;height:38px;border:0;border-radius:50%;background:#edf3f1;color:var(--secondary);font-size:1.5rem;line-height:1;cursor:pointer}
+.speed-obs-chips{display:flex;flex-wrap:wrap;gap:7px;margin-bottom:12px}
+.speed-obs-chips button{border:1px solid #d6e3df;background:#f7fbf9;color:var(--secondary);border-radius:999px;padding:9px 11px;font-weight:800;font-size:.74rem;cursor:pointer}
+.speed-obs-chips button:active{background:#dff3ec}
+#speed-obs-text{width:100%;resize:vertical;border:1px solid #cfded9;border-radius:12px;padding:11px;font:inherit;font-size:.9rem;outline:none;min-height:76px}
+#speed-obs-text:focus{border-color:var(--primary);box-shadow:0 0 0 3px rgba(15,76,92,.1)}
+.speed-obs-actions{display:flex;gap:8px;margin-top:10px}
+.speed-obs-actions button{min-height:46px;border:0;border-radius:11px;font-weight:900;cursor:pointer}
+.speed-obs-clear{flex:.7;background:#f4e8e4;color:#a34831}
+.speed-obs-save{flex:1.3;background:var(--success);color:#fff}
+@media(max-width:480px){.speed-product{min-height:88px}.speed-obs-modal{padding:0}.speed-obs-box{border-radius:20px 20px 0 0}.speed-obs-chips button{padding:10px 12px}}
+@media(prefers-reduced-motion:reduce){.speed-product,.speed-product.speed-added{animation:none;transition:none}}
