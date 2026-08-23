@@ -7,6 +7,7 @@ on:
 
 permissions:
   contents: read
+  id-token: write
 
 jobs:
   deploy:
@@ -15,16 +16,16 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 10.4.1
+
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: 20
           cache: pnpm
-
-      - name: Setup pnpm
-        uses: pnpm/action-setup@v4
-        with:
-          version: 10.4.1
 
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
@@ -35,10 +36,13 @@ jobs:
       - name: Tests
         run: pnpm test
 
-      - name: Deploy to Firebase Hosting
-        uses: FirebaseExtended/action-hosting-deploy@v0
+      - name: Authenticate to Google Cloud
+        uses: google-github-actions/auth@v2
         with:
-          repoToken: ${{ secrets.GITHUB_TOKEN }}
-          firebaseServiceAccount: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_JOAOCAICARATRADICAO }}
-          channelId: live
-          projectId: joaocaicaratradicao
+          workload_identity_provider: projects/777982220663/locations/global/workloadIdentityPools/github-actions-jo-o-cai-ara/providers/github
+          service_account: firebase-adminsdk-fbsvc@joaocaicaratradicao.iam.gserviceaccount.com
+          create_credentials_file: true
+          export_environment_variables: true
+
+      - name: Deploy to Firebase Hosting
+        run: npx firebase-tools@latest deploy --only hosting --project joaocaicaratradicao --non-interactive
