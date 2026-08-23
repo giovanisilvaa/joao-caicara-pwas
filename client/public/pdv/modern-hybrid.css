@@ -1,0 +1,136 @@
+/* João Caiçara — Tema Híbrido Moderno (PDV)
+   Visual premium + identidade caiçara. Camada somente visual. */
+:root{
+  --primary:#0B5963;
+  --secondary:#123E48;
+  --accent:#E66B45;
+  --success:#2A9D8F;
+  --danger:#D85B46;
+  --info:#477C96;
+  --kitchen:#9A402A;
+  --bg:#F4F6F3;
+  --card:#FFFFFF;
+  --border:#DCE5E1;
+  --wood:#D7B07A;
+  --warning:#E4A13A;
+  --ink:#18383F;
+  --muted:#6E7D7F;
+  --sand:#F3E8D5;
+  --shadow:0 10px 28px rgba(18,62,72,.10);
+  --shadow-soft:0 4px 14px rgba(18,62,72,.08);
+}
+*{scrollbar-width:thin;scrollbar-color:#b9c8c3 transparent}
+body{
+  background:
+    radial-gradient(circle at top right,rgba(230,107,69,.08),transparent 26%),
+    linear-gradient(180deg,#EEF4F1 0%,#F8F7F2 48%,#F3EEE6 100%) !important;
+  color:var(--ink);
+}
+.header{
+  min-height:78px;
+  padding:12px 18px;
+  background:linear-gradient(135deg,#0A4C56 0%,#0F6570 58%,#123E48 100%);
+  border-bottom:0;
+  box-shadow:0 10px 28px rgba(8,55,62,.22);
+  position:relative;
+  z-index:50;
+}
+.header::after{
+  content:"";position:absolute;left:0;right:0;bottom:0;height:3px;
+  background:linear-gradient(90deg,var(--wood),var(--accent),var(--wood));
+}
+.header-logo-container{gap:12px;min-width:0}
+.header-logo-container img{
+  width:72px !important;height:52px !important;border-radius:16px !important;
+  border:1px solid rgba(255,255,255,.7) !important;box-shadow:0 6px 18px rgba(0,0,0,.16);
+}
+.header h1{font-size:1.45rem;letter-spacing:.01em;text-shadow:none;white-space:nowrap}
+.header-actions{gap:8px;flex-wrap:wrap;justify-content:flex-end}
+.btn-history,.btn-alerta-producao,#status-conexao,#usuario-logado-pdv{
+  border-radius:12px !important;min-height:40px;
+}
+.btn-history{
+  background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.18);color:#fff;
+  box-shadow:none;padding:8px 11px;font-size:.75rem;
+}
+.btn-history:hover{background:rgba(255,255,255,.2);filter:none;transform:translateY(-1px)}
+#usuario-logado-pdv{display:inline-flex;align-items:center;background:rgba(255,255,255,.10);border:1px solid rgba(255,255,255,.12)}
+.status-conexao-pdv{border:1px solid rgba(255,255,255,.12)}
+#painel-diario{
+  grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;padding:14px 18px;
+  background:rgba(246,248,245,.86);backdrop-filter:blur(10px);border-bottom:1px solid rgba(18,62,72,.08);
+}
+.painel-diario-titulo strong{font-size:1.12rem}.painel-diario-titulo span{color:var(--muted)}
+.indicador-diario{
+  border:0;border-radius:18px;padding:13px 15px;box-shadow:var(--shadow-soft);background:rgba(255,255,255,.92);
+}
+.indicador-diario strong{font-size:1.55rem}.indicador-diario small{color:var(--muted)}
+.indicador-diario.vendas{border-left:0;background:linear-gradient(135deg,#fff,#EEF9F5)}
+.indicador-diario.mesas{border-left:0;background:linear-gradient(135deg,#fff,#FBF4E7)}
+.main-container{gap:0;background:transparent}
+.tables-panel{
+  width:300px;padding:16px;background:linear-gradient(180deg,#123E48,#0E333A);gap:14px;
+  border-right:1px solid rgba(255,255,255,.08);box-shadow:8px 0 24px rgba(12,47,53,.08);
+}
+.tables-section-title{
+  color:#F0D7AF;border-bottom:1px solid rgba(255,255,255,.12);padding:0 2px 8px;margin-top:6px;font-size:.78rem;
+}
+.tables-grid{grid-template-columns:repeat(4,minmax(0,1fr));gap:9px}
+.table-btn{
+  min-height:62px;border-radius:14px 14px 10px 10px;background:linear-gradient(145deg,#E8C896,#D3A96E);
+  color:#18383F;border:1px solid rgba(255,255,255,.26);box-shadow:0 4px 0 rgba(0,0,0,.16),0 8px 16px rgba(0,0,0,.10);
+  transition:transform .15s ease,box-shadow .15s ease,filter .15s ease;
+}
+.table-btn:hover{transform:translateY(-2px);filter:brightness(1.04)}
+.table-btn.occupied{background:linear-gradient(145deg,#13717D,#0B5963);border-color:#2E8490;color:white;box-shadow:0 4px 0 #073C43,0 10px 18px rgba(0,0,0,.16)}
+.table-btn.novo-pedido{background:linear-gradient(145deg,#F08058,#D95433);border-color:#F29C7E;box-shadow:0 4px 0 #973A24,0 10px 20px rgba(217,84,51,.26)}
+.table-btn.active{background:linear-gradient(145deg,#EA815B,#D65D3E);border:2px solid #fff;box-shadow:0 0 0 3px rgba(230,107,69,.35),0 10px 24px rgba(0,0,0,.18)}
+.menu-panel{padding:20px 22px;background:rgba(248,249,246,.88)}
+.menu-panel h2{font-size:1.35rem !important;color:var(--secondary) !important}
+#busca-produto{
+  min-height:48px !important;border:1px solid var(--border) !important;border-radius:14px !important;
+  background:#fff !important;box-shadow:0 3px 12px rgba(18,62,72,.05);padding:0 15px !important;
+}
+.tabs{gap:8px;margin-bottom:16px}
+.tab{
+  border-radius:999px;padding:9px 13px;background:#fff;border:1px solid var(--border);color:var(--secondary);
+  box-shadow:0 2px 8px rgba(18,62,72,.05);font-size:.78rem;
+}
+.tab.active{background:linear-gradient(135deg,#0B5963,#14707C);border-color:#0B5963;color:#fff;box-shadow:0 5px 14px rgba(11,89,99,.20)}
+.products-grid{grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:12px}
+.product-card{
+  min-height:116px;border:1px solid var(--border);border-radius:18px;padding:14px;background:linear-gradient(180deg,#fff,#FCFDFC);
+  box-shadow:0 5px 16px rgba(18,62,72,.07);display:flex;flex-direction:column;justify-content:center;
+}
+.product-card:hover{border-color:#7FB1B3;transform:translateY(-3px);box-shadow:0 10px 22px rgba(18,62,72,.12)}
+.product-card h4{font-size:.9rem;color:var(--secondary);line-height:1.25;margin-bottom:8px}.product-card p{font-size:1rem;color:var(--success)}
+.order-panel{
+  width:400px;border-left:0;background:rgba(255,255,255,.96);box-shadow:-10px 0 28px rgba(18,62,72,.08);
+}
+.order-header{padding:16px;background:linear-gradient(180deg,#F8FBFA,#F2F5F2);border-bottom:1px solid var(--border)}
+.order-header h2{font-size:1.25rem;margin-bottom:9px}.order-header input{min-height:42px;border-radius:11px;border:1px solid var(--border);background:#fff}
+.order-items{padding:10px 16px}.order-item{padding:13px 0;border-bottom:1px solid #ECF0EE}.item-name{color:var(--secondary);font-size:.9rem}.item-price{color:var(--accent);text-decoration:none;font-weight:700}
+.btn-qty{width:32px;height:32px;border:0;background:#EAF1EF;box-shadow:0 2px 6px rgba(18,62,72,.07)}
+.order-footer{padding:14px 16px;background:linear-gradient(180deg,#F7F9F7,#F1F4F1);border-top:1px solid var(--border)}
+.total-display{font-size:1.6rem;margin-bottom:12px}
+.action-buttons{gap:8px}.btn{border-radius:12px;min-height:45px;box-shadow:0 3px 9px rgba(18,62,72,.08);font-size:.75rem}
+.btn-close{background:linear-gradient(135deg,#2A9D8F,#238678);box-shadow:0 5px 0 #1A6B61,0 10px 18px rgba(42,157,143,.16)}
+.btn-kitchen{background:linear-gradient(135deg,#A24730,#873522)}.btn-bar{background:linear-gradient(135deg,#4E8198,#386C84)}.btn-split{background:linear-gradient(135deg,#E1C08D,#CFA56C);color:#2B3F42}
+#producao-painel{
+  border:1px solid rgba(230,107,69,.35);border-radius:18px;background:rgba(255,255,255,.98);box-shadow:0 20px 50px rgba(18,62,72,.22);
+}
+.producao-card{border-radius:14px;border:1px solid var(--border);border-left:5px solid var(--accent);box-shadow:0 3px 12px rgba(18,62,72,.06)}
+.producao-card select,.producao-filtros select{border-radius:10px;min-height:40px}
+.modal-overlay{backdrop-filter:blur(5px)}.modal{border:0;border-radius:22px;box-shadow:0 24px 60px rgba(8,45,51,.28);background:#F8FAF8;padding:24px}.modal h3{font-size:1.35rem}.report-box{border:1px solid var(--border);border-radius:14px;box-shadow:0 3px 12px rgba(18,62,72,.05)}.history-card{border-radius:12px;box-shadow:0 2px 8px rgba(18,62,72,.05)}
+@media(max-width:1100px){
+  .header{min-height:auto}.header h1{font-size:1.2rem}.tables-panel{width:100%;background:linear-gradient(135deg,#123E48,#0B5963)}
+  .tables-grid{grid-template-columns:repeat(8,minmax(44px,1fr))}.order-panel{width:100%;box-shadow:0 -8px 24px rgba(18,62,72,.06)}
+}
+@media(max-width:600px){
+  .header{padding:10px}.header-logo-container img{width:54px !important;height:42px !important}.header h1{font-size:.98rem}.header-actions{gap:6px}.btn-history{font-size:.68rem;min-height:38px}
+  #painel-diario{padding:8px;gap:8px}.indicador-diario{padding:10px;border-radius:14px}.indicador-diario strong{font-size:1.12rem}
+  .tables-panel{padding:10px}.tables-grid{grid-template-columns:repeat(5,minmax(48px,1fr));gap:7px}.table-btn{min-height:58px;border-radius:12px}
+  .menu-panel{padding:12px}.products-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:9px}.product-card{min-height:104px;border-radius:15px;padding:11px}
+  .order-footer{padding:10px}.btn{min-height:44px;border-radius:10px}
+}
+@media(prefers-reduced-motion:reduce){*{scroll-behavior:auto!important;transition:none!important;animation:none!important}}
