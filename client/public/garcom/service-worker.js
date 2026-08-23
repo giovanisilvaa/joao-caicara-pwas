@@ -1,7 +1,8 @@
-const CACHE_NAME = 'joao-caicara-garcom-v4';
-const APP_SHELL = ['/garcom/', '/garcom/manifest.json', '/garcom/hotfix-sync.js', '/tradicao-caicara-logo.webp'];
+const CACHE_NAME = 'joao-caicara-garcom-v5';
+const APP_SHELL = ['/garcom/', '/garcom/manifest.json', '/garcom/hotfix-sync.js', '/garcom/modern-hybrid.css', '/tradicao-caicara-logo.webp'];
 const respostaHtmlComHotfix = async (response) => {
   let html = await response.text();
+  if (!html.includes('/garcom/modern-hybrid.css')) html = html.replace('</head>', '<link rel="stylesheet" href="/garcom/modern-hybrid.css"></head>');
   if (!html.includes('/garcom/hotfix-sync.js')) html = html.replace('</body>', '<script src="/garcom/hotfix-sync.js"></script></body>');
   const headers = new Headers(response.headers);
   headers.delete('content-length');
