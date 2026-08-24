@@ -29,19 +29,18 @@ describe("regressoes criticas Firebase e PWAs", () => {
     expect(safety).toContain("window.confirmarLimpezaMesa");
     expect(safety).toContain(".remove()");
     expect(safety).toContain("CAMINHOS_BACKUP_SEGUROS");
-    expect(safety).toContain("mesas");
-    expect(safety).toContain("vendas");
-    expect(safety).toContain("pedidosProducao");
     const lista = safety.match(/const CAMINHOS_BACKUP_SEGUROS = \[([^\]]+)\]/)?.[1] ?? "";
     expect(lista).not.toContain("configuracoes");
   });
 
-  it("hotfix principal nao volta a sobrescrever modulos consolidados", () => {
-    const hotfix = read("client/public/pdv/hotfix-sync.js");
-    expect(hotfix).not.toContain("window.confirmarLimpezaMesa");
-    expect(hotfix).not.toContain("window.transferirMesa");
-    expect(hotfix).not.toContain("window.imprimirCaixa");
-    expect(hotfix).not.toContain("window.imprimirProducao");
+  it("sincronizacao do PDV grava somente a mesa selecionada", () => {
+    const sync = read("client/public/pdv/pdv-sync.js");
+    expect(sync).toContain("window.salvarMesas");
+    expect(sync).toContain("db.ref(`mesas/${mesaAtualSelecionada}`).set");
+    expect(sync).not.toContain("db.ref('mesas').set");
+    expect(sync).not.toContain('db.ref("mesas").set');
+    expect(sync).toContain("window.gerarMesas");
+    expect(sync).toContain("window.atualizarPainelDiario");
   });
 
   it("operacoes do PDV preservam transferencia atomica entre mesas", () => {
@@ -72,23 +71,28 @@ describe("regressoes criticas Firebase e PWAs", () => {
     expect(production).toContain("db.ref('pedidosProducao').push");
   });
 
-  it("PDV carrega camadas consolidadas depois do hotfix principal", () => {
+  it("PDV usa apenas modulos consolidados e nao carrega hotfix antigo", () => {
     const sw = read("client/public/pdv/service-worker.js");
-    const hotfix = sw.indexOf("/pdv/hotfix-sync.js");
+    const sync = sw.indexOf("/pdv/pdv-sync.js");
     const safety = sw.indexOf("/pdv/pdv-safety.js");
     const operations = sw.indexOf("/pdv/pdv-operations.js");
     const checkout = sw.indexOf("/pdv/pdv-checkout-core.js");
     const production = sw.indexOf("/pdv/pdv-production.js");
     const fastCheckout = sw.indexOf("/pdv/fast-checkout.js");
-    expect(hotfix).toBeGreaterThanOrEqual(0);
-    expect(safety).toBeGreaterThan(hotfix);
-    expect(operations).toBeGreaterThan(hotfix);
-    expect(checkout).toBeGreaterThan(hotfix);
-    expect(production).toBeGreaterThan(hotfix);
+    expect(sync).toBeGreaterThanOrEqual(0);
+    expect(safety).toBeGreaterThan(sync);
+    expect(operations).toBeGreaterThan(sync);
+    expect(checkout).toBeGreaterThan(sync);
+    expect(production).toBeGreaterThan(sync);
     expect(fastCheckout).toBeGreaterThan(checkout);
-    expect(sw).toContain("joao-caicara-pdv-v17");
+    expect(sw).toContain("joao-caicara-pdv-v18");
+    expect(sw).not.toContain("/pdv/hotfix-sync.js");
     expect(sw).not.toContain("/pdv/mesa-delete-fix.js");
     expect(sw).not.toContain("/pdv/backup-safety.js");
+  });
+
+  it("hotfix principal antigo foi removido", () => {
+    expect(fs.existsSync("client/public/pdv/hotfix-sync.js")).toBe(false);
   });
 
   it("deploy inclui Hosting e regras do Realtime Database em etapas separadas", () => {
