@@ -45,6 +45,12 @@
         ".write": "auth != null && newData.exists()"
       }
     },
+    "perfisAcesso": {
+      "$uid": {
+        ".read": "auth != null && auth.uid === $uid",
+        ".write": false
+      }
+    },
     "configuracoes": {
       ".read": false,
       ".write": false
