@@ -52,16 +52,16 @@ describe("concorrencia atomica de mesas", () => {
     expect(operations).toContain("db.ref('/').update");
   });
 
-  it("service workers carregam o nucleo antes e a camada de concorrencia por ultimo", () => {
+  it("service workers carregam o nucleo antes e injetam a camada de concorrencia depois dos modulos base", () => {
     const pdvSw = read("client/public/pdv/service-worker.js");
     const garcomSw = read("client/public/garcom/service-worker.js");
 
     expect(pdvSw.indexOf("/mesa-atomic.js?v=36")).toBeGreaterThanOrEqual(0);
     expect(pdvSw.indexOf("/mesa-atomic.js?v=36")).toBeLessThan(pdvSw.indexOf("/pdv/pdv-checkout-core.js"));
-    expect(pdvSw.indexOf("/pdv/mesa-concurrency.js?v=36")).toBeGreaterThan(pdvSw.indexOf("/pdv/pdv-production.js"));
+    expect(pdvSw.lastIndexOf("/pdv/mesa-concurrency.js?v=36")).toBeGreaterThan(pdvSw.lastIndexOf("/pdv/pdv-production.js"));
 
     expect(garcomSw.indexOf("/mesa-atomic.js?v=36")).toBeGreaterThanOrEqual(0);
     expect(garcomSw.indexOf("/mesa-atomic.js?v=36")).toBeLessThan(garcomSw.indexOf("/garcom/hotfix-sync.js"));
-    expect(garcomSw.indexOf("/garcom/mesa-concurrency.js?v=36")).toBeGreaterThan(garcomSw.indexOf("/garcom/waiter-speed.js"));
+    expect(garcomSw.lastIndexOf("/garcom/mesa-concurrency.js?v=36")).toBeGreaterThan(garcomSw.lastIndexOf("/garcom/waiter-speed.js"));
   });
 });
