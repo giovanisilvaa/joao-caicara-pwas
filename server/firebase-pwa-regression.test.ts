@@ -24,11 +24,17 @@ describe("regressoes criticas Firebase e PWAs", () => {
     expect(rules.rules.configuracoes?.[".write"]).toBe(false);
   });
 
-  it("perfis de acesso sao privados por uid e somente leitura no cliente", () => {
+  it("perfil remoto e privado e bootstrap administrativo so pode ocorrer uma vez no UID autorizado", () => {
     const rules = JSON.parse(read("database.rules.json"));
     const perfil = rules.rules.perfisAcesso?.$uid;
-    expect(String(perfil?.[".read"] ?? "")).toContain("auth.uid === $uid");
-    expect(perfil?.[".write"]).toBe(false);
+    const leitura = String(perfil?.[".read"] ?? "");
+    const escrita = String(perfil?.[".write"] ?? "");
+    expect(leitura).toContain("auth.uid === $uid");
+    expect(escrita).toContain("auth.uid === $uid");
+    expect(escrita).toContain("woAmR3x91JcMZGLzykBUtLG97Hx1");
+    expect(escrita).toContain("!data.exists()");
+    expect(escrita).toContain("administrador");
+    expect(perfil?.$other?.[".validate"]).toBe(false);
   });
 
   it("camada consolidada protege limpeza e backup", () => {
@@ -96,16 +102,18 @@ describe("regressoes criticas Firebase e PWAs", () => {
     expect(checkout).toBeGreaterThan(sync);
     expect(production).toBeGreaterThan(sync);
     expect(fastCheckout).toBeGreaterThan(checkout);
-    expect(sw).toContain("joao-caicara-pdv-v22");
+    expect(sw).toContain("joao-caicara-pdv-v23");
     expect(sw).not.toContain("/pdv/hotfix-sync.js");
   });
 
-  it("PDV consulta perfil remoto sem aplica-lo automaticamente", () => {
+  it("PDV cadastra somente o administrador autorizado e nao ativa bloqueio", () => {
     const access = read("client/public/pdv/access-control.js");
+    expect(access).toContain("BOOTSTRAP_ADMIN_UID");
+    expect(access).toContain("woAmR3x91JcMZGLzykBUtLG97Hx1");
+    expect(access).toContain("tentarBootstrapAdministrador");
+    expect(access).toContain("ref.set({ perfil: 'administrador' })");
     expect(access).toContain("perfilAtual: 'administrador'");
     expect(access).toContain("modoCompatibilidade: true");
-    expect(access).toContain("consultarPerfilRemoto");
-    expect(access).toContain("perfisAcesso/${uid}");
     expect(access).toContain("aplicado: false");
     expect(access).not.toContain("consultarPerfilRemoto(user.uid).then");
   });
