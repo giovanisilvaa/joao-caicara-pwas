@@ -2,7 +2,7 @@
 (() => {
   const LOGIN_COMPARTILHADO = 'garcom';
   const EMAIL_FIREBASE = 'garcom@acesso.joaocaicara.app';
-  const NOME_COMPARTILHADO = 'Garçom compartilhado';
+  const CHAVE_NOME_SESSAO = 'joao_caicara_garcom_nome_sessao';
   const ESTADO = {
     autenticando: false,
     entradaEm: Date.now(),
@@ -11,18 +11,39 @@
 
   const auth = () => window.firebase?.auth?.();
 
+  function limparNome(nome) {
+    return String(nome || '').replace(/\s+/g, ' ').trim().slice(0, 60);
+  }
+
+  function nomeDaSessao() {
+    try { return limparNome(sessionStorage.getItem(CHAVE_NOME_SESSAO)); }
+    catch (_) { return ''; }
+  }
+
+  function salvarNomeDaSessao(nome) {
+    const limpo = limparNome(nome);
+    if (!limpo) return false;
+    try { sessionStorage.setItem(CHAVE_NOME_SESSAO, limpo); } catch (_) {}
+    return true;
+  }
+
+  function removerNomeDaSessao() {
+    try { sessionStorage.removeItem(CHAVE_NOME_SESSAO); } catch (_) {}
+  }
+
   function usuarioEhCompartilhado(user) {
     return Boolean(user && !user.isAnonymous && String(user.email || '').toLowerCase() === EMAIL_FIREBASE);
   }
 
   function sessaoAtual() {
     const user = auth()?.currentUser || null;
-    if (usuarioEhCompartilhado(user)) {
+    const nome = nomeDaSessao();
+    if (usuarioEhCompartilhado(user) && nome) {
       return {
         funcionarioId: user.uid,
         uid: user.uid,
         login: LOGIN_COMPARTILHADO,
-        nome: NOME_COMPARTILHADO,
+        nome,
         funcao: 'garcom',
         perfil: 'garcom',
         compartilhado: true,
@@ -33,7 +54,7 @@
       funcionarioId: user?.uid || 'acesso-temporario',
       uid: user?.uid || null,
       login: 'temporario',
-      nome: 'Acesso temporário',
+      nome: nome || 'Acesso temporário',
       funcao: 'operacao',
       perfil: 'garcom',
       compartilhado: false,
@@ -41,14 +62,29 @@
     };
   }
 
+  function garantirBotaoTrocarGarcom() {
+    const usuario = document.getElementById('usuario-logado-g');
+    if (!usuario || document.getElementById('trocar-garcom-g')) return;
+    const botao = document.createElement('button');
+    botao.id = 'trocar-garcom-g';
+    botao.type = 'button';
+    botao.textContent = 'Trocar';
+    botao.title = 'Trocar garçom neste aparelho';
+    botao.style.cssText = 'border:0;border-radius:999px;padding:6px 8px;font-size:.68rem;font-weight:800;cursor:pointer;background:rgba(255,255,255,.15);color:#fff;';
+    botao.addEventListener('click', () => trocarGarcom());
+    usuario.insertAdjacentElement('afterend', botao);
+  }
+
   function instalarIdentidadeOperacional() {
     window.sessaoGarcomAtual = sessaoAtual;
     const user = auth()?.currentUser || null;
+    const nome = nomeDaSessao();
     const el = document.getElementById('usuario-logado-g');
     if (el) {
-      el.textContent = usuarioEhCompartilhado(user) ? 'Garçom' : 'Acesso temporário';
-      el.title = usuarioEhCompartilhado(user) ? 'Login compartilhado: garcom' : 'Modo compatibilidade temporário';
+      el.textContent = nome || (usuarioEhCompartilhado(user) ? 'Identifique-se' : 'Acesso temporário');
+      el.title = nome ? `Garçom: ${nome}` : 'Nenhum garçom identificado nesta sessão';
     }
+    garantirBotaoTrocarGarcom();
   }
 
   function criarEstilos() {
@@ -62,7 +98,6 @@
       #garcom-login-card p{font-size:.88rem;color:#5f7074;margin:0 0 18px;line-height:1.45}
       #garcom-login-card label{display:block;font-size:.78rem;font-weight:800;margin:10px 0 5px;color:#123e48}
       #garcom-login-card input{width:100%;padding:12px;border:1px solid #d8e2df;border-radius:10px;font-size:1rem;background:#fff}
-      #garcom-login-card input[readonly]{background:#f3f6f5;color:#52666b}
       #garcom-login-actions{display:flex;gap:8px;margin-top:16px}
       #garcom-login-actions button{flex:1;border:0;border-radius:10px;padding:12px 10px;font-weight:800;cursor:pointer}
       #garcom-login-submit{background:#0b5963;color:#fff}
@@ -115,10 +150,10 @@
     overlay.innerHTML = `
       <div id="garcom-login-card" role="dialog" aria-modal="true" aria-labelledby="garcom-login-title">
         <h2 id="garcom-login-title">Acesso do Garçom</h2>
-        <p>Use o login compartilhado da equipe. Futuramente cada garçom poderá ter seu próprio usuário para relatório individual de vendas.</p>
-        <label for="garcom-login-user">Usuário</label>
-        <input id="garcom-login-user" value="${LOGIN_COMPARTILHADO}" readonly autocomplete="username">
-        <label for="garcom-login-password">Senha</label>
+        <p>Digite seu nome e use a senha única da equipe. Seu nome será registrado nas comandas e pedidos desta sessão.</p>
+        <label for="garcom-login-name">Seu nome</label>
+        <input id="garcom-login-name" maxlength="60" autocomplete="name" placeholder="Ex.: João">
+        <label for="garcom-login-password">Senha da equipe</label>
         <input id="garcom-login-password" type="password" inputmode="numeric" autocomplete="current-password" placeholder="Digite a senha da equipe">
         <div id="garcom-login-msg" aria-live="polite"></div>
         <div id="garcom-login-actions">
@@ -128,14 +163,22 @@
       </div>`;
     document.body.appendChild(overlay);
 
+    const nomeEl = document.getElementById('garcom-login-name');
     const senhaEl = document.getElementById('garcom-login-password');
     const msgEl = document.getElementById('garcom-login-msg');
     const card = document.getElementById('garcom-login-card');
     const submit = document.getElementById('garcom-login-submit');
+    if (nomeDaSessao()) nomeEl.value = nomeDaSessao();
 
     async function enviar() {
       if (ESTADO.autenticando) return;
+      const nome = limparNome(nomeEl?.value);
       const senha = String(senhaEl?.value || '');
+      if (nome.length < 2) {
+        msgEl.textContent = 'Digite seu nome.';
+        nomeEl?.focus();
+        return;
+      }
       if (senha.length < 6) {
         msgEl.textContent = 'Digite a senha da equipe.';
         senhaEl?.focus();
@@ -147,6 +190,7 @@
       msgEl.textContent = '';
       try {
         await tentarEntrar(senha);
+        salvarNomeDaSessao(nome);
         ESTADO.modoTemporario = false;
         ESTADO.entradaEm = Date.now();
         esconderLogin();
@@ -163,11 +207,26 @@
     submit?.addEventListener('click', enviar);
     senhaEl?.addEventListener('keydown', event => { if (event.key === 'Enter') enviar(); });
     document.getElementById('garcom-login-fallback')?.addEventListener('click', () => {
+      const nome = limparNome(nomeEl?.value);
+      if (nome.length < 2) {
+        msgEl.textContent = 'Digite seu nome antes de continuar.';
+        nomeEl?.focus();
+        return;
+      }
+      salvarNomeDaSessao(nome);
       ESTADO.modoTemporario = true;
       ESTADO.entradaEm = Date.now();
       esconderLogin();
     });
-    setTimeout(() => senhaEl?.focus(), 50);
+    setTimeout(() => (nomeEl?.value ? senhaEl : nomeEl)?.focus(), 50);
+  }
+
+  function trocarGarcom() {
+    removerNomeDaSessao();
+    ESTADO.modoTemporario = false;
+    ESTADO.entradaEm = Date.now();
+    instalarIdentidadeOperacional();
+    mostrarLogin();
   }
 
   function iniciar() {
@@ -178,14 +237,14 @@
     }
     firebaseAuth.onAuthStateChanged(user => {
       instalarIdentidadeOperacional();
-      if (usuarioEhCompartilhado(user)) {
+      if (usuarioEhCompartilhado(user) && nomeDaSessao()) {
         esconderLogin();
       } else if (!ESTADO.modoTemporario) {
         mostrarLogin();
       }
     });
     instalarIdentidadeOperacional();
-    if (!usuarioEhCompartilhado(firebaseAuth.currentUser)) mostrarLogin();
+    if (!usuarioEhCompartilhado(firebaseAuth.currentUser) || !nomeDaSessao()) mostrarLogin();
   }
 
   window.GarcomLoginCompartilhado = Object.freeze({
@@ -193,7 +252,9 @@
     emailInterno: EMAIL_FIREBASE,
     sessaoAtual,
     mostrarLogin,
-    get autenticado() { return usuarioEhCompartilhado(auth()?.currentUser); },
+    trocarGarcom,
+    get nomeAtual() { return nomeDaSessao(); },
+    get autenticado() { return usuarioEhCompartilhado(auth()?.currentUser) && Boolean(nomeDaSessao()); },
     get modoTemporario() { return ESTADO.modoTemporario; }
   });
 
