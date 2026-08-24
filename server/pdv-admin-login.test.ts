@@ -16,7 +16,7 @@ describe("login administrativo do PDV", () => {
     expect(sync).toBeGreaterThan(diagnostics);
   });
 
-  it("usa credencial digitada e perfil administrador sem criar conta no cliente", () => {
+  it("usa credencial digitada e perfil administrador sem criar conta nem liberar fallback", () => {
     const login = read("client/public/pdv/admin-login.js");
     expect(login).toContain("LOGIN_ADMIN = 'adm'");
     expect(login).toContain("EMAIL_ADMIN = 'adm@acesso.joaocaicara.app'");
@@ -26,7 +26,10 @@ describe("login administrativo do PDV", () => {
     expect(login).toContain("aplicarPerfilAutenticado('administrador'");
     expect(login).toContain("firebase-auth-adm");
     expect(login).toContain("pdv-admin-sair");
-    expect(login).toContain("Acesso temporário");
+    expect(login).not.toContain("Acesso temporário");
+    expect(login).not.toContain("fallback-temporario");
+    expect(login).not.toContain("pdv-admin-login-fallback");
+    expect(login).not.toContain("temporario:");
     expect(login).not.toMatch(/(?:SENHA|PASSWORD|PASS)_[A-Z_]*\s*=\s*['\"][^'\"]+['\"]/i);
   });
 
