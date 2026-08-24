@@ -82,48 +82,6 @@
     ]).then(() => gerarMesas()).catch(erro => { console.error(erro); alert('Pedido impresso, mas houve falha ao confirmar a sincronização. Confira o status da conexão.'); });
   };
 
-  window.transferirMesa = async function transferirMesaSeguro() {
-    if (!mesaAtualSelecionada) return alert('Selecione uma mesa!');
-    const origem = mesaAtualSelecionada;
-    const destinoStr = prompt(`Transferir Mesa ${origem} para qual mesa? (número de 1 a 25 ou 50 a 65)`);
-    if (destinoStr === null) return;
-    const destino = parseInt(destinoStr, 10);
-    if (Number.isNaN(destino) || destino === origem || !((destino >= 1 && destino <= 25) || (destino >= 50 && destino <= 65))) return alert('Número de mesa inválido.');
-    try {
-      const [snapOrigem, snapDestino] = await Promise.all([db.ref(`mesas/${origem}`).once('value'), db.ref(`mesas/${destino}`).once('value')]);
-      const dadosOrigem = normalizarHotfix(snapOrigem.val() || mesas[origem]);
-      const dadosDestino = normalizarHotfix(snapDestino.val() || mesas[destino] || mesaVaziaHotfix());
-      if (!dadosOrigem.itens.length) return alert('A comanda está vazia, não há nada para transferir!');
-      if (dadosDestino.itens.length && !confirm(`A Mesa ${destino} já está ocupada. Deseja JUNTAR a conta da Mesa ${origem} com a Mesa ${destino}?`)) return;
-      const destinoFinal = normalizarHotfix(dadosDestino);
-      if (destinoFinal.itens.length) {
-        dadosOrigem.itens.forEach(item => {
-          const igual = destinoFinal.itens.find(i => i.id === item.id && i.preco === item.preco && (i.obs || '') === (item.obs || '') && i.enviado === item.enviado && i.rascunho === item.rascunho);
-          if (igual) igual.qtd = (Number(igual.qtd) || 0) + (Number(item.qtd) || 0); else destinoFinal.itens.push(item);
-        });
-        if (!destinoFinal.cliente && dadosOrigem.cliente) destinoFinal.cliente = dadosOrigem.cliente;
-        destinoFinal.abertura = destinoFinal.abertura || dadosOrigem.abertura || Date.now();
-      } else {
-        destinoFinal.itens = dadosOrigem.itens;
-        destinoFinal.cliente = dadosOrigem.cliente;
-        destinoFinal.abertura = dadosOrigem.abertura || Date.now();
-      }
-      const origemFechada = mesaVaziaHotfix();
-      await db.ref('/').update({ [`mesas/${origem}`]: origemFechada, [`mesas/${destino}`]: destinoFinal });
-      mesas[origem] = origemFechada;
-      mesas[destino] = destinoFinal;
-      mesaAtualSelecionada = destino;
-      document.getElementById('mesa-titulo').innerText = `Comanda - Mesa ${destino}`;
-      document.getElementById('nome-cliente').value = destinoFinal.cliente || '';
-      renderizarComanda(); gerarMesas(); atualizarPainelDiario();
-      await registrarAuditoriaPdv('transferir_mesa', { origem, destino });
-      alert(`Mesa ${origem} transferida para a Mesa ${destino} com sucesso!`);
-    } catch (erro) {
-      console.error('Falha ao transferir mesa:', erro);
-      alert('Não foi possível transferir a mesa. Nenhuma alteração parcial foi confirmada.');
-    }
-  };
-
   window.imprimirCaixa = async function imprimirCaixaSeguro() {
     const mesaId = mesaAtualSelecionada;
     if (!mesaId || !mesas[mesaId]) return alert('Selecione uma mesa!');
