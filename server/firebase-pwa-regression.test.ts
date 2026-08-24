@@ -59,12 +59,14 @@ describe("regressoes criticas Firebase e PWAs", () => {
     expect(operations).toContain("registrarAuditoriaPdv('transferir_mesa'");
   });
 
-  it("fechamento do PDV registra venda e libera mesa na mesma atualizacao", () => {
+  it("fechamento do PDV registra venda, garcom e libera mesa na mesma atualizacao", () => {
     const checkout = read("client/public/pdv/pdv-checkout-core.js");
     expect(checkout).toContain("window.imprimirCaixa");
     expect(checkout).toContain("db.ref('/').update");
     expect(checkout).toContain("vendas/${vendaRef.key}");
     expect(checkout).toContain("mesas/${mesaId}");
+    expect(checkout).toContain("garcomResponsavel");
+    expect(checkout).toContain("garcomNome");
     expect(checkout).toContain("O pagamento informado ainda é insuficiente");
     expect(checkout).toContain("registrarAuditoriaPdv('fechar_conta'");
   });
@@ -78,7 +80,7 @@ describe("regressoes criticas Firebase e PWAs", () => {
     expect(production).toContain("db.ref('pedidosProducao').push");
   });
 
-  it("PDV usa modulos consolidados e diagnostico de sessao", () => {
+  it("PDV usa modulos consolidados e cache atualizado", () => {
     const sw = read("client/public/pdv/service-worker.js");
     const access = sw.indexOf("/pdv/access-control.js");
     const diagnostics = sw.indexOf("/pdv/access-diagnostics.js");
@@ -96,7 +98,7 @@ describe("regressoes criticas Firebase e PWAs", () => {
     expect(checkout).toBeGreaterThan(sync);
     expect(production).toBeGreaterThan(sync);
     expect(fastCheckout).toBeGreaterThan(checkout);
-    expect(sw).toContain("joao-caicara-pdv-v24");
+    expect(sw).toContain("joao-caicara-pdv-v25");
     expect(sw).not.toContain("/pdv/hotfix-sync.js");
   });
 
@@ -112,32 +114,47 @@ describe("regressoes criticas Firebase e PWAs", () => {
     expect(access).not.toContain("tentarBootstrapAdministrador");
   });
 
-  it("Garcom consulta perfil remoto e carrega login compartilhado", () => {
+  it("Garcom carrega login, atribuicao e velocidade na ordem correta", () => {
     const access = read("client/public/garcom/access-control.js");
     const sw = read("client/public/garcom/service-worker.js");
     const shared = sw.indexOf("/garcom/shared-login.js");
     const diagnostics = sw.indexOf("/garcom/access-diagnostics.js");
+    const hotfix = sw.indexOf("/garcom/hotfix-sync.js");
+    const attribution = sw.indexOf("/garcom/waiter-attribution.js");
+    const speed = sw.indexOf("/garcom/waiter-speed.js");
     expect(access).toContain("perfilAtual: 'garcom'");
     expect(access).toContain("modoCompatibilidade: true");
     expect(access).toContain("consultarPerfilRemoto");
     expect(access).toContain("perfisAcesso/${uid}");
-    expect(access).toContain("aplicado: false");
-    expect(sw).toContain("/garcom/access-control.js");
     expect(shared).toBeGreaterThanOrEqual(0);
     expect(diagnostics).toBeGreaterThan(shared);
-    expect(sw).toContain("joao-caicara-garcom-v13");
+    expect(hotfix).toBeGreaterThan(diagnostics);
+    expect(attribution).toBeGreaterThan(hotfix);
+    expect(speed).toBeGreaterThan(attribution);
+    expect(sw).toContain("joao-caicara-garcom-v14");
   });
 
-  it("login compartilhado do garcom usa credencial digitada e preserva identidade", () => {
+  it("login compartilhado pede nome e senha sem armazenar a senha da equipe", () => {
     const login = read("client/public/garcom/shared-login.js");
     expect(login).toContain("LOGIN_COMPARTILHADO = 'garcom'");
+    expect(login).toContain("garcom-login-name");
     expect(login).toContain('type="password"');
+    expect(login).toContain("sessionStorage");
+    expect(login).toContain("trocarGarcom");
     expect(login).toContain("signInWithEmailAndPassword");
-    expect(login).toContain("createUserWithEmailAndPassword");
-    expect(login).toContain("Acesso temporário");
     expect(login).toContain("funcionarioId: user.uid");
     expect(login).toContain("sessaoGarcomAtual");
     expect(login).not.toContain("895623");
+  });
+
+  it("garcom responsavel fica na mesa e cada item guarda quem lancou", () => {
+    const hotfix = read("client/public/garcom/hotfix-sync.js");
+    const attribution = read("client/public/garcom/waiter-attribution.js");
+    expect(hotfix).toContain("garcomResponsavel");
+    expect(hotfix).toContain("atribuidoEm");
+    expect(attribution).toContain("garcomLancamento");
+    expect(attribution).toContain("garcomUltimoLancamento");
+    expect(attribution).toContain("Garçom responsável:");
   });
 
   it("diagnostico de sessao apenas exibe UID e perfil sem alterar acesso", () => {
@@ -153,6 +170,13 @@ describe("regressoes criticas Firebase e PWAs", () => {
     expect(garcom).toContain("window.GarcomDiagnosticoSessao");
     expect(garcom).not.toContain("ativarControleEstrito");
     expect(garcom).not.toContain("definirPerfil(");
+  });
+
+  it("Actions habilita login por email e senha sem conter senha operacional", () => {
+    const workflow = read(".github/workflows/firebase-hosting-deploy.yml");
+    expect(workflow).toContain("Enable Firebase email/password sign-in");
+    expect(workflow).toContain('"enabled":true');
+    expect(workflow).not.toContain("895623");
   });
 
   it("cadastro do administrador e feito pela credencial administrativa do Actions", () => {
@@ -171,7 +195,7 @@ describe("regressoes criticas Firebase e PWAs", () => {
     expect(rulesText).not.toContain("auth.token.role");
   });
 
-  it("hotfix principal antigo foi removido", () => {
+  it("hotfix principal antigo do PDV foi removido", () => {
     expect(fs.existsSync("client/public/pdv/hotfix-sync.js")).toBe(false);
   });
 
