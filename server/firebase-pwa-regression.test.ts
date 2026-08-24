@@ -36,12 +36,14 @@ describe("regressoes criticas Firebase e PWAs", () => {
     expect(lista).not.toContain("configuracoes");
   });
 
-  it("hotfix principal nao volta a sobrescrever limpeza nem transferencia", () => {
+  it("hotfix principal nao volta a sobrescrever limpeza transferencia nem fechamento", () => {
     const hotfix = read("client/public/pdv/hotfix-sync.js");
     expect(hotfix).not.toContain("window.confirmarLimpezaMesa");
     expect(hotfix).not.toContain("confirmarLimpezaMesaSeguro");
     expect(hotfix).not.toContain("window.transferirMesa");
     expect(hotfix).not.toContain("transferirMesaSeguro");
+    expect(hotfix).not.toContain("window.imprimirCaixa");
+    expect(hotfix).not.toContain("imprimirCaixaSeguro");
   });
 
   it("operacoes do PDV preservam transferencia atomica entre mesas", () => {
@@ -53,15 +55,29 @@ describe("regressoes criticas Firebase e PWAs", () => {
     expect(operations).toContain("registrarAuditoriaPdv('transferir_mesa'");
   });
 
+  it("fechamento do PDV registra venda e libera mesa na mesma atualizacao", () => {
+    const checkout = read("client/public/pdv/pdv-checkout-core.js");
+    expect(checkout).toContain("window.imprimirCaixa");
+    expect(checkout).toContain("db.ref('/').update");
+    expect(checkout).toContain("vendas/${vendaRef.key}");
+    expect(checkout).toContain("mesas/${mesaId}");
+    expect(checkout).toContain("O pagamento informado ainda é insuficiente");
+    expect(checkout).toContain("registrarAuditoriaPdv('fechar_conta'");
+  });
+
   it("PDV carrega camadas consolidadas depois do hotfix principal", () => {
     const sw = read("client/public/pdv/service-worker.js");
     const hotfix = sw.indexOf("/pdv/hotfix-sync.js");
     const safety = sw.indexOf("/pdv/pdv-safety.js");
     const operations = sw.indexOf("/pdv/pdv-operations.js");
+    const checkout = sw.indexOf("/pdv/pdv-checkout-core.js");
+    const fastCheckout = sw.indexOf("/pdv/fast-checkout.js");
     expect(hotfix).toBeGreaterThanOrEqual(0);
     expect(safety).toBeGreaterThan(hotfix);
     expect(operations).toBeGreaterThan(hotfix);
-    expect(sw).toContain("joao-caicara-pdv-v15");
+    expect(checkout).toBeGreaterThan(hotfix);
+    expect(fastCheckout).toBeGreaterThan(checkout);
+    expect(sw).toContain("joao-caicara-pdv-v16");
     expect(sw).not.toContain("/pdv/mesa-delete-fix.js");
     expect(sw).not.toContain("/pdv/backup-safety.js");
   });
