@@ -24,21 +24,25 @@ describe("regressoes criticas Firebase e PWAs", () => {
     expect(rules.rules.configuracoes?.[".write"]).toBe(false);
   });
 
-  it("backup seguro nao inclui configuracoes protegidas", () => {
-    const backupFix = read("client/public/pdv/backup-safety.js");
-    expect(backupFix).toContain("mesas");
-    expect(backupFix).toContain("vendas");
-    expect(backupFix).toContain("pedidosProducao");
-    const lista = backupFix.match(/const CAMINHOS_BACKUP_SEGUROS = \[([^\]]+)\]/)?.[1] ?? "";
+  it("camada consolidada protege limpeza e backup", () => {
+    const safety = read("client/public/pdv/pdv-safety.js");
+    expect(safety).toContain(".remove()");
+    expect(safety).toContain("CAMINHOS_BACKUP_SEGUROS");
+    expect(safety).toContain("mesas");
+    expect(safety).toContain("vendas");
+    expect(safety).toContain("pedidosProducao");
+    const lista = safety.match(/const CAMINHOS_BACKUP_SEGUROS = \[([^\]]+)\]/)?.[1] ?? "";
     expect(lista).not.toContain("configuracoes");
   });
 
-  it("PDV carrega a correcao de limpeza depois do hotfix principal", () => {
+  it("PDV carrega a camada consolidada depois do hotfix principal", () => {
     const sw = read("client/public/pdv/service-worker.js");
     const hotfix = sw.indexOf("/pdv/hotfix-sync.js");
-    const deleteFix = sw.indexOf("/pdv/mesa-delete-fix.js");
+    const safety = sw.indexOf("/pdv/pdv-safety.js");
     expect(hotfix).toBeGreaterThanOrEqual(0);
-    expect(deleteFix).toBeGreaterThan(hotfix);
+    expect(safety).toBeGreaterThan(hotfix);
+    expect(sw).not.toContain("/pdv/mesa-delete-fix.js");
+    expect(sw).not.toContain("/pdv/backup-safety.js");
   });
 
   it("deploy inclui Hosting e regras do Realtime Database em etapas separadas", () => {
