@@ -3,46 +3,46 @@
     ".read": false,
     ".write": false,
     "mesas": {
-      ".read": "auth != null",
+      ".read": "auth != null && (auth.token.email === 'adm@acesso.joaocaicara.app' || auth.token.email === 'garcom@acesso.joaocaicara.app')",
       "$mesaId": {
-        ".write": "auth != null && $mesaId.matches(/^([1-9]|1[0-9]|2[0-5]|5[0-9]|6[0-5])$/)",
+        ".write": "auth != null && (auth.token.email === 'adm@acesso.joaocaicara.app' || auth.token.email === 'garcom@acesso.joaocaicara.app') && $mesaId.matches(/^([1-9]|1[0-9]|2[0-5]|5[0-9]|6[0-5])$/)",
         ".validate": "!newData.exists() || ((!newData.child('cliente').exists() || newData.child('cliente').isString()) && (!newData.child('abertura').exists() || newData.child('abertura').isNumber()))"
       }
     },
     "pedidosProducao": {
-      ".read": "auth != null",
+      ".read": "auth != null && (auth.token.email === 'adm@acesso.joaocaicara.app' || auth.token.email === 'garcom@acesso.joaocaicara.app')",
       "$pedidoId": {
-        ".write": "auth != null",
+        ".write": "auth != null && (auth.token.email === 'adm@acesso.joaocaicara.app' || auth.token.email === 'garcom@acesso.joaocaicara.app')",
         ".validate": "!newData.exists() || (newData.hasChildren(['mesa', 'setor', 'status']) && newData.child('mesa').isNumber() && newData.child('setor').isString() && newData.child('status').isString())"
       }
     },
     "cardapio": {
-      ".read": "auth != null",
-      ".write": "auth != null && newData.exists()"
+      ".read": "auth != null && (auth.token.email === 'adm@acesso.joaocaicara.app' || auth.token.email === 'garcom@acesso.joaocaicara.app')",
+      ".write": "auth != null && auth.token.email === 'adm@acesso.joaocaicara.app' && newData.exists()"
     },
     "vendas": {
-      ".read": "auth != null",
+      ".read": "auth != null && auth.token.email === 'adm@acesso.joaocaicara.app'",
       "$vendaId": {
-        ".write": "auth != null && newData.exists()",
+        ".write": "auth != null && ((auth.token.email === 'adm@acesso.joaocaicara.app' && newData.exists()) || (auth.token.email === 'garcom@acesso.joaocaicara.app' && !data.exists() && newData.exists()))",
         ".validate": "newData.hasChildren(['mesa', 'total']) && newData.child('mesa').isNumber() && newData.child('total').isNumber() && newData.child('total').val() >= 0"
       }
     },
     "auditoria": {
-      ".read": "auth != null",
+      ".read": "auth != null && auth.token.email === 'adm@acesso.joaocaicara.app'",
       "$registroId": {
-        ".write": "auth != null && newData.exists()"
+        ".write": "auth != null && (auth.token.email === 'adm@acesso.joaocaicara.app' || auth.token.email === 'garcom@acesso.joaocaicara.app') && !data.exists() && newData.exists()"
       }
     },
     "cancelamentos": {
-      ".read": "auth != null",
+      ".read": "auth != null && auth.token.email === 'adm@acesso.joaocaicara.app'",
       "$cancelamentoId": {
-        ".write": "auth != null && newData.exists()"
+        ".write": "auth != null && auth.token.email === 'adm@acesso.joaocaicara.app' && newData.exists()"
       }
     },
     "fechamentosCaixa": {
-      ".read": "auth != null",
+      ".read": "auth != null && auth.token.email === 'adm@acesso.joaocaicara.app'",
       "$fechamentoId": {
-        ".write": "auth != null && newData.exists()"
+        ".write": "auth != null && auth.token.email === 'adm@acesso.joaocaicara.app' && newData.exists()"
       }
     },
     "perfisAcesso": {
