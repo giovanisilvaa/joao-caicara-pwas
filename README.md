@@ -106,6 +106,73 @@ database.rules.json
 
 Nenhuma senha operacional deve ser armazenada no código ou na documentação do repositório.
 
+## Concorrência e integridade das comandas
+
+As comandas são protegidas contra alterações simultâneas de vários aparelhos na mesma mesa.
+
+O padrão anterior de **ler a mesa → alterar localmente → gravar a mesa inteira com `set()`** podia provocar uma condição de corrida: dois aparelhos podiam ler a mesma versão e a última gravação sobrescrever a alteração do outro.
+
+A camada atual utiliza:
+
+- `Firebase Realtime Database transaction()` para alterações concorrentes da comanda;
+- `itemOperacaoId` único por linha de item, permitindo localizar a linha correta mesmo após outra alteração simultânea;
+- `bloqueioOperacional` temporário durante fechamento, transferência e envio para produção;
+- `update()` multipath para confirmar conjuntos de alterações críticas de uma só vez;
+- envio para produção que altera apenas os itens reservados, sem sobrescrever a mesa inteira;
+- fechamento que calcula a venda a partir de um snapshot autoritativo obtido após o bloqueio da mesa;
+- transferência que bloqueia origem e destino antes de mover/juntar as comandas.
+
+O núcleo compartilhado está em:
+
+```text
+client/public/mesa-atomic.js
+```
+
+As integrações específicas estão em:
+
+```text
+client/public/garcom/mesa-concurrency.js
+client/public/pdv/mesa-concurrency.js
+```
+
+### Teste virtual de alta carga — 24/08/2026
+
+Foi criada uma bateria determinística de concorrência que **não escreve no Firebase de produção**. Ela reproduz o comportamento de várias sessões alterando mesas ao mesmo tempo e mantém um cenário-controle com o algoritmo antigo para verificar se o teste é capaz de detectar perda.
+
+Arquivos dos testes:
+
+```text
+server/virtual-load-diagnostic.test.ts
+server/mesa-concurrency.test.ts
+```
+
+Resultado da execução isolada:
+
+| Cenário | Esperado | Preservado | Perdido | Duplicado | Resultado |
+| --- | ---: | ---: | ---: | ---: | --- |
+| Controle legado `read + set`, carga simultânea artificial | 2.400 | 40 | 2.360 | — | colisão detectada |
+| 12 garçons / 40 mesas / transações concorrentes | 2.400 | 2.400 | **0** | 0 | ✅ aprovado |
+| Estresse transacional / 40 mesas | 20.000 | 20.000 | **0** | **0** | ✅ aprovado |
+| Pedidos de produção com chave única | 5.000 | 5.000 | **0** | 0 | ✅ aprovado |
+| Vendas com chave única | 1.200 | 1.200 | **0** | 0 | ✅ aprovado |
+| Alteração durante lock de fechamento | bloqueada | bloqueada | 0 | 0 | ✅ aprovado |
+
+> O cenário legado é propositalmente extremo e serve como **controle do teste**, não como estimativa de perda no restaurante. Ele demonstra que a simulação detecta a condição de corrida que motivou a correção.
+
+O teste de 20.000 lançamentos também verificou individualmente a presença de cada identificador esperado e terminou com **zero item perdido e zero item duplicado**.
+
+Para executar somente a bateria de concorrência:
+
+```bash
+pnpm test -- server/virtual-load-diagnostic.test.ts server/mesa-concurrency.test.ts
+```
+
+### O que este teste comprova — e o que não comprova
+
+O teste valida a **integridade lógica da aplicação sob concorrência virtual**: lançamentos simultâneos não devem desaparecer nem ser sobrescritos pelo último aparelho a gravar.
+
+Ele não deve ser interpretado como garantia de “20.000 pedidos por segundo” e não mede velocidade da internet do restaurante, latência real do Firebase, Wi-Fi, navegador ou impressora. Esses fatores continuam dependendo do ambiente físico e devem ser observados durante a operação real.
+
 ## Taxa de serviço — 10%
 
 A taxa de serviço funciona tanto no PDV quanto no Garçom.
@@ -167,6 +234,8 @@ Os pedidos são separados entre:
 
 O sistema evita exibir um fluxo complexo de status de produção para não atrapalhar a operação da cozinha. Internamente os registros mantêm somente os campos necessários para sincronização e impressão.
 
+O envio atual reserva os itens de uma mesa antes da confirmação e grava o pedido de produção junto com a marcação dos itens por `update()` multipath. Assim, outro aparelho não precisa regravar a comanda inteira para confirmar o envio.
+
 ## Firebase Realtime Database
 
 Principais caminhos utilizados:
@@ -202,6 +271,8 @@ Celular / tablet / computador
                   │
           Firebase Realtime Database
                   │
+      transaction por mesa + locks curtos
+                  │
       mesas · cardapio · pedidosProducao
       vendas · auditoria · fechamentosCaixa
 ```
@@ -212,6 +283,7 @@ Celular / tablet / computador
 .
 ├── client/
 │   └── public/
+│       ├── mesa-atomic.js          # núcleo transacional compartilhado
 │       ├── garcom/                 # PWA do Garçom
 │       ├── pdv/                    # PWA do Caixa / PDV
 │       └── ...                     # imagens e recursos públicos
@@ -231,18 +303,21 @@ Celular / tablet / computador
 ## Arquivos importantes do Garçom
 
 ```text
+client/public/mesa-atomic.js
 client/public/garcom/index.html
 client/public/garcom/shared-login.js
 client/public/garcom/cardapio-auth-reconnect.js
 client/public/garcom/waiter-attribution.js
 client/public/garcom/waiter-speed.js
 client/public/garcom/garcom-service-fee.js
+client/public/garcom/mesa-concurrency.js
 client/public/garcom/service-worker.js
 ```
 
 ## Arquivos importantes do PDV
 
 ```text
+client/public/mesa-atomic.js
 client/public/pdv/index.html
 client/public/pdv/admin-login.js
 client/public/pdv/pdv-sync.js
@@ -250,6 +325,7 @@ client/public/pdv/pdv-safety.js
 client/public/pdv/pdv-operations.js
 client/public/pdv/pdv-checkout-core.js
 client/public/pdv/pdv-production.js
+client/public/pdv/mesa-concurrency.js
 client/public/pdv/waiter-sales-report.js
 client/public/pdv/service-fee-shifts.js
 client/public/pdv/cash-reset.js
@@ -307,8 +383,12 @@ git diff --check
 Os testes automatizados possuem verificações específicas para evitar regressões em pontos críticos como:
 
 - exclusão segura de mesas;
-- envio para produção;
-- fechamento de conta;
+- concorrência de vários aparelhos na mesma mesa;
+- identificação única de linhas da comanda;
+- lock durante fechamento, transferência e envio;
+- teste de carga com 2.400 e 20.000 lançamentos;
+- envio para produção sem sobrescrever a mesa inteira;
+- fechamento de conta com snapshot autoritativo;
 - atribuição de Garçom;
 - taxa de serviço;
 - zeragem de caixa;
@@ -322,10 +402,14 @@ Os testes automatizados possuem verificações específicas para evitar regress�
 
 As alterações enviadas para a branch principal passam pelo workflow do GitHub Actions.
 
-O processo executa validações e publica automaticamente:
+O workflow executa, nesta ordem:
 
-- Firebase Hosting;
-- regras do Realtime Database.
+1. instalação das dependências;
+2. verificação de TypeScript;
+3. testes automatizados;
+4. autenticação com Google Cloud;
+5. publicação no Firebase Hosting;
+6. publicação das regras do Realtime Database.
 
 A autenticação do GitHub Actions com o Google Cloud/Firebase utiliza **Workload Identity Federation**, evitando o armazenamento de chaves permanentes de service account no repositório.
 
@@ -365,7 +449,8 @@ Quando houver uma atualização importante e o aparelho continuar mostrando uma 
 - manter botões e alvos de toque adequados para celular;
 - preservar a atribuição individual dos pedidos aos garçons;
 - não apagar vendas do Firebase apenas para zerar o caixa;
-- manter testes de regressão para funcionalidades críticas.
+- manter testes de regressão para funcionalidades críticas;
+- não voltar a usar gravação da mesa inteira como mecanismo normal de edição concorrente.
 
 ## Estado atual
 
@@ -373,6 +458,10 @@ O sistema atualmente possui:
 
 - ✅ sincronização em tempo real entre Garçom e PDV;
 - ✅ abertura de mesas pelo Garçom;
+- ✅ edição concorrente protegida por transações do Firebase;
+- ✅ IDs únicos por linha da comanda;
+- ✅ locks operacionais em fechamento, transferência e envio para produção;
+- ✅ teste virtual com **20.000 lançamentos e zero perda/duplicação**;
 - ✅ fechamento de conta pelo Garçom e PDV;
 - ✅ taxa de serviço de 10% nos dois módulos;
 - ✅ relatório de vendas por Garçom;
