@@ -35,7 +35,7 @@
     const el = document.getElementById('usuario-logado-pdv');
     if (el) {
       el.textContent = usuarioEhAdmin(user) ? 'Administrador' : (ESTADO.temporario ? 'Acesso temporário' : 'Bloqueado');
-      el.title = usuarioEhAdmin(user) ? 'Sessão administrativa autenticada' : 'PDV aguardando autenticação administrativa';
+      el.title = usuarioEhAdmin(user) ? 'Sessão administrativa autenticada pelo Firebase Auth' : 'PDV aguardando autenticação administrativa';
     }
     if (usuarioEhAdmin(user)) garantirBotaoSair();
   }
@@ -59,30 +59,17 @@
 
   function mensagemErro(erro) {
     const codigo = String(erro?.code || '');
-    if (codigo.includes('wrong-password') || codigo.includes('invalid-credential') || codigo.includes('invalid-login-credentials')) return 'Senha incorreta.';
+    if (codigo.includes('wrong-password') || codigo.includes('invalid-credential') || codigo.includes('invalid-login-credentials') || codigo.includes('user-not-found')) return 'Usuário ou senha incorretos.';
     if (codigo.includes('too-many-requests')) return 'Muitas tentativas. Aguarde um pouco e tente novamente.';
     if (codigo.includes('network-request-failed')) return 'Sem conexão com o Firebase. Verifique a internet.';
     if (codigo.includes('operation-not-allowed')) return 'O login por senha não está disponível no Firebase.';
-    if (codigo.includes('weak-password')) return 'A senha precisa ter pelo menos 6 caracteres.';
     return `Não foi possível entrar (${codigo || 'erro de autenticação'}).`;
   }
 
   async function tentarEntrar(senha) {
     const firebaseAuth = auth();
     if (!firebaseAuth) throw new Error('Firebase Auth indisponível');
-    try {
-      return await firebaseAuth.signInWithEmailAndPassword(EMAIL_ADMIN, senha);
-    } catch (erroLogin) {
-      const codigo = String(erroLogin?.code || '');
-      const podeCriar = codigo.includes('user-not-found') || codigo.includes('invalid-credential') || codigo.includes('invalid-login-credentials');
-      if (!podeCriar) throw erroLogin;
-      try {
-        return await firebaseAuth.createUserWithEmailAndPassword(EMAIL_ADMIN, senha);
-      } catch (erroCriacao) {
-        if (String(erroCriacao?.code || '').includes('email-already-in-use')) throw erroLogin;
-        throw erroCriacao;
-      }
-    }
+    return firebaseAuth.signInWithEmailAndPassword(EMAIL_ADMIN, senha);
   }
 
   function mostrarLogin() {
@@ -124,9 +111,13 @@
       submit.textContent = 'Entrando...';
       msgEl.textContent = '';
       try {
-        await tentarEntrar(senha);
+        const credencial = await tentarEntrar(senha);
+        if (!usuarioEhAdmin(credencial?.user)) {
+          await auth()?.signOut?.();
+          throw new Error('Conta autenticada não é a conta administrativa esperada');
+        }
         ESTADO.temporario = false;
-        if (window.PdvAcesso?.aplicarPerfilAutenticado) window.PdvAcesso.aplicarPerfilAutenticado('administrador', 'login-administrador');
+        if (window.PdvAcesso?.aplicarPerfilAutenticado) window.PdvAcesso.aplicarPerfilAutenticado('administrador', 'firebase-auth-adm');
         esconderLogin();
       } catch (erro) {
         console.warn('Falha no login administrativo do PDV:', erro);
@@ -165,7 +156,7 @@
     firebaseAuth.onAuthStateChanged(user => {
       atualizarIndicador();
       if (usuarioEhAdmin(user)) {
-        if (window.PdvAcesso?.aplicarPerfilAutenticado) window.PdvAcesso.aplicarPerfilAutenticado('administrador', 'firebase-admin-login');
+        if (window.PdvAcesso?.aplicarPerfilAutenticado) window.PdvAcesso.aplicarPerfilAutenticado('administrador', 'firebase-auth-adm');
         esconderLogin();
       } else if (!ESTADO.temporario) {
         mostrarLogin();
@@ -181,6 +172,7 @@
     mostrarLogin,
     sair,
     get autenticado() { return usuarioEhAdmin(auth()?.currentUser); },
+    get uid() { return usuarioEhAdmin(auth()?.currentUser) ? auth().currentUser.uid : null; },
     get temporario() { return ESTADO.temporario; }
   });
 
