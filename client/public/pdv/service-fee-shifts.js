@@ -95,8 +95,7 @@
   function renderizarTaxaTurnos() {
     const conteudo = document.getElementById('relatorio-garcons-conteudo');
     if (!conteudo) return;
-    const existente = document.getElementById('rg-taxas-turno');
-    if (existente) existente.remove();
+    document.getElementById('rg-taxas-turno')?.remove();
 
     const resumo = gerarResumoTurnos();
     const secao = document.createElement('section');
@@ -132,20 +131,12 @@
     document.addEventListener('click', event => {
       if (event.target?.id === 'btn-relatorio-garcons') setTimeout(renderizarTaxaTurnos, 0);
     });
-    const alvo = document.getElementById('relatorio-garcons-conteudo');
-    if (alvo) {
-      new MutationObserver(() => {
-        if (document.getElementById('relatorio-garcons-overlay')?.style.display === 'flex' && !document.getElementById('rg-taxas-turno')) {
-          renderizarTaxaTurnos();
-        }
-      }).observe(alvo, { childList: true });
-    }
   }
 
   function carregarFechamentos() {
     try {
-      if (!window.db?.ref) return;
-      window.db.ref('fechamentosCaixa').on('value', snapshot => {
+      if (typeof db === 'undefined' || !db?.ref) return;
+      db.ref('fechamentosCaixa').on('value', snapshot => {
         const hoje = typeof chaveDataPainel === 'function' ? chaveDataPainel(new Date()) : new Date().toISOString().slice(0, 10);
         const lista = [];
         snapshot.forEach(child => {
