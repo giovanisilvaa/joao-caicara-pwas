@@ -184,7 +184,7 @@ describe("regressoes criticas Firebase e PWAs", () => {
     const pdv = read("client/public/pdv/access-diagnostics.js");
     const garcom = read("client/public/garcom/access-diagnostics.js");
     expect(pdv).toContain("UID:");
-    expect(pdv).toContain("Perfil remoto:");
+    expect(pdv).toContain("Perfil remoto (diagnóstico):");
     expect(pdv).toContain("window.PdvDiagnosticoSessao");
     expect(pdv).not.toContain("ativarControleEstrito");
     expect(pdv).not.toContain("definirPerfil(");
