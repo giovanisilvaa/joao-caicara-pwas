@@ -78,9 +78,10 @@ describe("regressoes criticas Firebase e PWAs", () => {
     expect(production).toContain("db.ref('pedidosProducao').push");
   });
 
-  it("PDV usa apenas modulos consolidados e nao carrega hotfix antigo", () => {
+  it("PDV usa apenas modulos consolidados e carrega diagnostico de sessao", () => {
     const sw = read("client/public/pdv/service-worker.js");
     const access = sw.indexOf("/pdv/access-control.js");
+    const diagnostics = sw.indexOf("/pdv/access-diagnostics.js");
     const sync = sw.indexOf("/pdv/pdv-sync.js");
     const safety = sw.indexOf("/pdv/pdv-safety.js");
     const operations = sw.indexOf("/pdv/pdv-operations.js");
@@ -88,13 +89,14 @@ describe("regressoes criticas Firebase e PWAs", () => {
     const production = sw.indexOf("/pdv/pdv-production.js");
     const fastCheckout = sw.indexOf("/pdv/fast-checkout.js");
     expect(access).toBeGreaterThanOrEqual(0);
-    expect(sync).toBeGreaterThan(access);
+    expect(diagnostics).toBeGreaterThan(access);
+    expect(sync).toBeGreaterThan(diagnostics);
     expect(safety).toBeGreaterThan(sync);
     expect(operations).toBeGreaterThan(sync);
     expect(checkout).toBeGreaterThan(sync);
     expect(production).toBeGreaterThan(sync);
     expect(fastCheckout).toBeGreaterThan(checkout);
-    expect(sw).toContain("joao-caicara-pdv-v21");
+    expect(sw).toContain("joao-caicara-pdv-v22");
     expect(sw).not.toContain("/pdv/hotfix-sync.js");
   });
 
@@ -117,7 +119,23 @@ describe("regressoes criticas Firebase e PWAs", () => {
     expect(access).toContain("perfisAcesso/${uid}");
     expect(access).toContain("aplicado: false");
     expect(sw).toContain("/garcom/access-control.js");
-    expect(sw).toContain("joao-caicara-garcom-v11");
+    expect(sw).toContain("/garcom/access-diagnostics.js");
+    expect(sw).toContain("joao-caicara-garcom-v12");
+  });
+
+  it("diagnostico de sessao apenas exibe UID e perfil sem alterar acesso", () => {
+    const pdv = read("client/public/pdv/access-diagnostics.js");
+    const garcom = read("client/public/garcom/access-diagnostics.js");
+    expect(pdv).toContain("UID:");
+    expect(pdv).toContain("Perfil remoto:");
+    expect(pdv).toContain("window.PdvDiagnosticoSessao");
+    expect(pdv).not.toContain("ativarControleEstrito");
+    expect(pdv).not.toContain("definirPerfil(");
+    expect(garcom).toContain("UID:");
+    expect(garcom).toContain("Perfil remoto:");
+    expect(garcom).toContain("window.GarcomDiagnosticoSessao");
+    expect(garcom).not.toContain("ativarControleEstrito");
+    expect(garcom).not.toContain("definirPerfil(");
   });
 
   it("regras operacionais ainda nao exigem perfil nesta fase de compatibilidade", () => {
