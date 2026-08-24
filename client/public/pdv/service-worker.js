@@ -1,5 +1,5 @@
-const CACHE_NAME = 'joao-caicara-pdv-v15';
-const APP_SHELL = ['/pdv/', '/pdv/manifest.json', '/pdv/hotfix-sync.js', '/pdv/pdv-safety.js', '/pdv/pdv-operations.js', '/pdv/modern-hybrid.css', '/pdv/fast-checkout.js', '/pdv/fast-checkout.css', '/pdv/fast-split.js', '/pdv/fast-split.css', '/tradicao-caicara-logo.webp'];
+const CACHE_NAME = 'joao-caicara-pdv-v16';
+const APP_SHELL = ['/pdv/', '/pdv/manifest.json', '/pdv/hotfix-sync.js', '/pdv/pdv-safety.js', '/pdv/pdv-operations.js', '/pdv/pdv-checkout-core.js', '/pdv/modern-hybrid.css', '/pdv/fast-checkout.js', '/pdv/fast-checkout.css', '/pdv/fast-split.js', '/pdv/fast-split.css', '/tradicao-caicara-logo.webp'];
 const respostaHtmlComHotfix = async (response) => {
   let html = await response.text();
   if (!html.includes('/pdv/modern-hybrid.css')) html = html.replace('</head>', '<link rel="stylesheet" href="/pdv/modern-hybrid.css"></head>');
@@ -8,6 +8,7 @@ const respostaHtmlComHotfix = async (response) => {
   if (!html.includes('/pdv/hotfix-sync.js')) html = html.replace('</body>', '<script src="/pdv/hotfix-sync.js"></script></body>');
   if (!html.includes('/pdv/pdv-safety.js')) html = html.replace('</body>', '<script src="/pdv/pdv-safety.js"></script></body>');
   if (!html.includes('/pdv/pdv-operations.js')) html = html.replace('</body>', '<script src="/pdv/pdv-operations.js"></script></body>');
+  if (!html.includes('/pdv/pdv-checkout-core.js')) html = html.replace('</body>', '<script src="/pdv/pdv-checkout-core.js"></script></body>');
   if (!html.includes('/pdv/fast-checkout.js')) html = html.replace('</body>', '<script src="/pdv/fast-checkout.js"></script></body>');
   if (!html.includes('/pdv/fast-split.js')) html = html.replace('</body>', '<script src="/pdv/fast-split.js"></script></body>');
   const headers = new Headers(response.headers);
