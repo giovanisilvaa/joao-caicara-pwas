@@ -40,7 +40,7 @@ describe("regressoes criticas Firebase e PWAs", () => {
     expect(lista).not.toContain("configuracoes");
   });
 
-  it("sincronizacao do PDV grava somente a mesa selecionada", () => {
+  it("sincronizacao do PDV grava somente a mesa selecionada no fallback legado", () => {
     const sync = read("client/public/pdv/pdv-sync.js");
     expect(sync).toContain("window.salvarMesas");
     expect(sync).toContain("db.ref(`mesas/${mesaAtualSelecionada}`).set");
@@ -53,15 +53,18 @@ describe("regressoes criticas Firebase e PWAs", () => {
   it("operacoes do PDV preservam transferencia atomica entre mesas", () => {
     const operations = read("client/public/pdv/pdv-operations.js");
     expect(operations).toContain("window.transferirMesa");
+    expect(operations).toContain("MesaAtomic.bloquearMesa(origem");
+    expect(operations).toContain("MesaAtomic.bloquearMesa(destino");
     expect(operations).toContain("db.ref('/').update");
     expect(operations).toContain("mesas/${origem}");
     expect(operations).toContain("mesas/${destino}");
     expect(operations).toContain("registrarAuditoriaPdv('transferir_mesa'");
   });
 
-  it("fechamento do PDV registra venda, abertura, atendentes e libera mesa", () => {
+  it("fechamento do PDV usa snapshot autoritativo, registra venda e libera mesa", () => {
     const checkout = read("client/public/pdv/pdv-checkout-core.js");
     expect(checkout).toContain("window.imprimirCaixa");
+    expect(checkout).toContain("MesaAtomic.bloquearMesa(mesaId");
     expect(checkout).toContain("db.ref('/').update");
     expect(checkout).toContain("vendas/${vendaRef.key}");
     expect(checkout).toContain("mesas/${mesaId}");
@@ -70,17 +73,19 @@ describe("regressoes criticas Firebase e PWAs", () => {
     expect(checkout).toContain("garconsAtendimento");
     expect(checkout).toContain("Mesa aberta por:");
     expect(checkout).toContain("Atendida por:");
-    expect(checkout).toContain("O pagamento informado ainda é insuficiente");
+    expect(checkout).toContain("pagamento informado ficou insuficiente");
     expect(checkout).toContain("registrarAuditoriaPdv('fechar_conta'");
   });
 
-  it("producao imprime apenas itens validos e confirma sincronizacao", () => {
+  it("producao reserva itens e confirma pedido sem sobrescrever a mesa inteira", () => {
     const production = read("client/public/pdv/pdv-production.js");
     expect(production).toContain("window.imprimirProducao");
-    expect(production).toContain("item.enviado === false && item.rascunho !== true");
+    expect(production).toContain("MesaAtomic.reservarEnvio");
+    expect(production).toContain("incluirRascunho: false");
     expect(production).toContain("item.enviado === true");
-    expect(production).toContain("db.ref(`mesas/${numeroMesa}`).set(dadosMesa)");
-    expect(production).toContain("db.ref('pedidosProducao').push");
+    expect(production).toContain("db.ref('/').update(atualizacoes)");
+    expect(production).toContain("pedidosProducao/${pedidoRef.key}");
+    expect(production).not.toContain(".set(dadosMesa)");
   });
 
   it("PDV usa modulos consolidados, relatorio por garcom e cache atualizado", () => {
@@ -93,6 +98,7 @@ describe("regressoes criticas Firebase e PWAs", () => {
     const checkout = sw.indexOf("/pdv/pdv-checkout-core.js");
     const waiterReport = sw.indexOf("/pdv/waiter-sales-report.js");
     const production = sw.indexOf("/pdv/pdv-production.js");
+    const concurrency = sw.indexOf("/pdv/mesa-concurrency.js");
     const fastCheckout = sw.indexOf("/pdv/fast-checkout.js");
     expect(access).toBeGreaterThanOrEqual(0);
     expect(diagnostics).toBeGreaterThan(access);
@@ -102,6 +108,7 @@ describe("regressoes criticas Firebase e PWAs", () => {
     expect(checkout).toBeGreaterThan(sync);
     expect(waiterReport).toBeGreaterThan(checkout);
     expect(production).toBeGreaterThan(waiterReport);
+    expect(concurrency).toBeGreaterThan(production);
     expect(fastCheckout).toBeGreaterThan(checkout);
     expect(sw).toContain("joao-caicara-pdv-v27");
     expect(sw).not.toContain("/pdv/hotfix-sync.js");
@@ -132,7 +139,7 @@ describe("regressoes criticas Firebase e PWAs", () => {
     expect(access).not.toContain("tentarBootstrapAdministrador");
   });
 
-  it("Garcom carrega login, atribuicao e velocidade na ordem correta", () => {
+  it("Garcom carrega login, atribuicao, velocidade e concorrencia na ordem correta", () => {
     const access = read("client/public/garcom/access-control.js");
     const sw = read("client/public/garcom/service-worker.js");
     const shared = sw.indexOf("/garcom/shared-login.js");
@@ -140,6 +147,7 @@ describe("regressoes criticas Firebase e PWAs", () => {
     const hotfix = sw.indexOf("/garcom/hotfix-sync.js");
     const attribution = sw.indexOf("/garcom/waiter-attribution.js");
     const speed = sw.indexOf("/garcom/waiter-speed.js");
+    const concurrency = sw.indexOf("/garcom/mesa-concurrency.js");
     expect(access).toContain("perfilAtual: 'garcom'");
     expect(access).toContain("modoCompatibilidade: true");
     expect(access).toContain("consultarPerfilRemoto");
@@ -149,6 +157,7 @@ describe("regressoes criticas Firebase e PWAs", () => {
     expect(hotfix).toBeGreaterThan(diagnostics);
     expect(attribution).toBeGreaterThan(hotfix);
     expect(speed).toBeGreaterThan(attribution);
+    expect(concurrency).toBeGreaterThan(speed);
     expect(sw).toContain("joao-caicara-garcom-v15");
   });
 
@@ -168,6 +177,7 @@ describe("regressoes criticas Firebase e PWAs", () => {
   it("uma mesa pode ser atendida por varios garçons sem perder autoria dos itens", () => {
     const hotfix = read("client/public/garcom/hotfix-sync.js");
     const attribution = read("client/public/garcom/waiter-attribution.js");
+    const concurrency = read("client/public/garcom/mesa-concurrency.js");
     expect(hotfix).toContain("garcomResponsavel");
     expect(hotfix).toContain("garconsAtendimento");
     expect(hotfix).toContain("primeiroAtendimentoEm");
@@ -177,7 +187,9 @@ describe("regressoes criticas Firebase e PWAs", () => {
     expect(attribution).toContain("garcomUltimoLancamento");
     expect(attribution).toContain("Mesa aberta por:");
     expect(attribution).toContain("Atendida por:");
-    expect(attribution).not.toContain("Garçom responsável:");
+    expect(concurrency).toContain("identidadeAtual()");
+    expect(concurrency).toContain("garcomResponsavel");
+    expect(concurrency).not.toContain("Garçom responsável:");
   });
 
   it("diagnostico de sessao apenas exibe UID e perfil sem alterar acesso", () => {
@@ -211,7 +223,7 @@ describe("regressoes criticas Firebase e PWAs", () => {
     expect(workflow).toContain("--force");
   });
 
-  it("regras operacionais ainda nao exigem perfil nesta fase de compatibilidade", () => {
+  it("regras operacionais ainda nao exigem custom claims nesta fase", () => {
     const rulesText = read("database.rules.json");
     expect(rulesText).toContain("auth != null");
     expect(rulesText).not.toContain("auth.token.perfil");
