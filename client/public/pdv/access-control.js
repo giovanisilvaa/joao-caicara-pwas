@@ -24,6 +24,8 @@
     administrador: Object.freeze(['*'])
   });
 
+  const DATABASE_URL = 'https://joaocaicaratradicao-default-rtdb.firebaseio.com';
+
   const estado = {
     modoCompatibilidade: true,
     perfilAtual: 'administrador',
@@ -37,7 +39,8 @@
     perfilRemoto: {
       carregado: false,
       encontrado: null,
-      origem: 'nao-consultado'
+      origem: 'nao-consultado',
+      caminho: null
     }
   };
 
@@ -58,26 +61,56 @@
     window.dispatchEvent(new CustomEvent('pdv:perfil-alterado', { detail: { perfil, origem } }));
   }
 
+  async function lerPerfilViaRest(uid) {
+    const auth = window.firebase?.auth?.();
+    const user = auth?.currentUser || null;
+    if (!user || user.uid !== uid || typeof user.getIdToken !== 'function') throw new Error('Sessão Firebase ainda não corresponde ao UID consultado');
+    const token = await user.getIdToken(true);
+    const resposta = await fetch(`${DATABASE_URL}/perfisAcesso/${encodeURIComponent(uid)}.json`, {
+      method: 'GET',
+      cache: 'no-store',
+      headers: { Authorization: `Bearer ${token}` }
+    });
+    if (!resposta.ok) throw new Error(`Realtime Database respondeu HTTP ${resposta.status}`);
+    return resposta.json();
+  }
+
+  async function lerPerfilViaSdk(uid) {
+    const database = window.firebase?.database?.();
+    if (!database) throw new Error('Firebase Database indisponível');
+    const snapshot = await database.ref(`perfisAcesso/${uid}`).once('value');
+    return snapshot.val();
+  }
+
   async function consultarPerfilRemoto(uid) {
     if (!uid) return null;
     estado.perfilRemoto.carregado = false;
     estado.perfilRemoto.encontrado = null;
     estado.perfilRemoto.origem = 'consultando';
+    estado.perfilRemoto.caminho = `perfisAcesso/${uid}`;
     try {
-      const database = window.firebase?.database?.();
-      if (!database) throw new Error('Firebase Database indisponível');
-      const snapshot = await database.ref(`perfisAcesso/${uid}`).once('value');
+      let valor;
+      let origemLeitura = 'firebase-rest';
+      try {
+        valor = await lerPerfilViaRest(uid);
+      } catch (erroRest) {
+        console.warn('Leitura REST do perfil falhou; tentando SDK:', erroRest);
+        valor = await lerPerfilViaSdk(uid);
+        origemLeitura = 'firebase-sdk';
+      }
       if (estado.sessao.uid !== uid) return null;
-      const valor = snapshot.val();
       const candidato = typeof valor === 'string' ? valor : valor?.perfil;
       estado.perfilRemoto.carregado = true;
       estado.perfilRemoto.encontrado = perfilValido(candidato) ? candidato : null;
-      estado.perfilRemoto.origem = valor == null ? 'firebase-sem-cadastro' : (estado.perfilRemoto.encontrado ? 'firebase-database' : 'firebase-perfil-invalido');
+      estado.perfilRemoto.origem = valor == null
+        ? `${origemLeitura}-sem-cadastro`
+        : (estado.perfilRemoto.encontrado ? `${origemLeitura}-database` : `${origemLeitura}-perfil-invalido`);
       window.dispatchEvent(new CustomEvent('pdv:perfil-remoto-consultado', {
         detail: {
           uid,
           perfilEncontrado: estado.perfilRemoto.encontrado,
           origem: estado.perfilRemoto.origem,
+          caminho: estado.perfilRemoto.caminho,
           aplicado: false,
           modoCompatibilidade: estado.modoCompatibilidade
         }
@@ -104,6 +137,7 @@
       estado.perfilRemoto.carregado = true;
       estado.perfilRemoto.encontrado = null;
       estado.perfilRemoto.origem = 'sem-usuario';
+      estado.perfilRemoto.caminho = null;
     }
     window.dispatchEvent(new CustomEvent('pdv:sessao-identificada', {
       detail: {
