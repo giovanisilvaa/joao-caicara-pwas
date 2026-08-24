@@ -30,6 +30,9 @@
 
     const troco = informado - total;
     const dataAtualStr = new Date().toLocaleString('pt-BR');
+    const garcomResponsavel = dadosMesa.garcomResponsavel && typeof dadosMesa.garcomResponsavel === 'object'
+      ? JSON.parse(JSON.stringify(dadosMesa.garcomResponsavel))
+      : null;
     const registro = {
       id: `pdv-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
       mesa: mesaId,
@@ -37,6 +40,8 @@
       dataHora: dataAtualStr,
       criadoEm: Date.now(),
       itens: JSON.parse(JSON.stringify(dadosMesa.itens)),
+      garcomResponsavel,
+      garcomNome: garcomResponsavel?.nome || '',
       subtotal,
       taxa,
       total,
@@ -59,6 +64,7 @@
       localStorage.setItem('historico_vendas_caicara', JSON.stringify(historico));
 
       let detalhe = '';
+      if (garcomResponsavel?.nome) detalhe += `Garçom: ${garcomResponsavel.nome}<br>`;
       if (dinheiro > 0) detalhe += `Dinheiro: ${formatarMoeda(dinheiro)}<br>`;
       if (pix > 0) detalhe += `PIX: ${formatarMoeda(pix)}<br>`;
       if (credito > 0) detalhe += `Crédito: ${formatarMoeda(credito)}<br>`;
@@ -93,7 +99,7 @@
       atualizarPainelDiario();
 
       if (typeof registrarAuditoriaPdv === 'function') {
-        Promise.resolve(registrarAuditoriaPdv('fechar_conta', { mesa: mesaId, total, venda: registro.id }))
+        Promise.resolve(registrarAuditoriaPdv('fechar_conta', { mesa: mesaId, total, venda: registro.id, garcom: garcomResponsavel?.nome || '' }))
           .catch(erro => console.warn('Venda concluída, mas a auditoria do fechamento falhou:', erro));
       }
     } catch (erro) {
