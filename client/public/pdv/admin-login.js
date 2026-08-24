@@ -2,7 +2,7 @@
 (() => {
   const LOGIN_ADMIN = 'adm';
   const EMAIL_ADMIN = 'adm@acesso.joaocaicara.app';
-  const ESTADO = { autenticando: false, temporario: false };
+  const ESTADO = { autenticando: false };
 
   const auth = () => window.firebase?.auth?.();
   const usuarioEhAdmin = user => Boolean(user && !user.isAnonymous && String(user.email || '').toLowerCase() === EMAIL_ADMIN);
@@ -20,9 +20,8 @@
       #pdv-admin-login-card input{width:100%;padding:12px;border:1px solid #d8e2df;border-radius:10px;font-size:1rem;background:#fff}
       #pdv-admin-login-card input[readonly]{background:#f3f6f5;color:#52666b}
       #pdv-admin-login-msg{min-height:20px;margin-top:10px;font-size:.78rem;font-weight:700;color:#c05036}
-      #pdv-admin-login-actions{display:flex;gap:8px;margin-top:16px}
-      #pdv-admin-login-actions button{flex:1;border:0;border-radius:10px;padding:12px 10px;font-weight:800;cursor:pointer}
-      #pdv-admin-login-fallback{background:#e7ecea;color:#345057}
+      #pdv-admin-login-actions{display:flex;margin-top:16px}
+      #pdv-admin-login-actions button{width:100%;border:0;border-radius:10px;padding:12px 10px;font-weight:800;cursor:pointer}
       #pdv-admin-login-submit{background:#0f4c5c;color:#fff}
       #pdv-admin-login-card.is-loading #pdv-admin-login-submit{opacity:.65;pointer-events:none}
       #pdv-admin-sair{border:0;border-radius:999px;padding:6px 9px;font-size:.68rem;font-weight:800;cursor:pointer;background:rgba(255,255,255,.15);color:#fff}
@@ -34,7 +33,7 @@
     const user = auth()?.currentUser || null;
     const el = document.getElementById('usuario-logado-pdv');
     if (el) {
-      el.textContent = usuarioEhAdmin(user) ? 'Administrador' : (ESTADO.temporario ? 'Acesso temporário' : 'Bloqueado');
+      el.textContent = usuarioEhAdmin(user) ? 'Administrador' : 'Bloqueado';
       el.title = usuarioEhAdmin(user) ? 'Sessão administrativa autenticada pelo Firebase Auth' : 'PDV aguardando autenticação administrativa';
     }
     if (usuarioEhAdmin(user)) garantirBotaoSair();
@@ -87,7 +86,6 @@
         <input id="pdv-admin-login-password" type="password" inputmode="numeric" autocomplete="current-password" placeholder="Digite a senha do administrador">
         <div id="pdv-admin-login-msg" aria-live="polite"></div>
         <div id="pdv-admin-login-actions">
-          <button id="pdv-admin-login-fallback" type="button">Acesso temporário</button>
           <button id="pdv-admin-login-submit" type="button">Entrar</button>
         </div>
       </div>`;
@@ -116,7 +114,6 @@
           await auth()?.signOut?.();
           throw new Error('Conta autenticada não é a conta administrativa esperada');
         }
-        ESTADO.temporario = false;
         if (window.PdvAcesso?.aplicarPerfilAutenticado) window.PdvAcesso.aplicarPerfilAutenticado('administrador', 'firebase-auth-adm');
         esconderLogin();
       } catch (erro) {
@@ -131,16 +128,10 @@
 
     submit?.addEventListener('click', enviar);
     senhaEl?.addEventListener('keydown', event => { if (event.key === 'Enter') enviar(); });
-    document.getElementById('pdv-admin-login-fallback')?.addEventListener('click', () => {
-      ESTADO.temporario = true;
-      if (window.PdvAcesso?.aplicarPerfilAutenticado) window.PdvAcesso.aplicarPerfilAutenticado('administrador', 'fallback-temporario');
-      esconderLogin();
-    });
     setTimeout(() => senhaEl?.focus(), 50);
   }
 
   async function sair() {
-    ESTADO.temporario = false;
     try { await auth()?.signOut?.(); } catch (_) {}
     document.getElementById('pdv-admin-sair')?.remove();
     atualizarIndicador();
@@ -158,7 +149,7 @@
       if (usuarioEhAdmin(user)) {
         if (window.PdvAcesso?.aplicarPerfilAutenticado) window.PdvAcesso.aplicarPerfilAutenticado('administrador', 'firebase-auth-adm');
         esconderLogin();
-      } else if (!ESTADO.temporario) {
+      } else {
         mostrarLogin();
       }
     });
@@ -172,8 +163,7 @@
     mostrarLogin,
     sair,
     get autenticado() { return usuarioEhAdmin(auth()?.currentUser); },
-    get uid() { return usuarioEhAdmin(auth()?.currentUser) ? auth().currentUser.uid : null; },
-    get temporario() { return ESTADO.temporario; }
+    get uid() { return usuarioEhAdmin(auth()?.currentUser) ? auth().currentUser.uid : null; }
   });
 
   iniciar();
