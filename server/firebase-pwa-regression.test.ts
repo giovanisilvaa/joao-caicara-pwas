@@ -83,7 +83,7 @@ describe("regressoes criticas Firebase e PWAs", () => {
     expect(production).toContain("db.ref('pedidosProducao').push");
   });
 
-  it("PDV usa modulos consolidados e cache atualizado", () => {
+  it("PDV usa modulos consolidados, relatorio por garcom e cache atualizado", () => {
     const sw = read("client/public/pdv/service-worker.js");
     const access = sw.indexOf("/pdv/access-control.js");
     const diagnostics = sw.indexOf("/pdv/access-diagnostics.js");
@@ -91,6 +91,7 @@ describe("regressoes criticas Firebase e PWAs", () => {
     const safety = sw.indexOf("/pdv/pdv-safety.js");
     const operations = sw.indexOf("/pdv/pdv-operations.js");
     const checkout = sw.indexOf("/pdv/pdv-checkout-core.js");
+    const waiterReport = sw.indexOf("/pdv/waiter-sales-report.js");
     const production = sw.indexOf("/pdv/pdv-production.js");
     const fastCheckout = sw.indexOf("/pdv/fast-checkout.js");
     expect(access).toBeGreaterThanOrEqual(0);
@@ -99,10 +100,24 @@ describe("regressoes criticas Firebase e PWAs", () => {
     expect(safety).toBeGreaterThan(sync);
     expect(operations).toBeGreaterThan(sync);
     expect(checkout).toBeGreaterThan(sync);
-    expect(production).toBeGreaterThan(sync);
+    expect(waiterReport).toBeGreaterThan(checkout);
+    expect(production).toBeGreaterThan(waiterReport);
     expect(fastCheckout).toBeGreaterThan(checkout);
-    expect(sw).toContain("joao-caicara-pdv-v26");
+    expect(sw).toContain("joao-caicara-pdv-v27");
     expect(sw).not.toContain("/pdv/hotfix-sync.js");
+  });
+
+  it("relatorio diario divide venda por autoria do item sem ratear taxa de servico", () => {
+    const report = read("client/public/pdv/waiter-sales-report.js");
+    expect(report).toContain("obterVendasDoDiaPdv");
+    expect(report).toContain("garcomLancamento");
+    expect(report).toContain("qtd * preco");
+    expect(report).toContain("garcomResponsavel");
+    expect(report).toContain("garconsAtendimento");
+    expect(report).toContain("taxa de serviço");
+    expect(report).toContain("Vendas por Garçom");
+    expect(report).toContain("Não identificado");
+    expect(report).not.toContain("venda.total / ");
   });
 
   it("PDV somente consulta perfil remoto e preserva modo compatibilidade", () => {
