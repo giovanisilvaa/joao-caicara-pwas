@@ -1,0 +1,14 @@
+/* Divisão rápida de conta — PDV */
+#split-fast-pdv{margin-top:12px;padding:12px;border:1px solid var(--border);border-radius:12px;background:#fff;text-align:left}
+.split-fast-title{font-weight:900;color:var(--primary);margin-bottom:8px}
+.split-fast-people{display:grid;grid-template-columns:repeat(5,1fr);gap:6px;margin-bottom:10px}
+.split-fast-people button{border:1px solid var(--border);background:#f7f4ec;color:var(--secondary);border-radius:9px;padding:9px 4px;font-size:.76rem;font-weight:800;cursor:pointer}
+.split-fast-people button.active{background:var(--primary);color:#fff;border-color:var(--primary)}
+.split-fast-summary{display:grid;gap:5px;font-size:.83rem}
+.split-fast-summary>div{display:flex;justify-content:space-between;gap:12px}
+.split-fast-summary .total{border-top:1px dashed var(--border);padding-top:7px;margin-top:2px;font-size:.95rem;color:var(--primary)}
+.split-fast-note{margin-top:10px;padding:10px;border-radius:9px;background:#eef8f5;color:#17675c;text-align:center;font-size:.85rem}
+.split-fast-note strong{font-size:1.05rem}
+.split-go-checkout{width:100%;margin-top:10px;border:0;border-radius:9px;background:var(--success);color:#fff;padding:11px;font-weight:900;cursor:pointer}
+.checkout-split-hint{margin:8px 0 12px;padding:9px 10px;border-radius:9px;background:#f6ead8;color:#6f4b24;font-size:.82rem;border:1px solid #ead1ae}
+@media(max-width:560px){.split-fast-people{grid-template-columns:repeat(3,1fr)}}
