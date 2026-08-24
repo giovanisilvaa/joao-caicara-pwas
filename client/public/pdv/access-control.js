@@ -1,5 +1,7 @@
 /* Base de controle de acesso do PDV. Modo compatibilidade: não bloqueia o fluxo atual. */
 (() => {
+  const BOOTSTRAP_ADMIN_UID = 'woAmR3x91JcMZGLzykBUtLG97Hx1';
+
   const PERFIS = Object.freeze({
     garcom: Object.freeze([
       'mesas.visualizar',
@@ -58,6 +60,18 @@
     window.dispatchEvent(new CustomEvent('pdv:perfil-alterado', { detail: { perfil, origem } }));
   }
 
+  async function tentarBootstrapAdministrador(uid, database) {
+    if (uid !== BOOTSTRAP_ADMIN_UID) return false;
+    try {
+      const ref = database.ref(`perfisAcesso/${uid}`);
+      await ref.set({ perfil: 'administrador' });
+      return true;
+    } catch (erro) {
+      console.warn('Bootstrap administrativo do PDV não foi concluído; acesso atual foi preservado:', erro);
+      return false;
+    }
+  }
+
   async function consultarPerfilRemoto(uid) {
     if (!uid) return null;
     estado.perfilRemoto.carregado = false;
@@ -66,8 +80,16 @@
     try {
       const database = window.firebase?.database?.();
       if (!database) throw new Error('Firebase Database indisponível');
-      const snapshot = await database.ref(`perfisAcesso/${uid}`).once('value');
+      const ref = database.ref(`perfisAcesso/${uid}`);
+      let snapshot = await ref.once('value');
       if (estado.sessao.uid !== uid) return null;
+
+      if (!snapshot.exists() && uid === BOOTSTRAP_ADMIN_UID) {
+        const cadastrado = await tentarBootstrapAdministrador(uid, database);
+        if (cadastrado) snapshot = await ref.once('value');
+        if (estado.sessao.uid !== uid) return null;
+      }
+
       const valor = snapshot.val();
       const candidato = typeof valor === 'string' ? valor : valor?.perfil;
       estado.perfilRemoto.carregado = true;
