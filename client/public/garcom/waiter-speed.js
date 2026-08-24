@@ -122,11 +122,18 @@
     indiceObsAtual = null;
   }
 
-  function salvarObsRapida() {
+  async function salvarObsRapida() {
     if (indiceObsAtual === null || !mesaSelecionada || !mesas[mesaSelecionada]) return fecharObsRapida();
     const item = mesas[mesaSelecionada].itens[indiceObsAtual];
     if (!item) return fecharObsRapida();
     const texto = document.getElementById('speed-obs-text').value.trim();
+
+    if (window.GarcomConcorrencia?.salvarObservacao) {
+      const salvo = await window.GarcomConcorrencia.salvarObservacao(indiceObsAtual, texto);
+      if (salvo) fecharObsRapida();
+      return;
+    }
+
     item.obs = texto;
     if (typeof registrarAuditoriaGarcom === 'function') registrarAuditoriaGarcom('editar_observacao', { mesa: mesaSelecionada, item: item.nome });
     salvarMesas();
