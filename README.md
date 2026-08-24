@@ -1,295 +1,177 @@
-João Caiçara — Sistema de Operação do Restaurante
+# João Caiçara — Sistema de Operação do Restaurante
+
+Sistema web progressivo desenvolvido para a operação do **João Caiçara Tradição**, reunindo atendimento, comandas, produção, caixa e gestão em dois PWAs sincronizados em tempo real pelo Firebase.
 
-Sistema web progressivo para operação de salão, atendimento, produção e caixa do restaurante João Caiçara Tradição. O projeto reúne dois PWAs independentes, um para o Garçom e outro para o Caixa/PDV, com sincronização de dados em tempo real pelo Firebase Realtime Database.
+O projeto possui dois módulos principais:
+
+- **Garçom** — abertura de mesas, lançamento de pedidos, envio para cozinha/bar e fechamento de contas.
+- **Caixa / PDV** — acompanhamento das mesas, pagamentos, relatórios, cardápio, auditoria, backup e administração.
 
-Links oficiais
+## Links oficiais
 
-Use sempre os links abaixo. Eles correspondem à versão publicada no Firebase Hosting e não exibem a tela de PIN.
+| Módulo | Link |
+| --- | --- |
+| Garçom | https://joaocaicaratradicao.web.app/garcom/ |
+| Caixa / PDV | https://joaocaicaratradicao.web.app/pdv/ |
+| Firebase Hosting | https://joaocaicaratradicao.web.app/ |
 
-Módulo
-Link
-Garçom
-Abrir PWA do Garçom
-Caixa / PDV
-Abrir PWA do Caixa
-Firebase Hosting
-Abrir projeto publicado
+> Os endereços publicados no Firebase Hosting são as versões oficiais do sistema.
 
+## Objetivo
 
+O sistema foi criado para reduzir processos manuais e centralizar a operação do restaurante.
 
+O Garçom pode abrir uma mesa diretamente pelo próprio aparelho, lançar pedidos e enviá-los para produção. As mesas e comandas são sincronizadas automaticamente com o PDV.
 
+O Caixa acompanha a operação em tempo real, controla pagamentos, transferência e junção de mesas, divisão de contas, relatórios, taxa de serviço, fechamento de caixa e funções administrativas.
 
-O endereço https://joaopwas-a8qonrlr.manus.space/ é uma publicação antiga e pode apresentar uma versão diferente do sistema. Enquanto não for sincronizado, ele não deve ser considerado o endereço oficial.
+## PWA do Garçom
 
-Objetivo do projeto
+Principais recursos:
 
-O sistema foi desenvolvido para reduzir o uso de papel e organizar o fluxo de atendimento do restaurante. O Garçom seleciona mesas, registra clientes, lança produtos e envia os pedidos para produção. O Caixa acompanha as comandas, controla a produção, imprime pedidos, divide contas, registra pagamentos e realiza o fechamento do caixa.
+- visualização das mesas do salão e deck/praia;
+- abertura de comanda diretamente pelo Garçom;
+- identificação do Garçom por nome em cada sessão;
+- uma única conta autenticada da equipe de garçons;
+- registro do responsável por cada item lançado;
+- suporte a vários garçons atendendo a mesma mesa;
+- pesquisa rápida de produtos;
+- produtos favoritos em destaque;
+- categorias do cardápio;
+- ajuste de quantidade;
+- observações nos itens;
+- envio separado para cozinha e bar;
+- indicador de sincronização;
+- fechamento da conta pelo próprio Garçom;
+- opção de **10% de taxa de serviço**, marcada por padrão;
+- cálculo de total, pagamento e troco;
+- sincronização automática da venda com o PDV.
 
-A interface segue a direção visual moderno caiçara, combinando azul-petróleo, coral, areia e referências visuais da identidade João Caiçara com componentes simples e rápidos para uso durante a operação.
+O Garçom pode consultar o cardápio, mas **não possui permissão para alterá-lo**.
 
-Módulos do sistema
+## PWA do Caixa / PDV
 
-PWA do Garçom
+Principais recursos:
 
-O módulo do Garçom permite visualizar as mesas do salão e do deck/praia, abrir comandas, identificar opcionalmente o cliente, pesquisar produtos, navegar por categorias, ajustar quantidades, adicionar observações e enviar itens para cozinha e bar.
+- acompanhamento das mesas em tempo real;
+- abertura e edição de comandas;
+- transferência e junção de mesas;
+- separação de produção entre cozinha e bar;
+- impressão e reimpressão de pedidos;
+- divisão de conta;
+- fechamento com múltiplas formas de pagamento;
+- cálculo de troco;
+- taxa de serviço de 10%;
+- fechamento rápido de conta;
+- histórico diário de vendas;
+- relatório de vendas por Garçom;
+- totalização da taxa de serviço por turno;
+- gerenciamento do cardápio;
+- auditoria de operações;
+- backup e restauração;
+- fechamento de caixa;
+- zeragem operacional do caixa sem excluir o histórico salvo no Firebase.
 
-A tela possui comanda fixa em dispositivos menores, resumo do envio por setor, total da mesa, indicação de conexão e armazenamento local de pendências para reprocessamento posterior quando a conexão estiver disponível.
+## Sessões independentes
 
-PWA do Caixa / PDV
+PDV e Garçom podem ser utilizados simultaneamente no mesmo computador, em abas diferentes.
 
-O módulo do Caixa permite visualizar mesas, consultar e editar comandas, acompanhar pedidos de produção, imprimir pedidos para cozinha e bar, reimprimir pedidos, dividir contas, transferir ou juntar mesas, fechar contas e consultar relatórios, auditoria, backup e fechamento de caixa.
+A autenticação utiliza **persistência por sessão/aba**, evitando que o login administrativo do PDV derrube a sessão do Garçom ou vice-versa.
 
-A comanda do PDV possui área de itens com rolagem independente, rodapé financeiro persistente, resumo operacional e ações principais acessíveis em telas pequenas.
+## Segurança
 
-Principais funcionalidades
+A segurança principal é aplicada no **Firebase Authentication + Realtime Database Rules**.
 
-Área
-Funcionalidades
-Mesas
-Salão, deck/praia, estados livre, ocupada e pedido novo
-Atendimento
-Abertura de comanda, cliente, itens, quantidades e observações
-Produção
-Separação de itens para cozinha e bar, status e impressão
-Caixa
-Total, divisão de conta, pagamentos, troco e fechamento
-Cardápio
-Categorias, favoritos, busca e gerenciamento pelo PDV
-Conectividade
-Indicador de conexão, pendências locais e reprocessamento
-Auditoria
-Registro de operações críticas do Garçom e do PDV
-Backup
-Exportação e restauração controladas dos dados operacionais
-PWA
-Manifesto, service worker e instalação na tela inicial
+As contas possuem permissões diferentes no banco:
 
+| Operação | Administrador | Garçom |
+| --- | :---: | :---: |
+| Ler mesas | ✅ | ✅ |
+| Alterar mesas | ✅ | ✅ |
+| Ler cardápio | ✅ | ✅ |
+| Alterar cardápio | ✅ | ❌ |
+| Criar pedidos de produção | ✅ | ✅ |
+| Criar venda ao fechar mesa | ✅ | ✅ |
+| Alterar venda existente | ✅ | ❌ |
+| Consultar histórico de vendas | ✅ | ❌ |
+| Consultar auditoria | ✅ | ❌ |
+| Fechamento de caixa | ✅ | ❌ |
+| Alterar perfis de acesso pelo navegador | ❌ | ❌ |
 
+As regras ficam versionadas em:
 
+```text
+database.rules.json
+```
 
-Arquitetura resumida
+Nenhuma senha operacional deve ser armazenada no código ou na documentação do repositório.
 
-Plain Text
+## Taxa de serviço — 10%
 
+A taxa de serviço funciona tanto no PDV quanto no Garçom.
 
-Navegador / celular / tablet / computador
-                |
-        PWA do Garçom ou PWA do Caixa
-                |
-       Firebase Realtime Database
-                |
-  mesas · pedidosProducao · cardapio
-  vendas · auditoria · cancelamentos
-  fechamentosCaixa · configuracoes
+Quando uma conta é fechada pelo Garçom:
 
+1. o subtotal é calculado;
+2. a opção de 10% aparece marcada por padrão;
+3. a taxa é adicionada ao total quando selecionada;
+4. o valor é gravado na venda;
+5. o PDV recebe a venda com `subtotal`, `taxa` e `total` corretamente registrados.
 
+O relatório do PDV também apresenta a taxa de serviço acumulada e a separação por turno.
 
-O projeto também contém uma base full-stack com frontend, backend, rotas de API, Drizzle e integrações internas. Os PWAs operacionais utilizam arquivos estáticos em client/public/garcom e client/public/pdv, compartilhando a fundação visual em client/public/shared/pwa-theme.css.
+## Relatório por Garçom
 
-Estrutura principal
+Cada item lançado pode registrar o Garçom responsável pela inclusão.
 
-Plain Text
+Isso permite gerar o relatório **Vendas por Garçom** com base nos itens efetivamente lançados por cada profissional, inclusive quando mais de um Garçom atende a mesma mesa.
 
+A taxa de serviço não é atribuída individualmente à venda do Garçom; ela é totalizada separadamente para posterior divisão da equipe.
 
-.
-├── client/
-│   ├── public/
-│   │   ├── garcom/              # PWA do Garçom
-│   │   ├── pdv/                 # PWA do Caixa / PDV
-│   │   ├── shared/              # Tema visual compartilhado
-│   │   └── ...                  # Logos, imagens e recursos públicos
-│   ├── index.html               # Entrada principal do frontend
-│   └── src/                     # Código do frontend principal
-├── server/
-│   ├── _core/                   # Infraestrutura do servidor
-│   ├── routers/                 # Rotas e procedimentos
-│   └── *.test.ts                # Testes automatizados
-├── shared/                      # Tipos e constantes compartilhadas
-├── docs/                        # Documentação técnica e operacional
-├── scripts/                     # Scripts auxiliares
-├── firebase.json                # Configuração do Firebase Hosting
-├── database.rules.json          # Regras versionadas do Realtime Database
-├── package.json                 # Dependências e scripts
-└── todo.md                      # Checklist e pendências do projeto
+## Zeragem do caixa
 
+O botão **Zerar Caixa / Histórico** utiliza um marco operacional.
 
+Ao zerar:
 
-Tecnologias
+- os valores exibidos no caixa passam a considerar somente vendas realizadas após a zeragem;
+- as vendas antigas permanecem armazenadas no Firebase;
+- auditoria, relatórios históricos e backup continuam preservados.
 
-Tecnologia
-Uso
-TypeScript
-Tipagem e código da aplicação
-React / Vite
-Frontend principal e build
-Express / tRPC
-Backend e procedimentos de API
-Drizzle
-Camada de dados do backend
-Firebase Realtime Database
-Sincronização de mesas, pedidos, vendas e operações
-Firebase Hosting
-Publicação dos PWAs
-Service Worker
-Suporte a instalação e recursos do PWA
-Vitest
-Testes automatizados
-pnpm
-Gerenciamento de dependências e scripts
+Isso evita perda de dados financeiros.
 
+## Cardápio
 
+O cardápio é sincronizado em tempo real pelo Firebase.
 
+O PDV permite:
 
-Requisitos para desenvolvimento
+- adicionar produtos;
+- alterar nome e preço;
+- alterar categoria;
+- definir setor (`cozinha` ou `bar`);
+- marcar favoritos;
+- ativar/desativar produtos;
+- configurar itens que servem duas pessoas;
+- excluir itens;
+- restaurar o cardápio padrão.
 
-Para trabalhar localmente, instale:
+O Garçom recebe automaticamente as alterações publicadas pelo PDV após autenticação.
 
-•
-Node.js compatível com o projeto;
+## Produção
 
-•
-pnpm;
+Os pedidos são separados entre:
 
-•
-acesso ao repositório GitHub;
+- **cozinha**;
+- **bar**.
 
-•
-configuração do Firebase para os fluxos que dependem de sincronização em tempo real.
+O sistema evita exibir um fluxo complexo de status de produção para não atrapalhar a operação da cozinha. Internamente os registros mantêm somente os campos necessários para sincronização e impressão.
 
-As configurações públicas do Firebase ficam no código dos PWAs. Chaves administrativas, credenciais de serviço e tokens privados nunca devem ser colocados no repositório ou enviados por mensagem.
+## Firebase Realtime Database
 
-Instalação local
+Principais caminhos utilizados:
 
-Clone o repositório e entre na pasta do projeto:
-
-Bash
-
-
-git clone https://github.com/giovanisilvaa/joao-caicara-pwas.git
-cd joao-caicara-pwas
-
-
-
-Instale as dependências:
-
-Bash
-
-
-pnpm install
-
-
-
-Para iniciar o ambiente de desenvolvimento, utilize o script configurado no package.json:
-
-Bash
-
-
-pnpm dev
-
-
-
-Os comandos disponíveis podem ser consultados com:
-
-Bash
-
-
-pnpm run
-
-
-
-Validação do projeto
-
-Antes de publicar alterações, execute a checagem de tipos, os testes e o build:
-
-Bash
-
-
-pnpm check
-pnpm test
-pnpm build
-
-
-
-Também é recomendado verificar espaços ou erros básicos no diff:
-
-Bash
-
-
-git diff --check
-
-
-
-A situação validada na última revisão foi:
-
-Verificação
-Resultado
-TypeScript
-Aprovado
-Testes automatizados
-14/14 aprovados
-Build de produção
-Aprovado
-Fluxos de mesas e pedidos
-Preservados
-Comanda fixa do Garçom e do PDV
-Implementada
-Tema moderno caiçara
-Implementado
-
-
-
-
-Desenvolvimento dos PWAs
-
-O Garçom está em:
-
-Plain Text
-
-
-client/public/garcom/index.html
-
-
-
-O Caixa/PDV está em:
-
-Plain Text
-
-
-client/public/pdv/index.html
-
-
-
-O tema visual comum está em:
-
-Plain Text
-
-
-client/public/shared/pwa-theme.css
-
-
-
-Cada PWA possui manifesto e service worker próprios:
-
-Plain Text
-
-
-client/public/garcom/manifest.json
-client/public/garcom/service-worker.js
-
-client/public/pdv/manifest.json
-client/public/pdv/service-worker.js
-
-
-
-Ao alterar um PWA, preserve os caminhos /garcom/ e /pdv/, os manifestos e os respectivos escopos dos service workers.
-
-Firebase Realtime Database
-
-Os principais caminhos usados pelo sistema são:
-
-Plain Text
-
-
+```text
 mesas
 pedidosProducao
 cardapio
@@ -297,145 +179,214 @@ vendas
 auditoria
 cancelamentos
 fechamentosCaixa
+perfisAcesso
 configuracoes
+```
 
+O projeto Firebase utilizado pela aplicação é:
 
-
-As regras estão versionadas em:
-
-Plain Text
-
-
-database.rules.json
-
-
-
-A autenticação atualmente utilizada pelos PWAs é anônima. O PIN foi removido da versão oficial publicada por decisão operacional, mas as regras atuais do Firebase ainda não diferenciam os perfis de Garçom e Caixa.
-
-Pendência de segurança
-
-A migração para contas identificadas e custom claims continua planejada para uma etapa futura. Essa migração permitirá diferenciar permissões por perfil, por exemplo:
-
-•
-Garçom: leitura de mesas e cardápio e criação de pedidos;
-
-•
-Caixa: leitura e atualização de produção, vendas e fechamentos;
-
-•
-Administrador: gerenciamento de cardápio, configurações, auditoria e backups.
-
-Até essa migração, não publique regras que dependam de auth.token.perfil, pois os usuários atuais não possuem essa claim.
-
-Publicação no Firebase Hosting
-
-O projeto Firebase utilizado é:
-
-Plain Text
-
-
+```text
 joaocaicaratradicao
+```
 
+## Arquitetura resumida
 
+```text
+Celular / tablet / computador
+          │
+          ├── PWA Garçom
+          │
+          └── PWA Caixa / PDV
+                  │
+          Firebase Authentication
+                  │
+          Firebase Realtime Database
+                  │
+      mesas · cardapio · pedidosProducao
+      vendas · auditoria · fechamentosCaixa
+```
 
-Depois de configurar o Firebase CLI e autenticar uma conta autorizada, a publicação do Hosting pode ser feita com:
+## Estrutura principal
 
-Bash
+```text
+.
+├── client/
+│   └── public/
+│       ├── garcom/                 # PWA do Garçom
+│       ├── pdv/                    # PWA do Caixa / PDV
+│       └── ...                     # imagens e recursos públicos
+│
+├── server/
+│   └── *.test.ts                   # testes automatizados
+│
+├── .github/
+│   └── workflows/                  # deploy automático
+│
+├── database.rules.json             # regras do Realtime Database
+├── firebase.json                   # configuração do Firebase
+├── package.json
+└── README.md
+```
 
+## Arquivos importantes do Garçom
 
-firebase deploy --only hosting --project joaocaicaratradicao
+```text
+client/public/garcom/index.html
+client/public/garcom/shared-login.js
+client/public/garcom/cardapio-auth-reconnect.js
+client/public/garcom/waiter-attribution.js
+client/public/garcom/waiter-speed.js
+client/public/garcom/garcom-service-fee.js
+client/public/garcom/service-worker.js
+```
 
+## Arquivos importantes do PDV
 
+```text
+client/public/pdv/index.html
+client/public/pdv/admin-login.js
+client/public/pdv/pdv-sync.js
+client/public/pdv/pdv-safety.js
+client/public/pdv/pdv-operations.js
+client/public/pdv/pdv-checkout-core.js
+client/public/pdv/pdv-production.js
+client/public/pdv/waiter-sales-report.js
+client/public/pdv/service-fee-shifts.js
+client/public/pdv/cash-reset.js
+client/public/pdv/fast-checkout.js
+client/public/pdv/fast-split.js
+client/public/pdv/service-worker.js
+```
 
-Antes da publicação, execute:
+## Tecnologias
 
-Bash
+- HTML, CSS e JavaScript nos PWAs operacionais;
+- Firebase Authentication;
+- Firebase Realtime Database;
+- Firebase Hosting;
+- Service Workers;
+- PWA Manifest;
+- TypeScript;
+- Vitest;
+- pnpm;
+- GitHub Actions;
+- Workload Identity Federation para autenticação do deploy.
 
+## Desenvolvimento local
 
+Clone o projeto:
+
+```bash
+git clone https://github.com/giovanisilvaa/joao-caicara-pwas.git
+cd joao-caicara-pwas
+```
+
+Instale as dependências:
+
+```bash
+pnpm install
+```
+
+Para iniciar o ambiente de desenvolvimento:
+
+```bash
+pnpm dev
+```
+
+## Validação
+
+Antes de publicar alterações:
+
+```bash
 pnpm check
 pnpm test
 pnpm build
 git diff --check
+```
 
+Os testes automatizados possuem verificações específicas para evitar regressões em pontos críticos como:
 
+- exclusão segura de mesas;
+- envio para produção;
+- fechamento de conta;
+- atribuição de Garçom;
+- taxa de serviço;
+- zeragem de caixa;
+- login administrativo;
+- login compartilhado do Garçom;
+- isolamento de sessão entre PDV e Garçom;
+- regras de segurança do Firebase;
+- carregamento dos módulos pelos service workers.
 
-A publicação do Hosting não altera automaticamente o domínio antigo do Manus. São publicações independentes.
+## Deploy automático
 
-Instalação no celular
+As alterações enviadas para a branch principal passam pelo workflow do GitHub Actions.
 
-Android
+O processo executa validações e publica automaticamente:
 
-Abra o link do Garçom ou do Caixa no Google Chrome, abra o menu do navegador e escolha Instalar aplicativo ou Adicionar à tela inicial.
+- Firebase Hosting;
+- regras do Realtime Database.
 
-iPhone
+A autenticação do GitHub Actions com o Google Cloud/Firebase utiliza **Workload Identity Federation**, evitando o armazenamento de chaves permanentes de service account no repositório.
 
-Abra o link no Safari, toque em Compartilhar, escolha Adicionar à Tela de Início e confirme. Se uma versão antiga estiver instalada, remova o atalho antigo antes de instalar novamente a versão atual.
+## Backup
 
-Backup e operação segura
+O PDV possui exportação manual de backup em JSON contendo os principais dados operacionais, incluindo:
 
-Antes de usar o sistema em produção, faça uma exportação dos dados pelo recurso de backup disponível no PDV. Guarde o arquivo com a data no nome e em local seguro.
+- mesas;
+- vendas;
+- pedidos de produção;
+- cardápio;
+- auditoria;
+- cancelamentos;
+- fechamentos de caixa.
 
-A restauração pode substituir dados existentes. Por isso, deve ser executada somente após conferência do arquivo e, preferencialmente, em uma janela controlada de manutenção.
+A restauração deve ser feita somente após conferir o arquivo, pois pode substituir conjuntos de dados existentes.
 
-Monitoramento do Firebase
+## Instalação como PWA
 
-Acompanhe periodicamente no Firebase Console:
+### Android
 
-•
-armazenamento;
+Abra o módulo no Chrome e utilize **Instalar aplicativo** ou **Adicionar à tela inicial**.
 
-•
-downloads;
+### iPhone / iPad
 
-•
-conexões simultâneas;
+Abra no Safari, toque em **Compartilhar → Adicionar à Tela de Início**.
 
-•
-carga do banco;
+Quando houver uma atualização importante e o aparelho continuar mostrando uma versão anterior, feche e abra novamente o PWA ou atualize a página para permitir a atualização do service worker.
 
-•
-erros de sincronização;
+## Boas práticas
 
-•
-crescimento de vendas, auditoria e fechamentos.
+- não armazenar senhas no código;
+- não armazenar tokens ou chaves administrativas no repositório;
+- fazer alterações pequenas e relacionadas;
+- validar Garçom e PDV após alterações nas regras do Firebase;
+- preservar o fluxo simples da cozinha;
+- manter botões e alvos de toque adequados para celular;
+- preservar a atribuição individual dos pedidos aos garçons;
+- não apagar vendas do Firebase apenas para zerar o caixa;
+- manter testes de regressão para funcionalidades críticas.
 
-No momento da última análise, o projeto apresentava aproximadamente 43,3 KB de armazenamento e 6,3 MB de downloads no período observado, muito abaixo dos limites exibidos no plano Spark. Esses valores devem ser acompanhados novamente após o início do uso real.
+## Estado atual
 
-Boas práticas de alteração
+O sistema atualmente possui:
 
-Faça alterações pequenas e relacionadas em cada commit. Execute os testes antes de enviar código ao GitHub. Não altere regras do Firebase junto com uma mudança visual sem validar o acesso dos dois PWAs. Não armazene senhas, tokens administrativos ou chaves privadas no projeto.
+- ✅ sincronização em tempo real entre Garçom e PDV;
+- ✅ abertura de mesas pelo Garçom;
+- ✅ fechamento de conta pelo Garçom e PDV;
+- ✅ taxa de serviço de 10% nos dois módulos;
+- ✅ relatório de vendas por Garçom;
+- ✅ taxa de serviço por turno;
+- ✅ gerenciamento de cardápio pelo administrador;
+- ✅ cardápio sincronizado no Garçom;
+- ✅ login administrativo do PDV;
+- ✅ login compartilhado autenticado do Garçom;
+- ✅ sessões independentes por aba;
+- ✅ regras Firebase separando permissões de Administrador e Garçom;
+- ✅ zeragem segura do caixa;
+- ✅ backup manual;
+- ✅ deploy automático pelo GitHub Actions.
 
-Ao atualizar a interface, preserve a legibilidade em ambientes de atendimento, os alvos de toque, o foco acessível, o suporte a telas pequenas e o comportamento de sincronização offline ou instável.
+## Licença e uso
 
-Pendências conhecidas
-
-Pendência
-Situação
-Sincronizar o domínio Manus antigo
-Pendente; ele pode continuar exibindo PIN
-Autenticação por perfis com custom claims
-Adiada
-Regras diferenciadas por função
-Aguardando autenticação identificada
-Domínio personalizado
-Adiado por custo
-Teste completo em celulares e rede real
-Recomendado
-Confirmação de alertas externos via WhatsApp
-Não concluída
-
-
-
-
-Histórico recente
-
-As últimas melhorias realizadas incluem a remoção da tela de PIN da versão publicada no Firebase, a correção dos testes de reprocessamento de pendências, o carregamento condicional de analytics, a criação do tema moderno caiçara, a comanda fixa do Garçom, a comanda fixa do Caixa e os resumos operacionais separados por setor.
-
-Licença e uso
-
-Este projeto é destinado à operação do restaurante João Caiçara Tradição. A licença e as condições de redistribuição devem ser definidas pelo responsável pelo projeto antes de disponibilizar o código publicamente para terceiros.
-
-Contato e manutenção
-
-Para manutenção, registre as decisões e alterações em todo.md e na pasta docs/. Ao relatar um problema, informe o módulo afetado, o dispositivo, o navegador, o horário, a mesa ou operação de teste utilizada e se havia conexão com a internet.
-
+Projeto destinado à operação do **João Caiçara Tradição**. As condições de redistribuição e uso por terceiros devem ser definidas pelo responsável pelo projeto.
