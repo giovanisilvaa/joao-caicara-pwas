@@ -33,6 +33,9 @@
     const garcomResponsavel = dadosMesa.garcomResponsavel && typeof dadosMesa.garcomResponsavel === 'object'
       ? JSON.parse(JSON.stringify(dadosMesa.garcomResponsavel))
       : null;
+    const garconsAtendimento = Array.isArray(dadosMesa.garconsAtendimento)
+      ? JSON.parse(JSON.stringify(dadosMesa.garconsAtendimento.filter(Boolean)))
+      : [];
     const registro = {
       id: `pdv-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
       mesa: mesaId,
@@ -42,6 +45,7 @@
       itens: JSON.parse(JSON.stringify(dadosMesa.itens)),
       garcomResponsavel,
       garcomNome: garcomResponsavel?.nome || '',
+      garconsAtendimento,
       subtotal,
       taxa,
       total,
@@ -64,7 +68,8 @@
       localStorage.setItem('historico_vendas_caicara', JSON.stringify(historico));
 
       let detalhe = '';
-      if (garcomResponsavel?.nome) detalhe += `Garçom: ${garcomResponsavel.nome}<br>`;
+      if (garcomResponsavel?.nome) detalhe += `Mesa aberta por: ${garcomResponsavel.nome}<br>`;
+      if (garconsAtendimento.length) detalhe += `Atendida por: ${garconsAtendimento.map(item => item.nome).filter(Boolean).join(', ')}<br>`;
       if (dinheiro > 0) detalhe += `Dinheiro: ${formatarMoeda(dinheiro)}<br>`;
       if (pix > 0) detalhe += `PIX: ${formatarMoeda(pix)}<br>`;
       if (credito > 0) detalhe += `Crédito: ${formatarMoeda(credito)}<br>`;
@@ -99,7 +104,7 @@
       atualizarPainelDiario();
 
       if (typeof registrarAuditoriaPdv === 'function') {
-        Promise.resolve(registrarAuditoriaPdv('fechar_conta', { mesa: mesaId, total, venda: registro.id, garcom: garcomResponsavel?.nome || '' }))
+        Promise.resolve(registrarAuditoriaPdv('fechar_conta', { mesa: mesaId, total, venda: registro.id, garcom: garcomResponsavel?.nome || '', garconsAtendimento: garconsAtendimento.map(item => item.nome).filter(Boolean) }))
           .catch(erro => console.warn('Venda concluída, mas a auditoria do fechamento falhou:', erro));
       }
     } catch (erro) {
