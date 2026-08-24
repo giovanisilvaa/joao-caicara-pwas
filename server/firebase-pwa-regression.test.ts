@@ -87,30 +87,39 @@ describe("regressoes criticas Firebase e PWAs", () => {
     expect(checkout).toBeGreaterThan(sync);
     expect(production).toBeGreaterThan(sync);
     expect(fastCheckout).toBeGreaterThan(checkout);
-    expect(sw).toContain("joao-caicara-pdv-v19");
+    expect(sw).toContain("joao-caicara-pdv-v20");
     expect(sw).not.toContain("/pdv/hotfix-sync.js");
   });
 
-  it("base de perfis do PDV permanece em modo compatibilidade", () => {
+  it("PDV identifica sessao Firebase sem sair do modo compatibilidade", () => {
     const access = read("client/public/pdv/access-control.js");
-    expect(access).toContain("garcom");
-    expect(access).toContain("caixa");
-    expect(access).toContain("administrador");
+    expect(access).toContain("perfilAtual: 'administrador'");
     expect(access).toContain("modoCompatibilidade: true");
-    expect(access).toContain("conta.fechar");
-    expect(access).toContain("window.PdvAcesso");
+    expect(access).toContain("onAuthStateChanged");
+    expect(access).toContain("uid: null");
+    expect(access).toContain("isAnonymous: null");
+    expect(access).toContain("identificarSessaoFirebase");
+    expect(access).toContain("aplicarPerfilAutenticado");
   });
 
-  it("base de perfis do garcom permanece em modo compatibilidade", () => {
+  it("Garcom identifica sessao Firebase sem sair do modo compatibilidade", () => {
     const access = read("client/public/garcom/access-control.js");
     const sw = read("client/public/garcom/service-worker.js");
     expect(access).toContain("perfilAtual: 'garcom'");
     expect(access).toContain("modoCompatibilidade: true");
-    expect(access).toContain("mesas.abrir");
-    expect(access).toContain("producao.enviar");
-    expect(access).toContain("window.GarcomAcesso");
+    expect(access).toContain("onAuthStateChanged");
+    expect(access).toContain("uid: null");
+    expect(access).toContain("isAnonymous: null");
+    expect(access).toContain("identificarSessaoFirebase");
     expect(sw).toContain("/garcom/access-control.js");
-    expect(sw).toContain("joao-caicara-garcom-v9");
+    expect(sw).toContain("joao-caicara-garcom-v10");
+  });
+
+  it("regras ainda nao exigem perfil nesta fase de compatibilidade", () => {
+    const rulesText = read("database.rules.json");
+    expect(rulesText).toContain("auth != null");
+    expect(rulesText).not.toContain("auth.token.perfil");
+    expect(rulesText).not.toContain("auth.token.role");
   });
 
   it("hotfix principal antigo foi removido", () => {
