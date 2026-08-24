@@ -1,12 +1,12 @@
 const CACHE_NAME = 'joao-caicara-garcom-v15';
-const LOGIN_ASSET = '/garcom/shared-login.js?v=16';
+const LOGIN_ASSET = '/garcom/shared-login.js?v=17';
 const APP_SHELL = ['/garcom/', '/garcom/manifest.json', '/garcom/access-control.js', LOGIN_ASSET, '/garcom/access-diagnostics.js', '/garcom/hotfix-sync.js', '/garcom/waiter-attribution.js', '/garcom/modern-hybrid.css', '/garcom/waiter-speed.js', '/garcom/waiter-speed.css', '/tradicao-caicara-logo.webp'];
 const respostaHtmlComHotfix = async (response) => {
   let html = await response.text();
   if (!html.includes('/garcom/modern-hybrid.css')) html = html.replace('</head>', '<link rel="stylesheet" href="/garcom/modern-hybrid.css"></head>');
   if (!html.includes('/garcom/waiter-speed.css')) html = html.replace('</head>', '<link rel="stylesheet" href="/garcom/waiter-speed.css"></head>');
   if (!html.includes('/garcom/access-control.js')) html = html.replace('</body>', '<script src="/garcom/access-control.js"></script></body>');
-  if (!html.includes('shared-login.js?v=16')) html = html.replace('</body>', '<script src="/garcom/shared-login.js?v=16"></script></body>');
+  if (!html.includes('shared-login.js?v=17')) html = html.replace('</body>', '<script src="/garcom/shared-login.js?v=17"></script></body>');
   if (!html.includes('/garcom/access-diagnostics.js')) html = html.replace('</body>', '<script src="/garcom/access-diagnostics.js"></script></body>');
   if (!html.includes('/garcom/hotfix-sync.js')) html = html.replace('</body>', '<script src="/garcom/hotfix-sync.js"></script></body>');
   if (!html.includes('/garcom/waiter-attribution.js')) html = html.replace('</body>', '<script src="/garcom/waiter-attribution.js"></script></body>');
