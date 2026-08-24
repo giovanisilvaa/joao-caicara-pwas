@@ -60,6 +60,22 @@ jobs:
           npx firebase-tools@latest database:set /perfisAcesso/woAmR3x91JcMZGLzykBUtLG97Hx1 --data '{"perfil":"administrador"}' --instance joaocaicaratradicao-default-rtdb --project joaocaicaratradicao --force --non-interactive
           npx firebase-tools@latest database:set /perfisAcesso/2SMlsyBIW8P0bHZgcvx32XDFb793 --data '{"perfil":"administrador"}' --instance joaocaicaratradicao-default-rtdb --project joaocaicaratradicao --force --non-interactive
 
+      - name: Verify administrator access profile
+        shell: bash
+        run: |
+          set -euo pipefail
+          PROFILE_JSON="$(npx firebase-tools@latest database:get /perfisAcesso/2SMlsyBIW8P0bHZgcvx32XDFb793 --instance joaocaicaratradicao-default-rtdb --project joaocaicaratradicao --non-interactive)"
+          echo "Perfil administrativo lido do Firebase: ${PROFILE_JSON}"
+          PROFILE_JSON="$PROFILE_JSON" node - <<'NODE'
+          const raw = process.env.PROFILE_JSON || '';
+          const parsed = JSON.parse(raw);
+          if (!parsed || parsed.perfil !== 'administrador') {
+            console.error('Perfil administrativo não foi persistido corretamente no Firebase.');
+            process.exit(1);
+          }
+          console.log('Perfil administrativo confirmado no Firebase.');
+          NODE
+
       - name: Deploy to Firebase Hosting
         run: npx firebase-tools@latest deploy --only hosting --project joaocaicaratradicao --non-interactive
 
