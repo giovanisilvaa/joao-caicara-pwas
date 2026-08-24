@@ -24,17 +24,11 @@ describe("regressoes criticas Firebase e PWAs", () => {
     expect(rules.rules.configuracoes?.[".write"]).toBe(false);
   });
 
-  it("perfil remoto e privado e bootstrap administrativo so pode ocorrer uma vez no UID autorizado", () => {
+  it("perfis de acesso sao privados por uid e somente leitura no cliente", () => {
     const rules = JSON.parse(read("database.rules.json"));
     const perfil = rules.rules.perfisAcesso?.$uid;
-    const leitura = String(perfil?.[".read"] ?? "");
-    const escrita = String(perfil?.[".write"] ?? "");
-    expect(leitura).toContain("auth.uid === $uid");
-    expect(escrita).toContain("auth.uid === $uid");
-    expect(escrita).toContain("woAmR3x91JcMZGLzykBUtLG97Hx1");
-    expect(escrita).toContain("!data.exists()");
-    expect(escrita).toContain("administrador");
-    expect(perfil?.$other?.[".validate"]).toBe(false);
+    expect(String(perfil?.[".read"] ?? "")).toContain("auth.uid === $uid");
+    expect(perfil?.[".write"]).toBe(false);
   });
 
   it("camada consolidada protege limpeza e backup", () => {
@@ -84,7 +78,7 @@ describe("regressoes criticas Firebase e PWAs", () => {
     expect(production).toContain("db.ref('pedidosProducao').push");
   });
 
-  it("PDV usa apenas modulos consolidados e carrega diagnostico de sessao", () => {
+  it("PDV usa modulos consolidados e diagnostico de sessao", () => {
     const sw = read("client/public/pdv/service-worker.js");
     const access = sw.indexOf("/pdv/access-control.js");
     const diagnostics = sw.indexOf("/pdv/access-diagnostics.js");
@@ -102,20 +96,20 @@ describe("regressoes criticas Firebase e PWAs", () => {
     expect(checkout).toBeGreaterThan(sync);
     expect(production).toBeGreaterThan(sync);
     expect(fastCheckout).toBeGreaterThan(checkout);
-    expect(sw).toContain("joao-caicara-pdv-v23");
+    expect(sw).toContain("joao-caicara-pdv-v24");
     expect(sw).not.toContain("/pdv/hotfix-sync.js");
   });
 
-  it("PDV cadastra somente o administrador autorizado e nao ativa bloqueio", () => {
+  it("PDV somente consulta perfil remoto e preserva modo compatibilidade", () => {
     const access = read("client/public/pdv/access-control.js");
-    expect(access).toContain("BOOTSTRAP_ADMIN_UID");
-    expect(access).toContain("woAmR3x91JcMZGLzykBUtLG97Hx1");
-    expect(access).toContain("tentarBootstrapAdministrador");
-    expect(access).toContain("ref.set({ perfil: 'administrador' })");
     expect(access).toContain("perfilAtual: 'administrador'");
     expect(access).toContain("modoCompatibilidade: true");
+    expect(access).toContain("consultarPerfilRemoto");
+    expect(access).toContain("perfisAcesso/${uid}");
     expect(access).toContain("aplicado: false");
-    expect(access).not.toContain("consultarPerfilRemoto(user.uid).then");
+    expect(access).not.toContain("BOOTSTRAP_ADMIN_UID");
+    expect(access).not.toContain("ref.set({ perfil: 'administrador' })");
+    expect(access).not.toContain("tentarBootstrapAdministrador");
   });
 
   it("Garcom consulta perfil remoto sem aplica-lo automaticamente", () => {
@@ -144,6 +138,15 @@ describe("regressoes criticas Firebase e PWAs", () => {
     expect(garcom).toContain("window.GarcomDiagnosticoSessao");
     expect(garcom).not.toContain("ativarControleEstrito");
     expect(garcom).not.toContain("definirPerfil(");
+  });
+
+  it("cadastro do administrador e feito pela credencial administrativa do Actions", () => {
+    const workflow = read(".github/workflows/firebase-hosting-deploy.yml");
+    expect(workflow).toContain("Seed administrator access profile");
+    expect(workflow).toContain("database:set /perfisAcesso/woAmR3x91JcMZGLzykBUtLG97Hx1");
+    expect(workflow).toContain("--data '{\"perfil\":\"administrador\"}'");
+    expect(workflow).toContain("--instance joaocaicaratradicao-default-rtdb");
+    expect(workflow).toContain("--force");
   });
 
   it("regras operacionais ainda nao exigem perfil nesta fase de compatibilidade", () => {
