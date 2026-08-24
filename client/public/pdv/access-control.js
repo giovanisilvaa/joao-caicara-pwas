@@ -27,7 +27,13 @@
   const estado = {
     modoCompatibilidade: true,
     perfilAtual: 'administrador',
-    origemPerfil: 'compatibilidade'
+    origemPerfil: 'compatibilidade',
+    sessao: {
+      authReady: false,
+      uid: null,
+      isAnonymous: null,
+      origem: 'aguardando-firebase'
+    }
   };
 
   const perfilValido = perfil => Object.prototype.hasOwnProperty.call(PERFIS, perfil);
@@ -47,6 +53,50 @@
     window.dispatchEvent(new CustomEvent('pdv:perfil-alterado', { detail: { perfil, origem } }));
   }
 
+  function identificarSessaoFirebase(user) {
+    estado.sessao.authReady = true;
+    estado.sessao.uid = user?.uid || null;
+    estado.sessao.isAnonymous = typeof user?.isAnonymous === 'boolean' ? user.isAnonymous : null;
+    estado.sessao.origem = user ? 'firebase-auth' : 'firebase-sem-usuario';
+    window.dispatchEvent(new CustomEvent('pdv:sessao-identificada', {
+      detail: {
+        uid: estado.sessao.uid,
+        isAnonymous: estado.sessao.isAnonymous,
+        perfil: estado.perfilAtual,
+        modoCompatibilidade: estado.modoCompatibilidade
+      }
+    }));
+  }
+
+  function conectarSessaoFirebase() {
+    try {
+      const auth = window.firebase?.auth?.();
+      if (!auth || typeof auth.onAuthStateChanged !== 'function') {
+        estado.sessao.origem = 'firebase-indisponivel';
+        return false;
+      }
+      auth.onAuthStateChanged(
+        user => identificarSessaoFirebase(user),
+        erro => {
+          console.warn('Não foi possível identificar a sessão Firebase do PDV:', erro);
+          estado.sessao.authReady = true;
+          estado.sessao.origem = 'firebase-erro';
+        }
+      );
+      return true;
+    } catch (erro) {
+      console.warn('Falha não bloqueante ao conectar controle de acesso do PDV ao Firebase:', erro);
+      estado.sessao.origem = 'firebase-erro';
+      return false;
+    }
+  }
+
+  function aplicarPerfilAutenticado(perfil, origem = 'firebase-perfil') {
+    if (!perfilValido(perfil)) return false;
+    definirPerfil(perfil, origem);
+    return true;
+  }
+
   function ativarControleEstrito() {
     estado.modoCompatibilidade = false;
     window.dispatchEvent(new CustomEvent('pdv:controle-acesso-ativado', { detail: { perfil: estado.perfilAtual } }));
@@ -57,10 +107,15 @@
     estado,
     pode,
     definirPerfil,
+    identificarSessaoFirebase,
+    conectarSessaoFirebase,
+    aplicarPerfilAutenticado,
     ativarControleEstrito,
     get perfilAtual() { return estado.perfilAtual; },
-    get modoCompatibilidade() { return estado.modoCompatibilidade; }
+    get modoCompatibilidade() { return estado.modoCompatibilidade; },
+    get sessao() { return { ...estado.sessao }; }
   });
 
   document.documentElement.dataset.perfilAcesso = estado.perfilAtual;
+  conectarSessaoFirebase();
 })();
