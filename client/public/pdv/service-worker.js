@@ -1,7 +1,7 @@
 const CACHE_NAME = 'joao-caicara-pdv-v27';
 const AUTH_SESSION_ASSET = '/auth-session-isolation.js?v=20';
 const MESA_ATOMIC_ASSET = '/mesa-atomic.js?v=36';
-const MESA_CONCURRENCY_ASSET = '/pdv/mesa-concurrency.js?v=36';
+const MESA_CONCURRENCY_ASSET = '/pdv/' + 'mesa-concurrency.js?v=36';
 const APP_SHELL = ['/pdv/', '/pdv/manifest.json', AUTH_SESSION_ASSET, MESA_ATOMIC_ASSET, '/pdv/access-control.js?v=31', '/pdv/admin-login.js?v=33', '/pdv/access-diagnostics.js?v=32', '/pdv/pdv-sync.js', '/pdv/pdv-safety.js', '/pdv/pdv-operations.js', '/pdv/pdv-checkout-core.js', '/pdv/waiter-sales-report.js?v=27', '/pdv/service-fee-shifts.js?v=28', '/pdv/cash-reset.js?v=35', '/pdv/pdv-production.js', MESA_CONCURRENCY_ASSET, '/pdv/modern-hybrid.css', '/pdv/menu-admin-cta.css?v=34', '/pdv/fast-checkout.js', '/pdv/fast-checkout.css', '/pdv/fast-split.js', '/pdv/fast-split.css', '/tradicao-caicara-logo.webp'];
 const respostaHtmlComHotfix = async (response) => {
   let html = await response.text();
