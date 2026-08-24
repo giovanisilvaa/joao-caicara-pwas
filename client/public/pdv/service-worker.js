@@ -1,5 +1,5 @@
 const CACHE_NAME = 'joao-caicara-pdv-v27';
-const APP_SHELL = ['/pdv/', '/pdv/manifest.json', '/pdv/access-control.js?v=31', '/pdv/admin-login.js?v=33', '/pdv/access-diagnostics.js?v=32', '/pdv/pdv-sync.js', '/pdv/pdv-safety.js', '/pdv/pdv-operations.js', '/pdv/pdv-checkout-core.js', '/pdv/waiter-sales-report.js?v=27', '/pdv/service-fee-shifts.js?v=28', '/pdv/pdv-production.js', '/pdv/modern-hybrid.css', '/pdv/menu-admin-cta.css?v=34', '/pdv/fast-checkout.js', '/pdv/fast-checkout.css', '/pdv/fast-split.js', '/pdv/fast-split.css', '/tradicao-caicara-logo.webp'];
+const APP_SHELL = ['/pdv/', '/pdv/manifest.json', '/pdv/access-control.js?v=31', '/pdv/admin-login.js?v=33', '/pdv/access-diagnostics.js?v=32', '/pdv/pdv-sync.js', '/pdv/pdv-safety.js', '/pdv/pdv-operations.js', '/pdv/pdv-checkout-core.js', '/pdv/waiter-sales-report.js?v=27', '/pdv/service-fee-shifts.js?v=28', '/pdv/cash-reset.js?v=35', '/pdv/pdv-production.js', '/pdv/modern-hybrid.css', '/pdv/menu-admin-cta.css?v=34', '/pdv/fast-checkout.js', '/pdv/fast-checkout.css', '/pdv/fast-split.js', '/pdv/fast-split.css', '/tradicao-caicara-logo.webp'];
 const respostaHtmlComHotfix = async (response) => {
   let html = await response.text();
   if (!html.includes('/pdv/modern-hybrid.css')) html = html.replace('</head>', '<link rel="stylesheet" href="/pdv/modern-hybrid.css"></head>');
@@ -15,6 +15,7 @@ const respostaHtmlComHotfix = async (response) => {
   if (!html.includes('/pdv/pdv-checkout-core.js')) html = html.replace('</body>', '<script src="/pdv/pdv-checkout-core.js"></script></body>');
   if (!html.includes('/pdv/waiter-sales-report.js')) html = html.replace('</body>', '<script src="/pdv/waiter-sales-report.js?v=27"></script></body>');
   if (!html.includes('/pdv/service-fee-shifts.js')) html = html.replace('</body>', '<script src="/pdv/service-fee-shifts.js?v=28"></script></body>');
+  if (!html.includes('/pdv/cash-reset.js')) html = html.replace('</body>', '<script src="/pdv/cash-reset.js?v=35"></script></body>');
   if (!html.includes('/pdv/pdv-production.js')) html = html.replace('</body>', '<script src="/pdv/pdv-production.js"></script></body>');
   if (!html.includes('/pdv/fast-checkout.js')) html = html.replace('</body>', '<script src="/pdv/fast-checkout.js"></script></body>');
   if (!html.includes('/pdv/fast-split.js')) html = html.replace('</body>', '<script src="/pdv/fast-split.js"></script></body>');
