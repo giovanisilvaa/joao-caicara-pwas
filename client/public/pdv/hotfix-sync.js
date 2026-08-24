@@ -124,26 +124,6 @@
     }
   };
 
-  window.confirmarLimpezaMesa = async function confirmarLimpezaMesaSeguro() {
-    const numeroMesa = mesaLimpezaPendente;
-    if (!numeroMesa || !mesas[numeroMesa]) return cancelarLimpezaMesa();
-    cancelarLimpezaMesa();
-    const mesaLimpa = mesaVaziaHotfix();
-    try {
-      await db.ref(`mesas/${numeroMesa}`).set(mesaLimpa);
-      mesas[numeroMesa] = mesaLimpa;
-      if (mesaAtualSelecionada === numeroMesa) {
-        document.getElementById('nome-cliente').value = '';
-        renderizarComanda();
-      }
-      gerarMesas(); atualizarPainelDiario();
-      registrarAuditoriaPdv('limpar_mesa', { mesa: numeroMesa });
-    } catch (erro) {
-      console.error(erro);
-      alert('Não foi possível limpar a mesa no servidor.');
-    }
-  };
-
   window.imprimirCaixa = async function imprimirCaixaSeguro() {
     const mesaId = mesaAtualSelecionada;
     if (!mesaId || !mesas[mesaId]) return alert('Selecione uma mesa!');
