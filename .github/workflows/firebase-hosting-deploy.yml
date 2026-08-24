@@ -56,7 +56,9 @@ jobs:
             'https://identitytoolkit.googleapis.com/admin/v2/projects/joaocaicaratradicao/config?updateMask=signIn.email.enabled,signIn.email.passwordRequired'
 
       - name: Seed administrator access profile
-        run: npx firebase-tools@latest database:set /perfisAcesso/woAmR3x91JcMZGLzykBUtLG97Hx1 --data '{"perfil":"administrador"}' --instance joaocaicaratradicao-default-rtdb --project joaocaicaratradicao --force --non-interactive
+        run: |
+          npx firebase-tools@latest database:set /perfisAcesso/woAmR3x91JcMZGLzykBUtLG97Hx1 --data '{"perfil":"administrador"}' --instance joaocaicaratradicao-default-rtdb --project joaocaicaratradicao --force --non-interactive
+          npx firebase-tools@latest database:set /perfisAcesso/2SMlsyBIw8P0bHZgcvx32XDFb793 --data '{"perfil":"administrador"}' --instance joaocaicaratradicao-default-rtdb --project joaocaicaratradicao --force --non-interactive
 
       - name: Deploy to Firebase Hosting
         run: npx firebase-tools@latest deploy --only hosting --project joaocaicaratradicao --non-interactive
