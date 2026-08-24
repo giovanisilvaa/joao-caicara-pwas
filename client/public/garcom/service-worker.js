@@ -1,4 +1,4 @@
-const CACHE_NAME = 'joao-caicara-garcom-v14';
+const CACHE_NAME = 'joao-caicara-garcom-v15';
 const APP_SHELL = ['/garcom/', '/garcom/manifest.json', '/garcom/access-control.js', '/garcom/shared-login.js', '/garcom/access-diagnostics.js', '/garcom/hotfix-sync.js', '/garcom/waiter-attribution.js', '/garcom/modern-hybrid.css', '/garcom/waiter-speed.js', '/garcom/waiter-speed.css', '/tradicao-caicara-logo.webp'];
 const respostaHtmlComHotfix = async (response) => {
   let html = await response.text();
