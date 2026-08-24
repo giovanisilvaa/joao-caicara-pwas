@@ -59,7 +59,7 @@ describe("regressoes criticas Firebase e PWAs", () => {
     expect(operations).toContain("registrarAuditoriaPdv('transferir_mesa'");
   });
 
-  it("fechamento do PDV registra venda, garcom e libera mesa na mesma atualizacao", () => {
+  it("fechamento do PDV registra venda, abertura, atendentes e libera mesa", () => {
     const checkout = read("client/public/pdv/pdv-checkout-core.js");
     expect(checkout).toContain("window.imprimirCaixa");
     expect(checkout).toContain("db.ref('/').update");
@@ -67,6 +67,9 @@ describe("regressoes criticas Firebase e PWAs", () => {
     expect(checkout).toContain("mesas/${mesaId}");
     expect(checkout).toContain("garcomResponsavel");
     expect(checkout).toContain("garcomNome");
+    expect(checkout).toContain("garconsAtendimento");
+    expect(checkout).toContain("Mesa aberta por:");
+    expect(checkout).toContain("Atendida por:");
     expect(checkout).toContain("O pagamento informado ainda é insuficiente");
     expect(checkout).toContain("registrarAuditoriaPdv('fechar_conta'");
   });
@@ -98,7 +101,7 @@ describe("regressoes criticas Firebase e PWAs", () => {
     expect(checkout).toBeGreaterThan(sync);
     expect(production).toBeGreaterThan(sync);
     expect(fastCheckout).toBeGreaterThan(checkout);
-    expect(sw).toContain("joao-caicara-pdv-v25");
+    expect(sw).toContain("joao-caicara-pdv-v26");
     expect(sw).not.toContain("/pdv/hotfix-sync.js");
   });
 
@@ -131,7 +134,7 @@ describe("regressoes criticas Firebase e PWAs", () => {
     expect(hotfix).toBeGreaterThan(diagnostics);
     expect(attribution).toBeGreaterThan(hotfix);
     expect(speed).toBeGreaterThan(attribution);
-    expect(sw).toContain("joao-caicara-garcom-v14");
+    expect(sw).toContain("joao-caicara-garcom-v15");
   });
 
   it("login compartilhado pede nome e senha sem armazenar a senha da equipe", () => {
@@ -147,14 +150,19 @@ describe("regressoes criticas Firebase e PWAs", () => {
     expect(login).not.toContain("895623");
   });
 
-  it("garcom responsavel fica na mesa e cada item guarda quem lancou", () => {
+  it("uma mesa pode ser atendida por varios garçons sem perder autoria dos itens", () => {
     const hotfix = read("client/public/garcom/hotfix-sync.js");
     const attribution = read("client/public/garcom/waiter-attribution.js");
     expect(hotfix).toContain("garcomResponsavel");
-    expect(hotfix).toContain("atribuidoEm");
+    expect(hotfix).toContain("garconsAtendimento");
+    expect(hotfix).toContain("primeiroAtendimentoEm");
+    expect(attribution).toContain("registrarAtendimentoNaMesa");
+    expect(attribution).toContain("garconsAtendimento");
     expect(attribution).toContain("garcomLancamento");
     expect(attribution).toContain("garcomUltimoLancamento");
-    expect(attribution).toContain("Garçom responsável:");
+    expect(attribution).toContain("Mesa aberta por:");
+    expect(attribution).toContain("Atendida por:");
+    expect(attribution).not.toContain("Garçom responsável:");
   });
 
   it("diagnostico de sessao apenas exibe UID e perfil sem alterar acesso", () => {
