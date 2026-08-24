@@ -1,11 +1,12 @@
-const CACHE_NAME = 'joao-caicara-garcom-v15';
-const APP_SHELL = ['/garcom/', '/garcom/manifest.json', '/garcom/access-control.js', '/garcom/shared-login.js', '/garcom/access-diagnostics.js', '/garcom/hotfix-sync.js', '/garcom/waiter-attribution.js', '/garcom/modern-hybrid.css', '/garcom/waiter-speed.js', '/garcom/waiter-speed.css', '/tradicao-caicara-logo.webp'];
+const CACHE_NAME = 'joao-caicara-garcom-v16';
+const LOGIN_ASSET = '/garcom/shared-login.js?v=16';
+const APP_SHELL = ['/garcom/', '/garcom/manifest.json', '/garcom/access-control.js', LOGIN_ASSET, '/garcom/access-diagnostics.js', '/garcom/hotfix-sync.js', '/garcom/waiter-attribution.js', '/garcom/modern-hybrid.css', '/garcom/waiter-speed.js', '/garcom/waiter-speed.css', '/tradicao-caicara-logo.webp'];
 const respostaHtmlComHotfix = async (response) => {
   let html = await response.text();
   if (!html.includes('/garcom/modern-hybrid.css')) html = html.replace('</head>', '<link rel="stylesheet" href="/garcom/modern-hybrid.css"></head>');
   if (!html.includes('/garcom/waiter-speed.css')) html = html.replace('</head>', '<link rel="stylesheet" href="/garcom/waiter-speed.css"></head>');
   if (!html.includes('/garcom/access-control.js')) html = html.replace('</body>', '<script src="/garcom/access-control.js"></script></body>');
-  if (!html.includes('/garcom/shared-login.js')) html = html.replace('</body>', '<script src="/garcom/shared-login.js"></script></body>');
+  if (!html.includes('shared-login.js?v=16')) html = html.replace('</body>', '<script src="/garcom/shared-login.js?v=16"></script></body>');
   if (!html.includes('/garcom/access-diagnostics.js')) html = html.replace('</body>', '<script src="/garcom/access-diagnostics.js"></script></body>');
   if (!html.includes('/garcom/hotfix-sync.js')) html = html.replace('</body>', '<script src="/garcom/hotfix-sync.js"></script></body>');
   if (!html.includes('/garcom/waiter-attribution.js')) html = html.replace('</body>', '<script src="/garcom/waiter-attribution.js"></script></body>');
@@ -28,7 +29,7 @@ self.addEventListener('fetch', event => {
   if (url.origin !== self.location.origin) return;
   event.respondWith((async () => {
     try {
-      const response = await fetch(request);
+      const response = await fetch(request, { cache: 'no-store' });
       if (request.mode === 'navigate' && url.pathname.startsWith('/garcom/') && (response.headers.get('content-type') || '').includes('text/html')) {
         const patched = await respostaHtmlComHotfix(response);
         caches.open(CACHE_NAME).then(cache => cache.put(request, patched.clone()));
