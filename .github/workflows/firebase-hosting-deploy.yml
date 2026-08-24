@@ -60,22 +60,6 @@ jobs:
           npx firebase-tools@latest database:set /perfisAcesso/woAmR3x91JcMZGLzykBUtLG97Hx1 --data '{"perfil":"administrador"}' --instance joaocaicaratradicao-default-rtdb --project joaocaicaratradicao --force --non-interactive
           npx firebase-tools@latest database:set /perfisAcesso/2SMlsyBIW8P0bHZgcvx32XDFb793 --data '{"perfil":"administrador"}' --instance joaocaicaratradicao-default-rtdb --project joaocaicaratradicao --force --non-interactive
 
-      - name: Remove incorrect administrator UID
-        shell: bash
-        run: |
-          set -euo pipefail
-          npx firebase-tools@latest database:set /perfisAcesso/2SMlsyBIw8P0bHZgcvx32XDFb793 --data 'null' --instance joaocaicaratradicao-default-rtdb --project joaocaicaratradicao --force --non-interactive
-          WRONG_PROFILE="$(npx firebase-tools@latest database:get /perfisAcesso/2SMlsyBIw8P0bHZgcvx32XDFb793 --instance joaocaicaratradicao-default-rtdb --project joaocaicaratradicao --non-interactive)"
-          echo "UID incorreto após limpeza: ${WRONG_PROFILE}"
-          WRONG_PROFILE="$WRONG_PROFILE" node - <<'NODE'
-          const raw = (process.env.WRONG_PROFILE || '').trim();
-          if (raw !== 'null') {
-            console.error('O UID administrativo incorreto ainda existe no Firebase.');
-            process.exit(1);
-          }
-          console.log('UID administrativo incorreto removido com sucesso.');
-          NODE
-
       - name: Verify administrator access profile
         shell: bash
         run: |
