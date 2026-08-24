@@ -2,9 +2,10 @@ const CACHE_NAME = 'joao-caicara-garcom-v15';
 const AUTH_SESSION_ASSET = '/auth-session-isolation.js?v=20';
 const LOGIN_ASSET = '/garcom/shared-login.js?v=17';
 const CARDAPIO_AUTH_ASSET = '/garcom/cardapio-auth-reconnect.js?v=19';
+const MESAS_AUTH_ASSET = '/garcom/mesas-auth-reconnect.js?v=37';
 const MESA_ATOMIC_ASSET = '/mesa-atomic.js?v=36';
 const MESA_CONCURRENCY_ASSET = '/garcom/' + 'mesa-concurrency.js?v=36';
-const APP_SHELL = ['/garcom/', '/garcom/manifest.json', AUTH_SESSION_ASSET, MESA_ATOMIC_ASSET, '/garcom/access-control.js', LOGIN_ASSET, CARDAPIO_AUTH_ASSET, '/garcom/access-diagnostics.js', '/garcom/hotfix-sync.js', '/garcom/waiter-attribution.js', '/garcom/garcom-service-fee.js?v=18', '/garcom/modern-hybrid.css', '/garcom/waiter-speed.js', '/garcom/waiter-speed.css', MESA_CONCURRENCY_ASSET, '/tradicao-caicara-logo.webp'];
+const APP_SHELL = ['/garcom/', '/garcom/manifest.json', AUTH_SESSION_ASSET, MESA_ATOMIC_ASSET, '/garcom/access-control.js', LOGIN_ASSET, MESAS_AUTH_ASSET, CARDAPIO_AUTH_ASSET, '/garcom/access-diagnostics.js', '/garcom/hotfix-sync.js', '/garcom/waiter-attribution.js', '/garcom/garcom-service-fee.js?v=18', '/garcom/modern-hybrid.css', '/garcom/waiter-speed.js', '/garcom/waiter-speed.css', MESA_CONCURRENCY_ASSET, '/tradicao-caicara-logo.webp'];
 const respostaHtmlComHotfix = async (response) => {
   let html = await response.text();
   if (!html.includes('/garcom/modern-hybrid.css')) html = html.replace('</head>', '<link rel="stylesheet" href="/garcom/modern-hybrid.css"></head>');
@@ -13,6 +14,7 @@ const respostaHtmlComHotfix = async (response) => {
   if (!html.includes('/mesa-atomic.js')) html = html.replace('</body>', '<script src="/mesa-atomic.js?v=36"></script></body>');
   if (!html.includes('/garcom/access-control.js')) html = html.replace('</body>', '<script src="/garcom/access-control.js"></script></body>');
   if (!html.includes('shared-login.js?v=17')) html = html.replace('</body>', '<script src="/garcom/shared-login.js?v=17"></script></body>');
+  if (!html.includes('/garcom/mesas-auth-reconnect.js')) html = html.replace('</body>', '<script src="/garcom/mesas-auth-reconnect.js?v=37"></script></body>');
   if (!html.includes('/garcom/cardapio-auth-reconnect.js')) html = html.replace('</body>', '<script src="/garcom/cardapio-auth-reconnect.js?v=19"></script></body>');
   if (!html.includes('/garcom/access-diagnostics.js')) html = html.replace('</body>', '<script src="/garcom/access-diagnostics.js"></script></body>');
   if (!html.includes('/garcom/hotfix-sync.js')) html = html.replace('</body>', '<script src="/garcom/hotfix-sync.js"></script></body>');
