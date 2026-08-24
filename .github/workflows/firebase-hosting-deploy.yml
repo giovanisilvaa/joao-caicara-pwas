@@ -42,6 +42,9 @@ jobs:
           create_credentials_file: true
           export_environment_variables: true
 
+      - name: Seed administrator access profile
+        run: npx firebase-tools@latest database:set /perfisAcesso/woAmR3x91JcMZGLzykBUtLG97Hx1 --data '{"perfil":"administrador"}' --instance joaocaicaratradicao-default-rtdb --project joaocaicaratradicao --force --non-interactive
+
       - name: Deploy to Firebase Hosting
         run: npx firebase-tools@latest deploy --only hosting --project joaocaicaratradicao --non-interactive
 
