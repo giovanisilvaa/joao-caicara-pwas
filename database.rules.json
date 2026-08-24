@@ -5,15 +5,15 @@
     "mesas": {
       ".read": "auth != null",
       "$mesaId": {
-        ".write": "auth != null && ($mesaId.matches(/^(?:[1-9]|1[0-9]|2[0-5]|5[0-9]|6[0-5])$/))",
+        ".write": "auth != null && $mesaId.matches(/^([1-9]|1[0-9]|2[0-5]|5[0-9]|6[0-5])$/)",
         ".validate": "!newData.exists() || ((!newData.child('cliente').exists() || newData.child('cliente').isString()) && (!newData.child('abertura').exists() || newData.child('abertura').isNumber()))"
       }
     },
     "pedidosProducao": {
       ".read": "auth != null",
       "$pedidoId": {
-        ".write": "auth != null && newData.exists()",
-        ".validate": "newData.hasChildren(['mesa', 'setor', 'status']) && newData.child('mesa').isNumber() && newData.child('setor').isString() && newData.child('status').isString()"
+        ".write": "auth != null",
+        ".validate": "!newData.exists() || (newData.hasChildren(['mesa', 'setor', 'status']) && newData.child('mesa').isNumber() && newData.child('setor').isString() && newData.child('status').isString())"
       }
     },
     "cardapio": {
