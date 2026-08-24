@@ -1,9 +1,10 @@
-const CACHE_NAME = 'joao-caicara-garcom-v8';
-const APP_SHELL = ['/garcom/', '/garcom/manifest.json', '/garcom/hotfix-sync.js', '/garcom/modern-hybrid.css', '/garcom/waiter-speed.js', '/garcom/waiter-speed.css', '/tradicao-caicara-logo.webp'];
+const CACHE_NAME = 'joao-caicara-garcom-v9';
+const APP_SHELL = ['/garcom/', '/garcom/manifest.json', '/garcom/access-control.js', '/garcom/hotfix-sync.js', '/garcom/modern-hybrid.css', '/garcom/waiter-speed.js', '/garcom/waiter-speed.css', '/tradicao-caicara-logo.webp'];
 const respostaHtmlComHotfix = async (response) => {
   let html = await response.text();
   if (!html.includes('/garcom/modern-hybrid.css')) html = html.replace('</head>', '<link rel="stylesheet" href="/garcom/modern-hybrid.css"></head>');
   if (!html.includes('/garcom/waiter-speed.css')) html = html.replace('</head>', '<link rel="stylesheet" href="/garcom/waiter-speed.css"></head>');
+  if (!html.includes('/garcom/access-control.js')) html = html.replace('</body>', '<script src="/garcom/access-control.js"></script></body>');
   if (!html.includes('/garcom/hotfix-sync.js')) html = html.replace('</body>', '<script src="/garcom/hotfix-sync.js"></script></body>');
   if (!html.includes('/garcom/waiter-speed.js')) html = html.replace('</body>', '<script src="/garcom/waiter-speed.js"></script></body>');
   const headers = new Headers(response.headers);
