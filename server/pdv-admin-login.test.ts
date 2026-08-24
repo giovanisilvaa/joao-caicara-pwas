@@ -16,15 +16,24 @@ describe("login administrativo do PDV", () => {
     expect(sync).toBeGreaterThan(diagnostics);
   });
 
-  it("usa credencial digitada e perfil administrador sem senha fixa no codigo", () => {
+  it("usa credencial digitada e perfil administrador sem criar conta no cliente", () => {
     const login = read("client/public/pdv/admin-login.js");
     expect(login).toContain("LOGIN_ADMIN = 'adm'");
+    expect(login).toContain("EMAIL_ADMIN = 'adm@acesso.joaocaicara.app'");
     expect(login).toContain('type=\"password\"');
     expect(login).toContain("signInWithEmailAndPassword");
-    expect(login).toContain("createUserWithEmailAndPassword");
+    expect(login).not.toContain("createUserWithEmailAndPassword");
     expect(login).toContain("aplicarPerfilAutenticado('administrador'");
+    expect(login).toContain("firebase-auth-adm");
     expect(login).toContain("pdv-admin-sair");
     expect(login).toContain("Acesso temporário");
     expect(login).not.toMatch(/(?:SENHA|PASSWORD|PASS)_[A-Z_]*\s*=\s*['\"][^'\"]+['\"]/i);
+  });
+
+  it("diagnostico separa autenticacao admin do perfil remoto", () => {
+    const diagnostics = read("client/public/pdv/access-diagnostics.js");
+    expect(diagnostics).toContain("Administrador autenticado:");
+    expect(diagnostics).toContain("Firebase Auth (conta adm)");
+    expect(diagnostics).toContain("Perfil remoto (diagnóstico):");
   });
 });
