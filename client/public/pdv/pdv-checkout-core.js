@@ -1,66 +1,76 @@
-/* Fechamento atômico do caixa do PDV — isolado do hotfix principal. */
+/* Fechamento atômico do caixa do PDV — bloqueia a mesa e usa o snapshot autoritativo. */
 (() => {
-  const mesaVaziaCheckout = () => ({ itens: [], cliente: '', abertura: null });
-  const normalizarCheckout = (valor) => {
-    const mesa = valor && typeof valor === 'object' ? valor : {};
-    const itens = Array.isArray(mesa.itens)
-      ? mesa.itens
-      : (mesa.itens && typeof mesa.itens === 'object' ? Object.values(mesa.itens) : []);
-    return {
-      ...mesa,
-      itens: itens.filter(Boolean),
-      cliente: typeof mesa.cliente === 'string' ? mesa.cliente : '',
-      abertura: mesa.abertura || null
-    };
-  };
+  const clone = valor => valor == null ? valor : JSON.parse(JSON.stringify(valor));
 
   window.imprimirCaixa = async function imprimirCaixaSeguro() {
     const mesaId = mesaAtualSelecionada;
     if (!mesaId || !mesas[mesaId]) return alert('Selecione uma mesa!');
+    if (!window.MesaAtomic) return alert('A proteção de concorrência ainda está carregando. Tente novamente em um instante.');
 
-    const dadosMesa = normalizarCheckout(mesas[mesaId]);
-    const { subtotal, taxa, total } = calcularTotalComTaxa('chk-taxa-servico');
-    const dinheiro = parseFloat(document.getElementById('pag-dinheiro').value) || 0;
-    const pix = parseFloat(document.getElementById('pag-pix').value) || 0;
-    const credito = parseFloat(document.getElementById('pag-credito').value) || 0;
-    const debito = parseFloat(document.getElementById('pag-debito').value) || 0;
-    const informado = dinheiro + pix + credito + debito;
-
-    if (informado < total - 0.01) return alert('O pagamento informado ainda é insuficiente.');
-
-    const troco = informado - total;
-    const dataAtualStr = new Date().toLocaleString('pt-BR');
-    const garcomResponsavel = dadosMesa.garcomResponsavel && typeof dadosMesa.garcomResponsavel === 'object'
-      ? JSON.parse(JSON.stringify(dadosMesa.garcomResponsavel))
-      : null;
-    const garconsAtendimento = Array.isArray(dadosMesa.garconsAtendimento)
-      ? JSON.parse(JSON.stringify(dadosMesa.garconsAtendimento.filter(Boolean)))
-      : [];
-    const registro = {
-      id: `pdv-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
-      mesa: mesaId,
-      cliente: dadosMesa.cliente || 'Não informado',
-      dataHora: dataAtualStr,
-      criadoEm: Date.now(),
-      itens: JSON.parse(JSON.stringify(dadosMesa.itens)),
-      garcomResponsavel,
-      garcomNome: garcomResponsavel?.nome || '',
-      garconsAtendimento,
-      subtotal,
-      taxa,
-      total,
-      pagamentos: { dinheiro, pix, credito, debito },
-      troco,
-      origem: 'pdv'
-    };
-
-    const vendaRef = db.ref('vendas').push();
-
+    let lock = null;
     try {
-      // Venda e liberação da mesa são confirmadas juntas no Realtime Database.
+      lock = await window.MesaAtomic.bloquearMesa(mesaId, { tipo: 'fechamento', origem: 'pdv' });
+      if (!lock.committed) return alert('A mesa está concluindo outra operação. Aguarde um instante e tente novamente.');
+
+      const dadosMesa = window.MesaAtomic.normalizarMesa(lock.mesa);
+      mesas[mesaId] = dadosMesa;
+      const subtotal = dadosMesa.itens.reduce((soma, item) => soma + (Number(item.preco) || 0) * (Number(item.qtd) || 0), 0);
+      if (subtotal <= 0) {
+        await window.MesaAtomic.cancelarBloqueio(mesaId, lock.id, 'mesa_vazia');
+        return alert('A mesa está vazia.');
+      }
+      const taxaAtiva = document.getElementById('chk-taxa-servico')?.checked !== false;
+      const taxa = taxaAtiva ? subtotal * 0.10 : 0;
+      const total = subtotal + taxa;
+      const dinheiro = parseFloat(document.getElementById('pag-dinheiro').value) || 0;
+      const pix = parseFloat(document.getElementById('pag-pix').value) || 0;
+      const credito = parseFloat(document.getElementById('pag-credito').value) || 0;
+      const debito = parseFloat(document.getElementById('pag-debito').value) || 0;
+      const informado = dinheiro + pix + credito + debito;
+
+      if (informado < total - 0.01) {
+        await window.MesaAtomic.cancelarBloqueio(mesaId, lock.id, 'pagamento_insuficiente');
+        try { renderizarComanda(); } catch (_) {}
+        return alert(`A comanda foi atualizada e o pagamento informado ficou insuficiente. Total atual: ${formatarMoeda(total)}. Revise o pagamento.`);
+      }
+
+      const troco = informado - total;
+      const dataAtualStr = new Date().toLocaleString('pt-BR');
+      const garcomResponsavel = dadosMesa.garcomResponsavel && typeof dadosMesa.garcomResponsavel === 'object'
+        ? clone(dadosMesa.garcomResponsavel)
+        : null;
+      const garconsAtendimento = Array.isArray(dadosMesa.garconsAtendimento)
+        ? clone(dadosMesa.garconsAtendimento.filter(Boolean))
+        : [];
+      const itensVenda = clone(dadosMesa.itens);
+      itensVenda.forEach(item => {
+        delete item.envioPendenteId;
+        delete item.envioReservadoEm;
+      });
+      const registro = {
+        id: `pdv-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
+        mesa: mesaId,
+        cliente: dadosMesa.cliente || 'Não informado',
+        dataHora: dataAtualStr,
+        criadoEm: Date.now(),
+        itens: itensVenda,
+        garcomResponsavel,
+        garcomNome: garcomResponsavel?.nome || '',
+        garconsAtendimento,
+        subtotal,
+        taxa,
+        total,
+        pagamentos: { dinheiro, pix, credito, debito },
+        troco,
+        origem: 'pdv'
+      };
+
+      const vendaRef = db.ref('vendas').push();
+      // Venda e liberação da mesa são confirmadas juntas. Enquanto o lock está ativo,
+      // os módulos novos de Garçom/PDV não aceitam alteração da comanda.
       await db.ref('/').update({
         [`vendas/${vendaRef.key}`]: registro,
-        [`mesas/${mesaId}`]: mesaVaziaCheckout()
+        [`mesas/${mesaId}`]: window.MesaAtomic.mesaVazia()
       });
 
       const historico = JSON.parse(localStorage.getItem('historico_vendas_caicara')) || [];
@@ -88,7 +98,7 @@
         `<div class="t-item"><span class="t-item-name">${item.qtd}x ${item.nome}</span><span>R$ ${((Number(item.preco) || 0) * (Number(item.qtd) || 0)).toFixed(2)}</span></div>`
       ).join('');
 
-      mesas[mesaId] = mesaVaziaCheckout();
+      mesas[mesaId] = window.MesaAtomic.mesaVazia();
       fecharModais();
       document.body.classList.add('print-mode-caixa');
       window.print();
@@ -109,6 +119,9 @@
       }
     } catch (erro) {
       console.error('Falha no fechamento atômico:', erro);
+      if (lock?.id) {
+        try { await window.MesaAtomic.cancelarBloqueio(mesaId, lock.id, 'falha_fechamento_pdv'); } catch (_) {}
+      }
       alert('Não foi possível registrar o fechamento. A mesa foi mantida aberta.');
     }
   };
