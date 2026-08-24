@@ -1,4 +1,4 @@
-const CACHE_NAME = 'joao-caicara-pdv-v13';
+const CACHE_NAME = 'joao-caicara-pdv-v14';
 const APP_SHELL = ['/pdv/', '/pdv/manifest.json', '/pdv/hotfix-sync.js', '/pdv/pdv-safety.js', '/pdv/modern-hybrid.css', '/pdv/fast-checkout.js', '/pdv/fast-checkout.css', '/pdv/fast-split.js', '/pdv/fast-split.css', '/tradicao-caicara-logo.webp'];
 const respostaHtmlComHotfix = async (response) => {
   let html = await response.text();
