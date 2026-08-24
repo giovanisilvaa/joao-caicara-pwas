@@ -25,11 +25,12 @@ describe("regressoes criticas Firebase e PWAs", () => {
   });
 
   it("backup seguro nao inclui configuracoes protegidas", () => {
-    const backupFix = read("client/public/pdv/backup-fix.js");
+    const backupFix = read("client/public/pdv/backup-safety.js");
     expect(backupFix).toContain("mesas");
     expect(backupFix).toContain("vendas");
     expect(backupFix).toContain("pedidosProducao");
-    expect(backupFix).not.toMatch(/CAMINHOS[^\n]*configuracoes/);
+    const lista = backupFix.match(/const CAMINHOS_BACKUP_SEGUROS = \[([^\]]+)\]/)?.[1] ?? "";
+    expect(lista).not.toContain("configuracoes");
   });
 
   it("PDV carrega a correcao de limpeza depois do hotfix principal", () => {
