@@ -66,11 +66,8 @@
     const user = auth?.currentUser || null;
     if (!user || user.uid !== uid || typeof user.getIdToken !== 'function') throw new Error('Sessão Firebase ainda não corresponde ao UID consultado');
     const token = await user.getIdToken(true);
-    const resposta = await fetch(`${DATABASE_URL}/perfisAcesso/${encodeURIComponent(uid)}.json`, {
-      method: 'GET',
-      cache: 'no-store',
-      headers: { Authorization: `Bearer ${token}` }
-    });
+    const url = `${DATABASE_URL}/perfisAcesso/${encodeURIComponent(uid)}.json?auth=${encodeURIComponent(token)}&_=${Date.now()}`;
+    const resposta = await fetch(url, { method: 'GET', cache: 'no-store' });
     if (!resposta.ok) throw new Error(`Realtime Database respondeu HTTP ${resposta.status}`);
     return resposta.json();
   }
