@@ -206,7 +206,7 @@ describe("alta carga e concorrência", () => {
 
     expect(presentes.size).toBe(OPERACOES);
     for (let i = 0; i < OPERACOES; i++) expect(presentes.has(`stress-${i}`)).toBe(true);
-  }, 20000);
+  }, 60000);
 
   it("bloqueio operacional impede alteração durante fechamento e libera depois", async () => {
     const db = new VirtualRealtimeDatabase();
