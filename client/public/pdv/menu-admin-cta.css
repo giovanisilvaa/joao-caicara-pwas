@@ -1,0 +1,47 @@
+/* Destaque do botão Gerenciar Cardápio no PDV */
+.btn-history[onclick="abrirModalCardapio()"] {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-height: 38px;
+  padding: 9px 14px;
+  border: 1px solid rgba(15, 76, 92, 0.28);
+  border-radius: 999px;
+  background: linear-gradient(180deg, #ffffff 0%, #edf6f7 100%);
+  color: var(--primary, #0F4C5C) !important;
+  font-weight: 800;
+  font-size: 0.82rem;
+  letter-spacing: 0.01em;
+  box-shadow: 0 6px 14px rgba(15, 76, 92, 0.12), inset 0 0 0 1px rgba(255, 255, 255, 0.65);
+  opacity: 1 !important;
+  filter: none !important;
+  white-space: nowrap;
+}
+
+.btn-history[onclick="abrirModalCardapio()"]::first-letter {
+  font-size: 1rem;
+}
+
+.btn-history[onclick="abrirModalCardapio()"]:hover,
+.btn-history[onclick="abrirModalCardapio()"]:focus-visible {
+  background: linear-gradient(180deg, #f7fcfc 0%, #dff0f2 100%);
+  border-color: var(--primary, #0F4C5C);
+  color: var(--primary, #0F4C5C) !important;
+  box-shadow: 0 8px 18px rgba(15, 76, 92, 0.18);
+  transform: translateY(-1px);
+  outline: none;
+}
+
+.btn-history[onclick="abrirModalCardapio()"]:active {
+  transform: translateY(0);
+  box-shadow: 0 4px 10px rgba(15, 76, 92, 0.14);
+}
+
+@media (max-width: 760px) {
+  .btn-history[onclick="abrirModalCardapio()"] {
+    width: 100%;
+    min-height: 42px;
+    font-size: 0.9rem;
+  }
+}
