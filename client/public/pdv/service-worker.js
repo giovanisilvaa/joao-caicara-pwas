@@ -1,13 +1,13 @@
 const CACHE_NAME = 'joao-caicara-pdv-v27';
-const APP_SHELL = ['/pdv/', '/pdv/manifest.json', '/pdv/access-control.js?v=31', '/pdv/admin-login.js?v=29', '/pdv/access-diagnostics.js?v=30', '/pdv/pdv-sync.js', '/pdv/pdv-safety.js', '/pdv/pdv-operations.js', '/pdv/pdv-checkout-core.js', '/pdv/waiter-sales-report.js?v=27', '/pdv/service-fee-shifts.js?v=28', '/pdv/pdv-production.js', '/pdv/modern-hybrid.css', '/pdv/fast-checkout.js', '/pdv/fast-checkout.css', '/pdv/fast-split.js', '/pdv/fast-split.css', '/tradicao-caicara-logo.webp'];
+const APP_SHELL = ['/pdv/', '/pdv/manifest.json', '/pdv/access-control.js?v=31', '/pdv/admin-login.js?v=32', '/pdv/access-diagnostics.js?v=32', '/pdv/pdv-sync.js', '/pdv/pdv-safety.js', '/pdv/pdv-operations.js', '/pdv/pdv-checkout-core.js', '/pdv/waiter-sales-report.js?v=27', '/pdv/service-fee-shifts.js?v=28', '/pdv/pdv-production.js', '/pdv/modern-hybrid.css', '/pdv/fast-checkout.js', '/pdv/fast-checkout.css', '/pdv/fast-split.js', '/pdv/fast-split.css', '/tradicao-caicara-logo.webp'];
 const respostaHtmlComHotfix = async (response) => {
   let html = await response.text();
   if (!html.includes('/pdv/modern-hybrid.css')) html = html.replace('</head>', '<link rel="stylesheet" href="/pdv/modern-hybrid.css"></head>');
   if (!html.includes('/pdv/fast-checkout.css')) html = html.replace('</head>', '<link rel="stylesheet" href="/pdv/fast-checkout.css"></head>');
   if (!html.includes('/pdv/fast-split.css')) html = html.replace('</head>', '<link rel="stylesheet" href="/pdv/fast-split.css"></head>');
   if (!html.includes('/pdv/access-control.js')) html = html.replace('</body>', '<script src="/pdv/access-control.js?v=31"></script></body>');
-  if (!html.includes('/pdv/admin-login.js')) html = html.replace('</body>', '<script src="/pdv/admin-login.js?v=29"></script></body>');
-  if (!html.includes('/pdv/access-diagnostics.js')) html = html.replace('</body>', '<script src="/pdv/access-diagnostics.js?v=30"></script></body>');
+  if (!html.includes('/pdv/admin-login.js')) html = html.replace('</body>', '<script src="/pdv/admin-login.js?v=32"></script></body>');
+  if (!html.includes('/pdv/access-diagnostics.js')) html = html.replace('</body>', '<script src="/pdv/access-diagnostics.js?v=32"></script></body>');
   if (!html.includes('/pdv/pdv-sync.js')) html = html.replace('</body>', '<script src="/pdv/pdv-sync.js"></script></body>');
   if (!html.includes('/pdv/pdv-safety.js')) html = html.replace('</body>', '<script src="/pdv/pdv-safety.js"></script></body>');
   if (!html.includes('/pdv/pdv-operations.js')) html = html.replace('</body>', '<script src="/pdv/pdv-operations.js"></script></body>');
