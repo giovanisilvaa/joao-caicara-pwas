@@ -24,6 +24,13 @@ describe("regressoes criticas Firebase e PWAs", () => {
     expect(rules.rules.configuracoes?.[".write"]).toBe(false);
   });
 
+  it("perfis de acesso sao privados por uid e somente leitura no cliente", () => {
+    const rules = JSON.parse(read("database.rules.json"));
+    const perfil = rules.rules.perfisAcesso?.$uid;
+    expect(String(perfil?.[".read"] ?? "")).toContain("auth.uid === $uid");
+    expect(perfil?.[".write"]).toBe(false);
+  });
+
   it("camada consolidada protege limpeza e backup", () => {
     const safety = read("client/public/pdv/pdv-safety.js");
     expect(safety).toContain("window.confirmarLimpezaMesa");
@@ -87,35 +94,33 @@ describe("regressoes criticas Firebase e PWAs", () => {
     expect(checkout).toBeGreaterThan(sync);
     expect(production).toBeGreaterThan(sync);
     expect(fastCheckout).toBeGreaterThan(checkout);
-    expect(sw).toContain("joao-caicara-pdv-v20");
+    expect(sw).toContain("joao-caicara-pdv-v21");
     expect(sw).not.toContain("/pdv/hotfix-sync.js");
   });
 
-  it("PDV identifica sessao Firebase sem sair do modo compatibilidade", () => {
+  it("PDV consulta perfil remoto sem aplica-lo automaticamente", () => {
     const access = read("client/public/pdv/access-control.js");
     expect(access).toContain("perfilAtual: 'administrador'");
     expect(access).toContain("modoCompatibilidade: true");
-    expect(access).toContain("onAuthStateChanged");
-    expect(access).toContain("uid: null");
-    expect(access).toContain("isAnonymous: null");
-    expect(access).toContain("identificarSessaoFirebase");
-    expect(access).toContain("aplicarPerfilAutenticado");
+    expect(access).toContain("consultarPerfilRemoto");
+    expect(access).toContain("perfisAcesso/${uid}");
+    expect(access).toContain("aplicado: false");
+    expect(access).not.toContain("consultarPerfilRemoto(user.uid).then");
   });
 
-  it("Garcom identifica sessao Firebase sem sair do modo compatibilidade", () => {
+  it("Garcom consulta perfil remoto sem aplica-lo automaticamente", () => {
     const access = read("client/public/garcom/access-control.js");
     const sw = read("client/public/garcom/service-worker.js");
     expect(access).toContain("perfilAtual: 'garcom'");
     expect(access).toContain("modoCompatibilidade: true");
-    expect(access).toContain("onAuthStateChanged");
-    expect(access).toContain("uid: null");
-    expect(access).toContain("isAnonymous: null");
-    expect(access).toContain("identificarSessaoFirebase");
+    expect(access).toContain("consultarPerfilRemoto");
+    expect(access).toContain("perfisAcesso/${uid}");
+    expect(access).toContain("aplicado: false");
     expect(sw).toContain("/garcom/access-control.js");
-    expect(sw).toContain("joao-caicara-garcom-v10");
+    expect(sw).toContain("joao-caicara-garcom-v11");
   });
 
-  it("regras ainda nao exigem perfil nesta fase de compatibilidade", () => {
+  it("regras operacionais ainda nao exigem perfil nesta fase de compatibilidade", () => {
     const rulesText = read("database.rules.json");
     expect(rulesText).toContain("auth != null");
     expect(rulesText).not.toContain("auth.token.perfil");
