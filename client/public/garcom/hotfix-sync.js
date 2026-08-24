@@ -7,6 +7,14 @@
   };
   const vaziaHotfixG = () => ({ itens: [], cliente: '', abertura: null });
   const estaAbertaG = mesa => Boolean(mesa && (mesa.abertura || (Array.isArray(mesa.itens) && mesa.itens.length)));
+  const identidadeGarcomG = () => {
+    try {
+      const sessao = typeof window.sessaoGarcomAtual === 'function' ? window.sessaoGarcomAtual() : null;
+      const nome = String(sessao?.nome || '').trim();
+      if (!nome || nome === 'Acesso temporário') return null;
+      return { nome, login: sessao.login || 'garcom', uid: sessao.uid || sessao.funcionarioId || null, compartilhado: sessao.compartilhado === true };
+    } catch (_) { return null; }
+  };
 
   window.renderizarMesasG = function renderizarMesasGSeguro() {
     const gridSalao = document.getElementById('grid-salao-g');
@@ -21,7 +29,8 @@
       const novo = mesas[numero].itens.some(it => it && it.enviado === false && it.rascunho !== true);
       const total = mesas[numero].itens.reduce((soma, item) => soma + ((Number(item.preco) || 0) * (Number(item.qtd) || 0)), 0);
       const estado = novo ? 'Pedido novo' : aberta ? 'Ocupada' : 'Livre';
-      const resumo = mesas[numero].itens.length ? `${mesas[numero].itens.length} item(ns) · ${formatarMoeda(total)}` : aberta ? 'Comanda aberta' : 'Toque para abrir';
+      const garcom = mesas[numero]?.garcomResponsavel?.nome ? ` · ${mesas[numero].garcomResponsavel.nome}` : '';
+      const resumo = mesas[numero].itens.length ? `${mesas[numero].itens.length} item(ns) · ${formatarMoeda(total)}${garcom}` : aberta ? `Comanda aberta${garcom}` : 'Toque para abrir';
       grid.insertAdjacentHTML('beforeend', `<button id="mesa-btn-g-${numero}" class="mesa-btn ${aberta ? 'occupied' : ''} ${novo ? 'novo-pedido' : ''}" aria-label="Mesa ${numero}: ${estado}" title="Mesa ${numero}: ${estado}" onclick="selecionarMesaG(${numero})"><span class="mesa-btn__state">${estado}</span><strong class="mesa-btn__number">${numero}</strong><span class="mesa-btn__meta">${resumo}</span></button>`);
     };
     for (let i = 1; i <= 25; i++) render(i, gridSalao);
@@ -35,10 +44,12 @@
     if (precisaAbrir) {
       atual.abertura = Date.now();
       atual.origemAbertura = 'garcom';
+      const identidade = identidadeGarcomG();
+      if (identidade) atual.garcomResponsavel = { ...identidade, atribuidoEm: Date.now() };
       mesas[numero] = atual;
       try {
         await db.ref(`mesas/${numero}`).set(atual);
-        registrarAuditoriaGarcom('abrir_mesa', { mesa: numero });
+        registrarAuditoriaGarcom('abrir_mesa', { mesa: numero, garcom: identidade?.nome || '' });
       } catch (erro) {
         console.error('Falha ao abrir mesa:', erro);
         atualizarStatusConexaoG('🔴 falha ao abrir mesa', 'sync-error');
