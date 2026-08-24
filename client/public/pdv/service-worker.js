@@ -1,6 +1,8 @@
 const CACHE_NAME = 'joao-caicara-pdv-v27';
 const AUTH_SESSION_ASSET = '/auth-session-isolation.js?v=20';
-const APP_SHELL = ['/pdv/', '/pdv/manifest.json', AUTH_SESSION_ASSET, '/pdv/access-control.js?v=31', '/pdv/admin-login.js?v=33', '/pdv/access-diagnostics.js?v=32', '/pdv/pdv-sync.js', '/pdv/pdv-safety.js', '/pdv/pdv-operations.js', '/pdv/pdv-checkout-core.js', '/pdv/waiter-sales-report.js?v=27', '/pdv/service-fee-shifts.js?v=28', '/pdv/cash-reset.js?v=35', '/pdv/pdv-production.js', '/pdv/modern-hybrid.css', '/pdv/menu-admin-cta.css?v=34', '/pdv/fast-checkout.js', '/pdv/fast-checkout.css', '/pdv/fast-split.js', '/pdv/fast-split.css', '/tradicao-caicara-logo.webp'];
+const MESA_ATOMIC_ASSET = '/mesa-atomic.js?v=36';
+const MESA_CONCURRENCY_ASSET = '/pdv/mesa-concurrency.js?v=36';
+const APP_SHELL = ['/pdv/', '/pdv/manifest.json', AUTH_SESSION_ASSET, MESA_ATOMIC_ASSET, '/pdv/access-control.js?v=31', '/pdv/admin-login.js?v=33', '/pdv/access-diagnostics.js?v=32', '/pdv/pdv-sync.js', '/pdv/pdv-safety.js', '/pdv/pdv-operations.js', '/pdv/pdv-checkout-core.js', '/pdv/waiter-sales-report.js?v=27', '/pdv/service-fee-shifts.js?v=28', '/pdv/cash-reset.js?v=35', '/pdv/pdv-production.js', MESA_CONCURRENCY_ASSET, '/pdv/modern-hybrid.css', '/pdv/menu-admin-cta.css?v=34', '/pdv/fast-checkout.js', '/pdv/fast-checkout.css', '/pdv/fast-split.js', '/pdv/fast-split.css', '/tradicao-caicara-logo.webp'];
 const respostaHtmlComHotfix = async (response) => {
   let html = await response.text();
   if (!html.includes('/pdv/modern-hybrid.css')) html = html.replace('</head>', '<link rel="stylesheet" href="/pdv/modern-hybrid.css"></head>');
@@ -8,6 +10,7 @@ const respostaHtmlComHotfix = async (response) => {
   if (!html.includes('/pdv/fast-checkout.css')) html = html.replace('</head>', '<link rel="stylesheet" href="/pdv/fast-checkout.css"></head>');
   if (!html.includes('/pdv/fast-split.css')) html = html.replace('</head>', '<link rel="stylesheet" href="/pdv/fast-split.css"></head>');
   if (!html.includes('/auth-session-isolation.js')) html = html.replace('</body>', '<script src="/auth-session-isolation.js?v=20"></script></body>');
+  if (!html.includes('/mesa-atomic.js')) html = html.replace('</body>', '<script src="/mesa-atomic.js?v=36"></script></body>');
   if (!html.includes('/pdv/access-control.js')) html = html.replace('</body>', '<script src="/pdv/access-control.js?v=31"></script></body>');
   if (!html.includes('/pdv/admin-login.js')) html = html.replace('</body>', '<script src="/pdv/admin-login.js?v=33"></script></body>');
   if (!html.includes('/pdv/access-diagnostics.js')) html = html.replace('</body>', '<script src="/pdv/access-diagnostics.js?v=32"></script></body>');
@@ -19,6 +22,7 @@ const respostaHtmlComHotfix = async (response) => {
   if (!html.includes('/pdv/service-fee-shifts.js')) html = html.replace('</body>', '<script src="/pdv/service-fee-shifts.js?v=28"></script></body>');
   if (!html.includes('/pdv/cash-reset.js')) html = html.replace('</body>', '<script src="/pdv/cash-reset.js?v=35"></script></body>');
   if (!html.includes('/pdv/pdv-production.js')) html = html.replace('</body>', '<script src="/pdv/pdv-production.js"></script></body>');
+  if (!html.includes('/pdv/mesa-concurrency.js')) html = html.replace('</body>', '<script src="/pdv/mesa-concurrency.js?v=36"></script></body>');
   if (!html.includes('/pdv/fast-checkout.js')) html = html.replace('</body>', '<script src="/pdv/fast-checkout.js"></script></body>');
   if (!html.includes('/pdv/fast-split.js')) html = html.replace('</body>', '<script src="/pdv/fast-split.js"></script></body>');
   const headers = new Headers(response.headers);
