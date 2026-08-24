@@ -1,5 +1,5 @@
-const CACHE_NAME = 'joao-caicara-pdv-v26';
-const APP_SHELL = ['/pdv/', '/pdv/manifest.json', '/pdv/access-control.js', '/pdv/access-diagnostics.js', '/pdv/pdv-sync.js', '/pdv/pdv-safety.js', '/pdv/pdv-operations.js', '/pdv/pdv-checkout-core.js', '/pdv/pdv-production.js', '/pdv/modern-hybrid.css', '/pdv/fast-checkout.js', '/pdv/fast-checkout.css', '/pdv/fast-split.js', '/pdv/fast-split.css', '/tradicao-caicara-logo.webp'];
+const CACHE_NAME = 'joao-caicara-pdv-v27';
+const APP_SHELL = ['/pdv/', '/pdv/manifest.json', '/pdv/access-control.js', '/pdv/access-diagnostics.js', '/pdv/pdv-sync.js', '/pdv/pdv-safety.js', '/pdv/pdv-operations.js', '/pdv/pdv-checkout-core.js', '/pdv/waiter-sales-report.js?v=27', '/pdv/pdv-production.js', '/pdv/modern-hybrid.css', '/pdv/fast-checkout.js', '/pdv/fast-checkout.css', '/pdv/fast-split.js', '/pdv/fast-split.css', '/tradicao-caicara-logo.webp'];
 const respostaHtmlComHotfix = async (response) => {
   let html = await response.text();
   if (!html.includes('/pdv/modern-hybrid.css')) html = html.replace('</head>', '<link rel="stylesheet" href="/pdv/modern-hybrid.css"></head>');
@@ -11,6 +11,7 @@ const respostaHtmlComHotfix = async (response) => {
   if (!html.includes('/pdv/pdv-safety.js')) html = html.replace('</body>', '<script src="/pdv/pdv-safety.js"></script></body>');
   if (!html.includes('/pdv/pdv-operations.js')) html = html.replace('</body>', '<script src="/pdv/pdv-operations.js"></script></body>');
   if (!html.includes('/pdv/pdv-checkout-core.js')) html = html.replace('</body>', '<script src="/pdv/pdv-checkout-core.js"></script></body>');
+  if (!html.includes('/pdv/waiter-sales-report.js')) html = html.replace('</body>', '<script src="/pdv/waiter-sales-report.js?v=27"></script></body>');
   if (!html.includes('/pdv/pdv-production.js')) html = html.replace('</body>', '<script src="/pdv/pdv-production.js"></script></body>');
   if (!html.includes('/pdv/fast-checkout.js')) html = html.replace('</body>', '<script src="/pdv/fast-checkout.js"></script></body>');
   if (!html.includes('/pdv/fast-split.js')) html = html.replace('</body>', '<script src="/pdv/fast-split.js"></script></body>');
@@ -32,7 +33,7 @@ self.addEventListener('fetch', event => {
   if (url.origin !== self.location.origin) return;
   event.respondWith((async () => {
     try {
-      const response = await fetch(request);
+      const response = await fetch(request, { cache: 'no-store' });
       if (request.mode === 'navigate' && url.pathname.startsWith('/pdv/') && (response.headers.get('content-type') || '').includes('text/html')) {
         const patched = await respostaHtmlComHotfix(response);
         caches.open(CACHE_NAME).then(cache => cache.put(request, patched.clone()));
