@@ -48,14 +48,7 @@
     "perfisAcesso": {
       "$uid": {
         ".read": "auth != null && auth.uid === $uid",
-        ".write": "auth != null && auth.uid === $uid && $uid === 'woAmR3x91JcMZGLzykBUtLG97Hx1' && !data.exists() && newData.child('perfil').val() === 'administrador'",
-        ".validate": "newData.hasChildren(['perfil'])",
-        "perfil": {
-          ".validate": "newData.isString() && newData.val() === 'administrador'"
-        },
-        "$other": {
-          ".validate": false
-        }
+        ".write": false
       }
     },
     "configuracoes": {
