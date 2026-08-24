@@ -1,6 +1,6 @@
 const CACHE_NAME = 'joao-caicara-garcom-v15';
 const LOGIN_ASSET = '/garcom/shared-login.js?v=17';
-const APP_SHELL = ['/garcom/', '/garcom/manifest.json', '/garcom/access-control.js', LOGIN_ASSET, '/garcom/access-diagnostics.js', '/garcom/hotfix-sync.js', '/garcom/waiter-attribution.js', '/garcom/modern-hybrid.css', '/garcom/waiter-speed.js', '/garcom/waiter-speed.css', '/tradicao-caicara-logo.webp'];
+const APP_SHELL = ['/garcom/', '/garcom/manifest.json', '/garcom/access-control.js', LOGIN_ASSET, '/garcom/access-diagnostics.js', '/garcom/hotfix-sync.js', '/garcom/waiter-attribution.js', '/garcom/garcom-service-fee.js?v=18', '/garcom/modern-hybrid.css', '/garcom/waiter-speed.js', '/garcom/waiter-speed.css', '/tradicao-caicara-logo.webp'];
 const respostaHtmlComHotfix = async (response) => {
   let html = await response.text();
   if (!html.includes('/garcom/modern-hybrid.css')) html = html.replace('</head>', '<link rel="stylesheet" href="/garcom/modern-hybrid.css"></head>');
@@ -10,6 +10,7 @@ const respostaHtmlComHotfix = async (response) => {
   if (!html.includes('/garcom/access-diagnostics.js')) html = html.replace('</body>', '<script src="/garcom/access-diagnostics.js"></script></body>');
   if (!html.includes('/garcom/hotfix-sync.js')) html = html.replace('</body>', '<script src="/garcom/hotfix-sync.js"></script></body>');
   if (!html.includes('/garcom/waiter-attribution.js')) html = html.replace('</body>', '<script src="/garcom/waiter-attribution.js"></script></body>');
+  if (!html.includes('/garcom/garcom-service-fee.js')) html = html.replace('</body>', '<script src="/garcom/garcom-service-fee.js?v=18"></script></body>');
   if (!html.includes('/garcom/waiter-speed.js')) html = html.replace('</body>', '<script src="/garcom/waiter-speed.js"></script></body>');
   const headers = new Headers(response.headers);
   headers.delete('content-length');
