@@ -42,6 +42,19 @@ jobs:
           create_credentials_file: true
           export_environment_variables: true
 
+      - name: Enable Firebase email/password sign-in
+        shell: bash
+        run: |
+          set -euo pipefail
+          ACCESS_TOKEN="$(gcloud auth print-access-token)"
+          curl --fail-with-body --silent --show-error \
+            -X PATCH \
+            -H "Authorization: Bearer ${ACCESS_TOKEN}" \
+            -H "X-Goog-User-Project: joaocaicaratradicao" \
+            -H "Content-Type: application/json" \
+            -d '{"signIn":{"email":{"enabled":true,"passwordRequired":true}}}' \
+            'https://identitytoolkit.googleapis.com/admin/v2/projects/joaocaicaratradicao/config?updateMask=signIn.email.enabled,signIn.email.passwordRequired'
+
       - name: Seed administrator access profile
         run: npx firebase-tools@latest database:set /perfisAcesso/woAmR3x91JcMZGLzykBUtLG97Hx1 --data '{"perfil":"administrador"}' --instance joaocaicaratradicao-default-rtdb --project joaocaicaratradicao --force --non-interactive
 
