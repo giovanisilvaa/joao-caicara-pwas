@@ -112,17 +112,33 @@ describe("regressoes criticas Firebase e PWAs", () => {
     expect(access).not.toContain("tentarBootstrapAdministrador");
   });
 
-  it("Garcom consulta perfil remoto sem aplica-lo automaticamente", () => {
+  it("Garcom consulta perfil remoto e carrega login compartilhado", () => {
     const access = read("client/public/garcom/access-control.js");
     const sw = read("client/public/garcom/service-worker.js");
+    const shared = sw.indexOf("/garcom/shared-login.js");
+    const diagnostics = sw.indexOf("/garcom/access-diagnostics.js");
     expect(access).toContain("perfilAtual: 'garcom'");
     expect(access).toContain("modoCompatibilidade: true");
     expect(access).toContain("consultarPerfilRemoto");
     expect(access).toContain("perfisAcesso/${uid}");
     expect(access).toContain("aplicado: false");
     expect(sw).toContain("/garcom/access-control.js");
-    expect(sw).toContain("/garcom/access-diagnostics.js");
-    expect(sw).toContain("joao-caicara-garcom-v12");
+    expect(shared).toBeGreaterThanOrEqual(0);
+    expect(diagnostics).toBeGreaterThan(shared);
+    expect(sw).toContain("joao-caicara-garcom-v13");
+  });
+
+  it("login compartilhado do garcom nao armazena senha e preserva fallback", () => {
+    const login = read("client/public/garcom/shared-login.js");
+    expect(login).toContain("LOGIN_COMPARTILHADO = 'garcom'");
+    expect(login).toContain("type=\"password\"");
+    expect(login).toContain("signInWithEmailAndPassword");
+    expect(login).toContain("createUserWithEmailAndPassword");
+    expect(login).toContain("Acesso temporário");
+    expect(login).toContain("funcionarioId: user.uid");
+    expect(login).toContain("window.sessaoGarcomAtual = sessaoAtual");
+    expect(login).not.toMatch(/const\s+SENHA/i);
+    expect(login).not.toMatch(/senha\s*=\s*['\"]\d{6,}['\"]/i);
   });
 
   it("diagnostico de sessao apenas exibe UID e perfil sem alterar acesso", () => {
