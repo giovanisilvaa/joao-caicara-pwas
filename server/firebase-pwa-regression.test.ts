@@ -36,18 +36,32 @@ describe("regressoes criticas Firebase e PWAs", () => {
     expect(lista).not.toContain("configuracoes");
   });
 
-  it("hotfix principal nao volta a sobrescrever a limpeza segura", () => {
+  it("hotfix principal nao volta a sobrescrever limpeza nem transferencia", () => {
     const hotfix = read("client/public/pdv/hotfix-sync.js");
     expect(hotfix).not.toContain("window.confirmarLimpezaMesa");
     expect(hotfix).not.toContain("confirmarLimpezaMesaSeguro");
+    expect(hotfix).not.toContain("window.transferirMesa");
+    expect(hotfix).not.toContain("transferirMesaSeguro");
   });
 
-  it("PDV carrega a camada consolidada depois do hotfix principal", () => {
+  it("operacoes do PDV preservam transferencia atomica entre mesas", () => {
+    const operations = read("client/public/pdv/pdv-operations.js");
+    expect(operations).toContain("window.transferirMesa");
+    expect(operations).toContain("db.ref('/').update");
+    expect(operations).toContain("mesas/${origem}");
+    expect(operations).toContain("mesas/${destino}");
+    expect(operations).toContain("registrarAuditoriaPdv('transferir_mesa'");
+  });
+
+  it("PDV carrega camadas consolidadas depois do hotfix principal", () => {
     const sw = read("client/public/pdv/service-worker.js");
     const hotfix = sw.indexOf("/pdv/hotfix-sync.js");
     const safety = sw.indexOf("/pdv/pdv-safety.js");
+    const operations = sw.indexOf("/pdv/pdv-operations.js");
     expect(hotfix).toBeGreaterThanOrEqual(0);
     expect(safety).toBeGreaterThan(hotfix);
+    expect(operations).toBeGreaterThan(hotfix);
+    expect(sw).toContain("joao-caicara-pdv-v15");
     expect(sw).not.toContain("/pdv/mesa-delete-fix.js");
     expect(sw).not.toContain("/pdv/backup-safety.js");
   });
