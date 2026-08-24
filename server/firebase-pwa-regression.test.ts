@@ -26,6 +26,7 @@ describe("regressoes criticas Firebase e PWAs", () => {
 
   it("camada consolidada protege limpeza e backup", () => {
     const safety = read("client/public/pdv/pdv-safety.js");
+    expect(safety).toContain("window.confirmarLimpezaMesa");
     expect(safety).toContain(".remove()");
     expect(safety).toContain("CAMINHOS_BACKUP_SEGUROS");
     expect(safety).toContain("mesas");
@@ -33,6 +34,12 @@ describe("regressoes criticas Firebase e PWAs", () => {
     expect(safety).toContain("pedidosProducao");
     const lista = safety.match(/const CAMINHOS_BACKUP_SEGUROS = \[([^\]]+)\]/)?.[1] ?? "";
     expect(lista).not.toContain("configuracoes");
+  });
+
+  it("hotfix principal nao volta a sobrescrever a limpeza segura", () => {
+    const hotfix = read("client/public/pdv/hotfix-sync.js");
+    expect(hotfix).not.toContain("window.confirmarLimpezaMesa");
+    expect(hotfix).not.toContain("confirmarLimpezaMesaSeguro");
   });
 
   it("PDV carrega a camada consolidada depois do hotfix principal", () => {
