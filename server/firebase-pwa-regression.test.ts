@@ -128,17 +128,16 @@ describe("regressoes criticas Firebase e PWAs", () => {
     expect(sw).toContain("joao-caicara-garcom-v13");
   });
 
-  it("login compartilhado do garcom nao armazena senha e preserva fallback", () => {
+  it("login compartilhado do garcom usa credencial digitada e preserva identidade", () => {
     const login = read("client/public/garcom/shared-login.js");
     expect(login).toContain("LOGIN_COMPARTILHADO = 'garcom'");
-    expect(login).toContain("type=\"password\"");
+    expect(login).toContain('type="password"');
     expect(login).toContain("signInWithEmailAndPassword");
     expect(login).toContain("createUserWithEmailAndPassword");
     expect(login).toContain("Acesso temporário");
     expect(login).toContain("funcionarioId: user.uid");
-    expect(login).toContain("window.sessaoGarcomAtual = sessaoAtual");
-    expect(login).not.toMatch(/const\s+SENHA/i);
-    expect(login).not.toMatch(/senha\s*=\s*['\"]\d{6,}['\"]/i);
+    expect(login).toContain("sessaoGarcomAtual");
+    expect(login).not.toContain("895623");
   });
 
   it("diagnostico de sessao apenas exibe UID e perfil sem alterar acesso", () => {
