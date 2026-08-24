@@ -9,13 +9,12 @@ const UID_INCORRETO = "2SMlsyBIw8P0bHZgcvx32XDFb793";
 describe("perfil remoto do administrador", () => {
   it("cadastra somente o UID exato da conta adm", () => {
     expect(workflow).toContain(`database:set /perfisAcesso/${UID_CORRETO} --data '{\"perfil\":\"administrador\"}'`);
-    expect(workflow).not.toContain(`database:set /perfisAcesso/${UID_INCORRETO} --data '{\"perfil\":\"administrador\"}'`);
+    expect(workflow).not.toContain(`database:set /perfisAcesso/${UID_INCORRETO}`);
+    expect(workflow).toContain(`database:get /perfisAcesso/${UID_CORRETO}`);
   });
 
-  it("remove e verifica a ausencia da variante com caixa errada", () => {
-    expect(workflow).toContain("Remove incorrect administrator UID");
-    expect(workflow).toContain(`database:set /perfisAcesso/${UID_INCORRETO} --data 'null'`);
-    expect(workflow).toContain(`database:get /perfisAcesso/${UID_INCORRETO}`);
-    expect(workflow).toContain("UID administrativo incorreto removido com sucesso.");
+  it("mantem verificacao do perfil administrador persistido", () => {
+    expect(workflow).toContain("Verify administrator access profile");
+    expect(workflow).toContain("Perfil administrativo confirmado no Firebase.");
   });
 });
