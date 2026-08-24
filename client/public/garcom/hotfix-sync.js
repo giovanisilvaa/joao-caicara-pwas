@@ -45,7 +45,10 @@
       atual.abertura = Date.now();
       atual.origemAbertura = 'garcom';
       const identidade = identidadeGarcomG();
-      if (identidade) atual.garcomResponsavel = { ...identidade, atribuidoEm: Date.now() };
+      if (identidade) {
+        atual.garcomResponsavel = { ...identidade, atribuidoEm: Date.now() };
+        atual.garconsAtendimento = [{ ...identidade, primeiroAtendimentoEm: Date.now() }];
+      }
       mesas[numero] = atual;
       try {
         await db.ref(`mesas/${numero}`).set(atual);
