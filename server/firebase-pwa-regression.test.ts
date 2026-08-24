@@ -73,22 +73,44 @@ describe("regressoes criticas Firebase e PWAs", () => {
 
   it("PDV usa apenas modulos consolidados e nao carrega hotfix antigo", () => {
     const sw = read("client/public/pdv/service-worker.js");
+    const access = sw.indexOf("/pdv/access-control.js");
     const sync = sw.indexOf("/pdv/pdv-sync.js");
     const safety = sw.indexOf("/pdv/pdv-safety.js");
     const operations = sw.indexOf("/pdv/pdv-operations.js");
     const checkout = sw.indexOf("/pdv/pdv-checkout-core.js");
     const production = sw.indexOf("/pdv/pdv-production.js");
     const fastCheckout = sw.indexOf("/pdv/fast-checkout.js");
-    expect(sync).toBeGreaterThanOrEqual(0);
+    expect(access).toBeGreaterThanOrEqual(0);
+    expect(sync).toBeGreaterThan(access);
     expect(safety).toBeGreaterThan(sync);
     expect(operations).toBeGreaterThan(sync);
     expect(checkout).toBeGreaterThan(sync);
     expect(production).toBeGreaterThan(sync);
     expect(fastCheckout).toBeGreaterThan(checkout);
-    expect(sw).toContain("joao-caicara-pdv-v18");
+    expect(sw).toContain("joao-caicara-pdv-v19");
     expect(sw).not.toContain("/pdv/hotfix-sync.js");
-    expect(sw).not.toContain("/pdv/mesa-delete-fix.js");
-    expect(sw).not.toContain("/pdv/backup-safety.js");
+  });
+
+  it("base de perfis do PDV permanece em modo compatibilidade", () => {
+    const access = read("client/public/pdv/access-control.js");
+    expect(access).toContain("garcom");
+    expect(access).toContain("caixa");
+    expect(access).toContain("administrador");
+    expect(access).toContain("modoCompatibilidade: true");
+    expect(access).toContain("conta.fechar");
+    expect(access).toContain("window.PdvAcesso");
+  });
+
+  it("base de perfis do garcom permanece em modo compatibilidade", () => {
+    const access = read("client/public/garcom/access-control.js");
+    const sw = read("client/public/garcom/service-worker.js");
+    expect(access).toContain("perfilAtual: 'garcom'");
+    expect(access).toContain("modoCompatibilidade: true");
+    expect(access).toContain("mesas.abrir");
+    expect(access).toContain("producao.enviar");
+    expect(access).toContain("window.GarcomAcesso");
+    expect(sw).toContain("/garcom/access-control.js");
+    expect(sw).toContain("joao-caicara-garcom-v9");
   });
 
   it("hotfix principal antigo foi removido", () => {
