@@ -16,7 +16,19 @@
     ].join('\n');
   }
 
-  function mostrarDiagnostico() {
+  async function atualizarPerfilRemoto() {
+    const acesso = window.PdvAcesso;
+    const uid = acesso?.sessao?.uid;
+    if (!uid || typeof acesso?.consultarPerfilRemoto !== 'function') return;
+    try {
+      await acesso.consultarPerfilRemoto(uid);
+    } catch (erro) {
+      console.warn('Não foi possível atualizar o perfil remoto antes do diagnóstico:', erro);
+    }
+  }
+
+  async function mostrarDiagnostico() {
+    await atualizarPerfilRemoto();
     alert(resumoSessao());
   }
 
@@ -25,14 +37,14 @@
     if (!indicador || indicador.dataset.diagnosticoSessao === '1') return;
     indicador.dataset.diagnosticoSessao = '1';
     indicador.style.cursor = 'pointer';
-    indicador.title = 'Clique para ver os dados da sessão';
+    indicador.title = 'Clique para atualizar e ver os dados da sessão';
     indicador.setAttribute('role', 'button');
     indicador.setAttribute('tabindex', '0');
-    indicador.addEventListener('click', mostrarDiagnostico);
+    indicador.addEventListener('click', () => { void mostrarDiagnostico(); });
     indicador.addEventListener('keydown', evento => {
       if (evento.key === 'Enter' || evento.key === ' ') {
         evento.preventDefault();
-        mostrarDiagnostico();
+        void mostrarDiagnostico();
       }
     });
   }
@@ -42,5 +54,5 @@
 
   window.addEventListener('pdv:sessao-identificada', conectar);
   window.addEventListener('pdv:perfil-remoto-consultado', conectar);
-  window.PdvDiagnosticoSessao = Object.freeze({ resumoSessao, mostrarDiagnostico });
+  window.PdvDiagnosticoSessao = Object.freeze({ resumoSessao, mostrarDiagnostico, atualizarPerfilRemoto });
 })();
