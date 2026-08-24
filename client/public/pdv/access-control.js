@@ -33,6 +33,11 @@
       uid: null,
       isAnonymous: null,
       origem: 'aguardando-firebase'
+    },
+    perfilRemoto: {
+      carregado: false,
+      encontrado: null,
+      origem: 'nao-consultado'
     }
   };
 
@@ -53,11 +58,53 @@
     window.dispatchEvent(new CustomEvent('pdv:perfil-alterado', { detail: { perfil, origem } }));
   }
 
+  async function consultarPerfilRemoto(uid) {
+    if (!uid) return null;
+    estado.perfilRemoto.carregado = false;
+    estado.perfilRemoto.encontrado = null;
+    estado.perfilRemoto.origem = 'consultando';
+    try {
+      const database = window.firebase?.database?.();
+      if (!database) throw new Error('Firebase Database indisponível');
+      const snapshot = await database.ref(`perfisAcesso/${uid}`).once('value');
+      if (estado.sessao.uid !== uid) return null;
+      const valor = snapshot.val();
+      const candidato = typeof valor === 'string' ? valor : valor?.perfil;
+      estado.perfilRemoto.carregado = true;
+      estado.perfilRemoto.encontrado = perfilValido(candidato) ? candidato : null;
+      estado.perfilRemoto.origem = valor == null ? 'firebase-sem-cadastro' : (estado.perfilRemoto.encontrado ? 'firebase-database' : 'firebase-perfil-invalido');
+      window.dispatchEvent(new CustomEvent('pdv:perfil-remoto-consultado', {
+        detail: {
+          uid,
+          perfilEncontrado: estado.perfilRemoto.encontrado,
+          origem: estado.perfilRemoto.origem,
+          aplicado: false,
+          modoCompatibilidade: estado.modoCompatibilidade
+        }
+      }));
+      return estado.perfilRemoto.encontrado;
+    } catch (erro) {
+      if (estado.sessao.uid !== uid) return null;
+      console.warn('Não foi possível consultar o perfil remoto do PDV; acesso atual foi preservado:', erro);
+      estado.perfilRemoto.carregado = true;
+      estado.perfilRemoto.encontrado = null;
+      estado.perfilRemoto.origem = 'firebase-erro';
+      return null;
+    }
+  }
+
   function identificarSessaoFirebase(user) {
     estado.sessao.authReady = true;
     estado.sessao.uid = user?.uid || null;
     estado.sessao.isAnonymous = typeof user?.isAnonymous === 'boolean' ? user.isAnonymous : null;
     estado.sessao.origem = user ? 'firebase-auth' : 'firebase-sem-usuario';
+    if (user?.uid) {
+      consultarPerfilRemoto(user.uid);
+    } else {
+      estado.perfilRemoto.carregado = true;
+      estado.perfilRemoto.encontrado = null;
+      estado.perfilRemoto.origem = 'sem-usuario';
+    }
     window.dispatchEvent(new CustomEvent('pdv:sessao-identificada', {
       detail: {
         uid: estado.sessao.uid,
@@ -109,11 +156,13 @@
     definirPerfil,
     identificarSessaoFirebase,
     conectarSessaoFirebase,
+    consultarPerfilRemoto,
     aplicarPerfilAutenticado,
     ativarControleEstrito,
     get perfilAtual() { return estado.perfilAtual; },
     get modoCompatibilidade() { return estado.modoCompatibilidade; },
-    get sessao() { return { ...estado.sessao }; }
+    get sessao() { return { ...estado.sessao }; },
+    get perfilRemoto() { return { ...estado.perfilRemoto }; }
   });
 
   document.documentElement.dataset.perfilAcesso = estado.perfilAtual;
