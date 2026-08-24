@@ -5,8 +5,7 @@
   const CHAVE_NOME_SESSAO = 'joao_caicara_garcom_nome_sessao';
   const ESTADO = {
     autenticando: false,
-    entradaEm: Date.now(),
-    modoTemporario: false
+    entradaEm: Date.now()
   };
 
   const auth = () => window.firebase?.auth?.();
@@ -51,11 +50,11 @@
       };
     }
     return {
-      funcionarioId: user?.uid || 'acesso-temporario',
+      funcionarioId: null,
       uid: user?.uid || null,
-      login: 'temporario',
-      nome: nome || 'Acesso temporário',
-      funcao: 'operacao',
+      login: 'bloqueado',
+      nome: '',
+      funcao: 'garcom',
       perfil: 'garcom',
       compartilhado: false,
       entradaEm: ESTADO.entradaEm
@@ -81,10 +80,11 @@
     const nome = nomeDaSessao();
     const el = document.getElementById('usuario-logado-g');
     if (el) {
-      el.textContent = nome || (usuarioEhCompartilhado(user) ? 'Identifique-se' : 'Acesso temporário');
-      el.title = nome ? `Garçom: ${nome}` : 'Nenhum garçom identificado nesta sessão';
+      el.textContent = usuarioEhCompartilhado(user) && nome ? nome : 'Bloqueado';
+      el.title = usuarioEhCompartilhado(user) && nome ? `Garçom: ${nome}` : 'Garçom precisa entrar com nome e senha da equipe';
     }
-    garantirBotaoTrocarGarcom();
+    if (usuarioEhCompartilhado(user) && nome) garantirBotaoTrocarGarcom();
+    else document.getElementById('trocar-garcom-g')?.remove();
   }
 
   function criarEstilos() {
@@ -98,10 +98,9 @@
       #garcom-login-card p{font-size:.88rem;color:#5f7074;margin:0 0 18px;line-height:1.45}
       #garcom-login-card label{display:block;font-size:.78rem;font-weight:800;margin:10px 0 5px;color:#123e48}
       #garcom-login-card input{width:100%;padding:12px;border:1px solid #d8e2df;border-radius:10px;font-size:1rem;background:#fff}
-      #garcom-login-actions{display:flex;gap:8px;margin-top:16px}
-      #garcom-login-actions button{flex:1;border:0;border-radius:10px;padding:12px 10px;font-weight:800;cursor:pointer}
+      #garcom-login-actions{display:flex;margin-top:16px}
+      #garcom-login-actions button{width:100%;border:0;border-radius:10px;padding:12px 10px;font-weight:800;cursor:pointer}
       #garcom-login-submit{background:#0b5963;color:#fff}
-      #garcom-login-fallback{background:#e7ecea;color:#345057}
       #garcom-login-msg{min-height:20px;margin-top:10px;font-size:.78rem;font-weight:700;color:#c05036}
       #garcom-login-card.is-loading #garcom-login-submit{opacity:.65;pointer-events:none}
     `;
@@ -115,31 +114,17 @@
 
   function mensagemErro(erro) {
     const codigo = String(erro?.code || '');
-    if (codigo.includes('wrong-password') || codigo.includes('invalid-credential') || codigo.includes('invalid-login-credentials')) return 'Senha incorreta.';
+    if (codigo.includes('wrong-password') || codigo.includes('invalid-credential') || codigo.includes('invalid-login-credentials') || codigo.includes('user-not-found')) return 'Usuário ou senha incorretos.';
     if (codigo.includes('too-many-requests')) return 'Muitas tentativas. Aguarde um pouco e tente novamente.';
     if (codigo.includes('network-request-failed')) return 'Sem conexão com o Firebase. Verifique a internet.';
-    if (codigo.includes('operation-not-allowed')) return 'O login por senha ainda precisa ser habilitado no Firebase. Use o acesso temporário por enquanto.';
-    if (codigo.includes('weak-password')) return 'A senha precisa ter pelo menos 6 caracteres.';
+    if (codigo.includes('operation-not-allowed')) return 'O login por senha não está disponível no Firebase.';
     return `Não foi possível entrar (${codigo || 'erro de autenticação'}).`;
   }
 
   async function tentarEntrar(senha) {
     const firebaseAuth = auth();
     if (!firebaseAuth) throw new Error('Firebase Auth indisponível');
-    try {
-      return await firebaseAuth.signInWithEmailAndPassword(EMAIL_FIREBASE, senha);
-    } catch (erroLogin) {
-      const codigo = String(erroLogin?.code || '');
-      const podeTentarCriar = codigo.includes('user-not-found') || codigo.includes('invalid-credential') || codigo.includes('invalid-login-credentials');
-      if (!podeTentarCriar) throw erroLogin;
-      try {
-        return await firebaseAuth.createUserWithEmailAndPassword(EMAIL_FIREBASE, senha);
-      } catch (erroCriacao) {
-        const codigoCriacao = String(erroCriacao?.code || '');
-        if (codigoCriacao.includes('email-already-in-use')) throw erroLogin;
-        throw erroCriacao;
-      }
-    }
+    return firebaseAuth.signInWithEmailAndPassword(EMAIL_FIREBASE, senha);
   }
 
   function mostrarLogin() {
@@ -157,7 +142,6 @@
         <input id="garcom-login-password" type="password" inputmode="numeric" autocomplete="current-password" placeholder="Digite a senha da equipe">
         <div id="garcom-login-msg" aria-live="polite"></div>
         <div id="garcom-login-actions">
-          <button id="garcom-login-fallback" type="button">Acesso temporário</button>
           <button id="garcom-login-submit" type="button">Entrar</button>
         </div>
       </div>`;
@@ -189,9 +173,12 @@
       submit.textContent = 'Entrando...';
       msgEl.textContent = '';
       try {
-        await tentarEntrar(senha);
+        const credencial = await tentarEntrar(senha);
+        if (!usuarioEhCompartilhado(credencial?.user)) {
+          await auth()?.signOut?.();
+          throw new Error('Conta autenticada não é a conta compartilhada esperada');
+        }
         salvarNomeDaSessao(nome);
-        ESTADO.modoTemporario = false;
         ESTADO.entradaEm = Date.now();
         esconderLogin();
       } catch (erro) {
@@ -206,24 +193,11 @@
 
     submit?.addEventListener('click', enviar);
     senhaEl?.addEventListener('keydown', event => { if (event.key === 'Enter') enviar(); });
-    document.getElementById('garcom-login-fallback')?.addEventListener('click', () => {
-      const nome = limparNome(nomeEl?.value);
-      if (nome.length < 2) {
-        msgEl.textContent = 'Digite seu nome antes de continuar.';
-        nomeEl?.focus();
-        return;
-      }
-      salvarNomeDaSessao(nome);
-      ESTADO.modoTemporario = true;
-      ESTADO.entradaEm = Date.now();
-      esconderLogin();
-    });
     setTimeout(() => (nomeEl?.value ? senhaEl : nomeEl)?.focus(), 50);
   }
 
   function trocarGarcom() {
     removerNomeDaSessao();
-    ESTADO.modoTemporario = false;
     ESTADO.entradaEm = Date.now();
     instalarIdentidadeOperacional();
     mostrarLogin();
@@ -239,7 +213,7 @@
       instalarIdentidadeOperacional();
       if (usuarioEhCompartilhado(user) && nomeDaSessao()) {
         esconderLogin();
-      } else if (!ESTADO.modoTemporario) {
+      } else {
         mostrarLogin();
       }
     });
@@ -255,7 +229,7 @@
     trocarGarcom,
     get nomeAtual() { return nomeDaSessao(); },
     get autenticado() { return usuarioEhCompartilhado(auth()?.currentUser) && Boolean(nomeDaSessao()); },
-    get modoTemporario() { return ESTADO.modoTemporario; }
+    get uid() { return usuarioEhCompartilhado(auth()?.currentUser) ? auth().currentUser.uid : null; }
   });
 
   iniciar();
