@@ -14,6 +14,12 @@ describe("concorrencia atomica de mesas", () => {
     expect(core).toContain("cancelarBloqueio");
   });
 
+  it("considera novo todo item que nao esteja explicitamente enviado", () => {
+    const core = read("client/public/mesa-atomic.js");
+    expect(core).toContain("item.enviado !== true");
+    expect(core).not.toContain("const estadoOk = item.enviado === false");
+  });
+
   it("garcom altera comanda, envia producao e fecha conta pela camada atomica", () => {
     const garcom = read("client/public/garcom/mesa-concurrency.js");
     expect(garcom).toContain("adicionarItemGAtomico");
@@ -56,12 +62,12 @@ describe("concorrencia atomica de mesas", () => {
     const pdvSw = read("client/public/pdv/service-worker.js");
     const garcomSw = read("client/public/garcom/service-worker.js");
 
-    expect(pdvSw.indexOf("/mesa-atomic.js?v=36")).toBeGreaterThanOrEqual(0);
-    expect(pdvSw.indexOf("/mesa-atomic.js?v=36")).toBeLessThan(pdvSw.indexOf("/pdv/pdv-checkout-core.js"));
+    expect(pdvSw.indexOf("/mesa-atomic.js?v=38")).toBeGreaterThanOrEqual(0);
+    expect(pdvSw.indexOf("/mesa-atomic.js?v=38")).toBeLessThan(pdvSw.indexOf("/pdv/pdv-checkout-core.js"));
     expect(pdvSw.lastIndexOf("/pdv/mesa-concurrency.js?v=36")).toBeGreaterThan(pdvSw.lastIndexOf("/pdv/pdv-production.js"));
 
-    expect(garcomSw.indexOf("/mesa-atomic.js?v=36")).toBeGreaterThanOrEqual(0);
-    expect(garcomSw.indexOf("/mesa-atomic.js?v=36")).toBeLessThan(garcomSw.indexOf("/garcom/hotfix-sync.js"));
+    expect(garcomSw.indexOf("/mesa-atomic.js?v=38")).toBeGreaterThanOrEqual(0);
+    expect(garcomSw.indexOf("/mesa-atomic.js?v=38")).toBeLessThan(garcomSw.indexOf("/garcom/hotfix-sync.js"));
     expect(garcomSw.lastIndexOf("/garcom/mesa-concurrency.js?v=36")).toBeGreaterThan(garcomSw.lastIndexOf("/garcom/waiter-speed.js"));
   });
 });
