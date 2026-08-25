@@ -1,4 +1,4 @@
-const CACHE_NAME = 'joao-caicara-garcom-v16';
+const CACHE_NAME = 'joao-caicara-garcom-v15';
 const AUTH_SESSION_ASSET = '/auth-session-isolation.js?v=20';
 const LOGIN_ASSET = '/garcom/shared-login.js?v=17';
 const CARDAPIO_AUTH_ASSET = '/garcom/cardapio-auth-reconnect.js?v=20';
