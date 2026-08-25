@@ -146,24 +146,39 @@
   };
 
   function instalarBotaoUnico() {
-    if (document.getElementById('btn-enviar-producao-pdv')) return;
-    const botoes = [...document.querySelectorAll('button')];
-    const cozinha = botoes.find(b => /imprimirProducao\(['\"]cozinha['\"],\s*false\)/.test(b.getAttribute('onclick') || ''));
-    const bar = botoes.find(b => /imprimirProducao\(['\"]bar['\"],\s*false\)/.test(b.getAttribute('onclick') || ''));
-    if (!cozinha && !bar) return;
-    const referencia = cozinha || bar;
-    const botao = document.createElement('button');
-    botao.id = 'btn-enviar-producao-pdv';
-    botao.type = 'button';
-    botao.className = referencia.className;
-    botao.innerText = '🖨️ ENVIAR PRODUÇÃO';
-    botao.style.gridColumn = '1 / -1';
-    botao.onclick = () => window.enviarProducaoCompletaPdv();
-    referencia.parentNode.insertBefore(botao, referencia);
+    const area = document.querySelector('.action-buttons');
+    if (!area) return;
+    const botoes = [...area.querySelectorAll('button')];
+    const cozinha = botoes.find(b => b.classList.contains('btn-kitchen') && !/reimprimir/i.test(b.textContent || ''));
+    const bar = botoes.find(b => b.classList.contains('btn-bar') && !/reimprimir/i.test(b.textContent || ''));
     if (cozinha) cozinha.style.display = 'none';
     if (bar) bar.style.display = 'none';
+
+    let botao = document.getElementById('btn-enviar-producao-pdv');
+    if (!botao) {
+      botao = document.createElement('button');
+      botao.id = 'btn-enviar-producao-pdv';
+      botao.type = 'button';
+      botao.className = 'btn btn-production-send';
+      botao.innerText = '🖨️ ENVIAR PRODUÇÃO';
+      botao.style.gridColumn = '1 / -1';
+      botao.style.background = 'var(--primary)';
+      botao.style.fontSize = '1rem';
+      botao.onclick = () => window.enviarProducaoCompletaPdv();
+      const referencia = cozinha || bar || area.querySelector('.btn-close');
+      if (referencia) area.insertBefore(botao, referencia);
+      else area.appendChild(botao);
+    }
   }
 
-  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', instalarBotaoUnico, { once: true });
-  else instalarBotaoUnico();
+  function garantirInterfaceProducao() {
+    instalarBotaoUnico();
+    setTimeout(instalarBotaoUnico, 250);
+    setTimeout(instalarBotaoUnico, 1200);
+  }
+
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', garantirInterfaceProducao, { once: true });
+  else garantirInterfaceProducao();
+
+  window.PdvProducao = Object.freeze({ prepararImpressao, imprimirAgora, instalarBotaoUnico });
 })();
