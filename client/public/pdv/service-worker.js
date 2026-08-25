@@ -1,4 +1,4 @@
-const CACHE_NAME = 'joao-caicara-pdv-v29';
+const CACHE_NAME = 'joao-caicara-pdv-v28';
 const AUTH_SESSION_ASSET = '/auth-session-isolation.js?v=20';
 const MESA_ATOMIC_ASSET = '/mesa-atomic.js?v=38';
 const MESA_CONCURRENCY_ASSET = '/pdv/' + 'mesa-concurrency.js?v=40';
