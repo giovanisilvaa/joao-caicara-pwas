@@ -1,5 +1,6 @@
 /* Núcleo de impressão de produção do PDV — concorrência segura por item. */
 (() => {
+  window.PDV_PRODUCTION_RUNTIME = 'v40';
   const clone = valor => valor == null ? valor : JSON.parse(JSON.stringify(valor));
 
   function prepararImpressao(setor, numeroMesa, cliente, itens, reimprimirTudo) {
@@ -29,6 +30,14 @@
     return mesa;
   }
 
+  function bloquearBotao(setor, bloqueado) {
+    const seletor = setor === 'bar' ? '.btn-bar' : '.btn-kitchen';
+    document.querySelectorAll(seletor).forEach(botao => {
+      botao.disabled = Boolean(bloqueado);
+      botao.style.opacity = bloqueado ? '.65' : '';
+    });
+  }
+
   window.imprimirProducao = async function imprimirProducaoSeguro(setor, reimprimirTudo) {
     if (!mesaAtualSelecionada) return alert('Selecione uma mesa!');
     const numeroMesa = mesaAtualSelecionada;
@@ -50,9 +59,8 @@
       return;
     }
 
-    // O envio normal nunca depende da cópia local da comanda. A transação abaixo
-    // consulta o estado autoritativo no Firebase e reserva somente itens ainda não enviados.
     if (!window.MesaAtomic) return alert('A proteção de concorrência ainda está carregando. Tente novamente em um instante.');
+    bloquearBotao(setor, true);
     let reserva = null;
     try {
       reserva = await window.MesaAtomic.reservarEnvio(numeroMesa, {
@@ -106,7 +114,6 @@
         atualizacoes[`mesas/${numeroMesa}/itens/${index}/envioReservadoEm`] = null;
       });
 
-      // Pedido de produção e estado dos itens são confirmados juntos.
       await db.ref('/').update(atualizacoes);
       await lerMesaServidor(numeroMesa);
       if (typeof gerarMesas === 'function') gerarMesas();
@@ -119,7 +126,9 @@
       if (reserva?.envioId) {
         try { await window.MesaAtomic.cancelarBloqueio(numeroMesa, reserva.envioId, 'falha_producao_pdv'); } catch (_) {}
       }
-      alert('Não foi possível confirmar o pedido de produção. A comanda foi mantida para nova tentativa.');
+      alert(`Não foi possível enviar para ${setor.toUpperCase()}. A comanda foi mantida para nova tentativa.`);
+    } finally {
+      bloquearBotao(setor, false);
     }
   };
 })();

@@ -79,6 +79,7 @@ describe("regressoes criticas Firebase e PWAs", () => {
 
   it("producao reserva itens e confirma pedido sem sobrescrever a mesa inteira", () => {
     const production = read("client/public/pdv/pdv-production.js");
+    expect(production).toContain("PDV_PRODUCTION_RUNTIME = 'v40'");
     expect(production).toContain("window.imprimirProducao");
     expect(production).toContain("MesaAtomic.reservarEnvio");
     expect(production).toContain("incluirRascunho: false");
@@ -100,6 +101,7 @@ describe("regressoes criticas Firebase e PWAs", () => {
     const production = sw.indexOf("/pdv/pdv-production.js");
     const concurrency = sw.indexOf("/pdv/mesa-concurrency.js");
     const fastCheckout = sw.indexOf("/pdv/fast-checkout.js");
+    const runtimeGuard = sw.indexOf("/pdv/runtime-guard.js");
     expect(access).toBeGreaterThanOrEqual(0);
     expect(diagnostics).toBeGreaterThan(access);
     expect(sync).toBeGreaterThan(diagnostics);
@@ -110,8 +112,22 @@ describe("regressoes criticas Firebase e PWAs", () => {
     expect(production).toBeGreaterThan(waiterReport);
     expect(concurrency).toBeGreaterThan(production);
     expect(fastCheckout).toBeGreaterThan(checkout);
-    expect(sw).toContain("joao-caicara-pdv-v27");
+    expect(runtimeGuard).toBeGreaterThan(concurrency);
+    expect(sw).toContain("joao-caicara-pdv-v28");
+    expect(sw).toContain("pdv-production.js?v=40");
+    expect(sw).toContain("mesa-concurrency.js?v=40");
+    expect(sw).toContain("runtime-guard.js?v=40");
     expect(sw).not.toContain("/pdv/hotfix-sync.js");
+  });
+
+  it("guardiao de runtime restaura producao e concorrencia se funcoes legadas vencerem", () => {
+    const guard = read("client/public/pdv/runtime-guard.js");
+    expect(guard).toContain("PDV_PRODUCTION_RUNTIME");
+    expect(guard).toContain("PDV_CONCURRENCY_RUNTIME");
+    expect(guard).toContain("imprimirProducaoSeguro");
+    expect(guard).toContain("adicionarProdutoAtomico");
+    expect(guard).toContain("pdv-production.js?v=40");
+    expect(guard).toContain("mesa-concurrency.js?v=40");
   });
 
   it("relatorio diario divide venda por autoria do item sem ratear taxa de servico", () => {

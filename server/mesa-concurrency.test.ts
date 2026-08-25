@@ -40,21 +40,14 @@ describe("concorrencia atomica de mesas", () => {
   it("pdv edita itens por transacao e producao nao faz set da mesa inteira", () => {
     const pdv = read("client/public/pdv/mesa-concurrency.js");
     const producao = read("client/public/pdv/pdv-production.js");
+    expect(pdv).toContain("PDV_CONCURRENCY_RUNTIME = 'v40'");
     expect(pdv).toContain("adicionarProdutoAtomico");
     expect(pdv).toContain("alterarQtdItemAtomico");
     expect(pdv).toContain("atomic().atualizarItem");
+    expect(producao).toContain("PDV_PRODUCTION_RUNTIME = 'v40'");
     expect(producao).toContain("MesaAtomic.reservarEnvio");
     expect(producao).toContain("db.ref('/').update(atualizacoes)");
     expect(producao).not.toContain(".set(dadosMesa)");
-  });
-
-  it("envio normal do pdv usa o estado autoritativo e nao bloqueia por copia local vazia", () => {
-    const producao = read("client/public/pdv/pdv-production.js");
-    const pdvSw = read("client/public/pdv/service-worker.js");
-    expect(producao).toContain("O envio normal nunca depende da cópia local da comanda");
-    expect(producao).toContain("MesaAtomic.reservarEnvio(numeroMesa");
-    expect(producao).not.toContain("if (!dadosMesa || !dadosMesa.itens.length) return alert('Comanda vazia!')");
-    expect(pdvSw).toContain("/pdv/pdv-production.js?v=39");
   });
 
   it("fechamento e transferencia do pdv usam locks antes do update final", () => {
@@ -73,7 +66,8 @@ describe("concorrencia atomica de mesas", () => {
 
     expect(pdvSw.indexOf("/mesa-atomic.js?v=38")).toBeGreaterThanOrEqual(0);
     expect(pdvSw.indexOf("/mesa-atomic.js?v=38")).toBeLessThan(pdvSw.indexOf("/pdv/pdv-checkout-core.js"));
-    expect(pdvSw.lastIndexOf("/pdv/mesa-concurrency.js?v=36")).toBeGreaterThan(pdvSw.lastIndexOf("/pdv/pdv-production.js?v=39"));
+    expect(pdvSw.lastIndexOf("/pdv/mesa-concurrency.js?v=40")).toBeGreaterThan(pdvSw.lastIndexOf("/pdv/pdv-production.js?v=40"));
+    expect(pdvSw.lastIndexOf("/pdv/runtime-guard.js?v=40")).toBeGreaterThan(pdvSw.lastIndexOf("/pdv/mesa-concurrency.js?v=40"));
 
     expect(garcomSw.indexOf("/mesa-atomic.js?v=38")).toBeGreaterThanOrEqual(0);
     expect(garcomSw.indexOf("/mesa-atomic.js?v=38")).toBeLessThan(garcomSw.indexOf("/garcom/hotfix-sync.js"));

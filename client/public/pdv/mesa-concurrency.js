@@ -1,5 +1,6 @@
 /* Concorrência segura do PDV — alterações da comanda por transação. */
 (() => {
+  window.PDV_CONCURRENCY_RUNTIME = 'v40';
   const atomic = () => window.MesaAtomic;
 
   function atualizarTela() {
