@@ -1,7 +1,7 @@
-/* Central autenticada de produção do PDV — recebe pedidos do garçom e imprime em fila na única impressora do caixa. */
+/* Central autenticada de produção do PDV — recebe pedidos do garçom e imprime em lote na única impressora do caixa. */
 (() => {
-  if (window.PDV_AUTO_PRODUCTION_RUNTIME === 'v2') return;
-  window.PDV_AUTO_PRODUCTION_RUNTIME = 'v2';
+  if (window.PDV_AUTO_PRODUCTION_RUNTIME === 'v3') return;
+  window.PDV_AUTO_PRODUCTION_RUNTIME = 'v3';
 
   const fila = [];
   const emFila = new Set();
@@ -9,40 +9,25 @@
   const sessao = `pdv-print_${Date.now()}_${Math.random().toString(36).slice(2, 9)}`;
   const EMAIL_PDV = 'adm@acesso.joaocaicara.app';
   const TEMPO_RECLAIM_MS = 120000;
+  const AGUARDO_LOTE_MS = 650;
+  const RECUPERAR_INICIAL_MS = 15 * 60 * 1000;
   let processando = false;
+  let timerProcessamento = null;
   let conectado = false;
   let refProducao = null;
   let onValue = null;
   let onChildAdded = null;
 
-  function prepararPedido(pedido) {
-    if (window.PdvProducao?.prepararImpressao) {
-      window.PdvProducao.prepararImpressao(
-        pedido.setor === 'bar' ? 'bar' : 'cozinha',
-        pedido.mesa || '-',
-        pedido.cliente || '',
-        pedido.itens || [],
-        false
-      );
-      return;
-    }
-    const setor = pedido.setor === 'bar' ? 'bar' : 'cozinha';
-    document.getElementById('prod-titulo').innerText = setor === 'bar' ? 'PEDIDO BAR' : 'PEDIDO COZINHA';
-    document.getElementById('prod-mesa').innerText = pedido.mesa || '-';
-    document.getElementById('prod-cliente').innerText = pedido.cliente || 'Balcão/Geral';
-    document.getElementById('prod-data').innerText = new Date(pedido.criadoEm || Date.now()).toLocaleString('pt-BR');
-    document.getElementById('prod-itens').innerHTML = (pedido.itens || []).map(item => {
-      const obs = item.obs ? `<div style="font-size:13px;font-weight:normal;margin:2px 0 0 0;">↳ Obs: ${item.obs}</div>` : '';
-      const serve2 = item.servePara2 ? `<div style="font-size:11px;font-weight:normal;margin:2px 0 0 0;">(serve bem 2 pessoas)</div>` : '';
-      return `<div class="cozinha-item">[ ] ${item.qtd}x ${item.nome}${obs}${serve2}</div>`;
-    }).join('');
+  function pedidoPendente(pedido) {
+    if (!pedido || pedido.origem !== 'garcom') return false;
+    if (pedido.impressoEm || pedido.impressoNoPdv || pedido.status === 'impresso' || pedido.impressaoPdv?.estado === 'impresso') return false;
+    return Array.isArray(pedido.itens) && pedido.itens.length > 0;
   }
 
-  function imprimirDocumentoAtual() {
-    if (window.PdvProducao?.imprimirAgora) return window.PdvProducao.imprimirAgora();
-    document.body.classList.add('print-mode-producao');
-    window.print();
-    document.body.classList.remove('print-mode-producao');
+  function deveRecuperarInicial(pedido) {
+    if (!pedidoPendente(pedido)) return false;
+    const criadoEm = Number(pedido.criadoEm || 0);
+    return criadoEm > 0 && Date.now() - criadoEm <= RECUPERAR_INICIAL_MS;
   }
 
   function sincronizarPainel(snapshot) {
@@ -72,75 +57,125 @@
     });
   }
 
-  async function imprimirDaFila(registro) {
-    const pedido = registro.pedido;
-    const assumiu = await reivindicarImpressao(registro.chave);
-    if (!assumiu) return;
+  async function assumirLote(registros) {
+    const assumidos = [];
+    for (const registro of registros) {
+      try {
+        if (await reivindicarImpressao(registro.chave)) assumidos.push(registro);
+      } catch (erro) {
+        console.error('Falha ao reivindicar impressão:', registro.chave, erro);
+      }
+    }
+    return assumidos;
+  }
+
+  async function marcarLoteImpresso(registros) {
+    const agora = Date.now();
+    const atualizacoes = {};
+    registros.forEach(registro => {
+      const base = `pedidosProducao/${registro.chave}`;
+      atualizacoes[`${base}/status`] = 'impresso';
+      atualizacoes[`${base}/impressoEm`] = agora;
+      atualizacoes[`${base}/atualizadoEm`] = agora;
+      atualizacoes[`${base}/impressoNoPdv`] = true;
+      atualizacoes[`${base}/impressaoPdv`] = { estado: 'impresso', sessao, iniciadoEm: agora, concluidoEm: agora };
+    });
+    await db.ref('/').update(atualizacoes);
+  }
+
+  async function marcarLoteFalha(registros) {
+    const agora = Date.now();
+    const atualizacoes = {};
+    registros.forEach(registro => {
+      atualizacoes[`pedidosProducao/${registro.chave}/impressaoPdv`] = {
+        estado: 'falha', sessao, falhouEm: agora
+      };
+    });
+    try { await db.ref('/').update(atualizacoes); } catch (_) {}
+  }
+
+  function documentosDoLote(registros) {
+    return registros
+      .slice()
+      .sort((a, b) => {
+        const mesaA = Number(a.pedido?.mesa || 0);
+        const mesaB = Number(b.pedido?.mesa || 0);
+        if (mesaA !== mesaB) return mesaA - mesaB;
+        if (a.pedido?.setor === b.pedido?.setor) return Number(a.pedido?.criadoEm || 0) - Number(b.pedido?.criadoEm || 0);
+        return a.pedido?.setor === 'cozinha' ? -1 : 1;
+      })
+      .map(registro => ({
+        setor: registro.pedido.setor === 'bar' ? 'bar' : 'cozinha',
+        numeroMesa: registro.pedido.mesa || '-',
+        cliente: registro.pedido.cliente || '',
+        itens: registro.pedido.itens || [],
+        criadoEm: registro.pedido.criadoEm || Date.now()
+      }));
+  }
+
+  async function imprimirLoteFila(registros) {
+    const assumidos = await assumirLote(registros);
+    if (!assumidos.length) return;
 
     try {
-      prepararPedido(pedido);
-      imprimirDocumentoAtual();
-      const agora = Date.now();
-      await db.ref(`pedidosProducao/${registro.chave}`).update({
-        status: 'impresso',
-        impressoEm: agora,
-        atualizadoEm: agora,
-        impressoNoPdv: true,
-        impressaoPdv: { estado: 'impresso', sessao, iniciadoEm: agora, concluidoEm: agora }
-      });
-      try {
-        if (typeof registrarAuditoriaPdv === 'function') {
-          await Promise.resolve(registrarAuditoriaPdv('imprimir_producao_automatica', {
-            pedido: registro.chave,
-            mesa: pedido.mesa,
-            setor: pedido.setor
-          }));
-        }
-      } catch (_) {}
+      if (!window.PdvProducao?.imprimirLote) {
+        throw new Error('Runtime de impressão em lote ainda não disponível.');
+      }
+      window.PdvProducao.imprimirLote(documentosDoLote(assumidos));
+      await marcarLoteImpresso(assumidos);
+      for (const registro of assumidos) {
+        try {
+          if (typeof registrarAuditoriaPdv === 'function') {
+            await Promise.resolve(registrarAuditoriaPdv('imprimir_producao_automatica', {
+              pedido: registro.chave,
+              mesa: registro.pedido.mesa,
+              setor: registro.pedido.setor
+            }));
+          }
+        } catch (_) {}
+      }
     } catch (erro) {
-      try {
-        await db.ref(`pedidosProducao/${registro.chave}/impressaoPdv`).update({
-          estado: 'falha', sessao, falhouEm: Date.now()
-        });
-      } catch (_) {}
+      await marcarLoteFalha(assumidos);
       throw erro;
     }
   }
 
+  function agendarProcessamento() {
+    if (timerProcessamento || processando) return;
+    timerProcessamento = setTimeout(() => {
+      timerProcessamento = null;
+      processarFila();
+    }, AGUARDO_LOTE_MS);
+  }
+
   async function processarFila() {
-    if (processando) return;
+    if (processando || !fila.length) return;
     processando = true;
+    const loteAtual = fila.splice(0, fila.length);
     try {
-      while (fila.length) {
-        const registro = fila.shift();
-        try {
-          await imprimirDaFila(registro);
-        } catch (erro) {
-          console.error('Falha ao imprimir pedido do garçom no PDV:', erro);
-        } finally {
-          emFila.delete(registro.chave);
-        }
-      }
+      await imprimirLoteFila(loteAtual);
+    } catch (erro) {
+      console.error('Falha ao imprimir lote do garçom no PDV:', erro);
     } finally {
+      loteAtual.forEach(registro => emFila.delete(registro.chave));
       processando = false;
-      if (fila.length) setTimeout(processarFila, 300);
+      if (fila.length) setTimeout(processarFila, 900);
     }
   }
 
   function enfileirar(chave, pedido) {
-    if (!pedido || pedido.origem !== 'garcom') return;
-    if (pedido.impressoEm || pedido.impressoNoPdv || pedido.status === 'impresso' || pedido.impressaoPdv?.estado === 'impresso') return;
-    if (!Array.isArray(pedido.itens) || !pedido.itens.length) return;
+    if (!pedidoPendente(pedido)) return;
     if (emFila.has(chave)) return;
     emFila.add(chave);
     fila.push({ chave, pedido });
-    processarFila();
+    agendarProcessamento();
   }
 
   function desconectar() {
-    if (!refProducao) return;
-    if (onValue) refProducao.off('value', onValue);
-    if (onChildAdded) refProducao.off('child_added', onChildAdded);
+    if (refProducao) {
+      if (onValue) refProducao.off('value', onValue);
+      if (onChildAdded) refProducao.off('child_added', onChildAdded);
+    }
     refProducao = null;
     onValue = null;
     onChildAdded = null;
@@ -157,7 +192,11 @@
     const inicial = await refProducao.once('value');
     sincronizarPainel(inicial);
     conhecidos.clear();
-    inicial.forEach(child => conhecidos.add(child.key));
+    inicial.forEach(child => {
+      conhecidos.add(child.key);
+      const pedido = child.val() || {};
+      if (deveRecuperarInicial(pedido)) enfileirar(child.key, pedido);
+    });
 
     onValue = snap => sincronizarPainel(snap);
     onChildAdded = snap => {
