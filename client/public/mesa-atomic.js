@@ -145,7 +145,7 @@
         item.id === produto.id &&
         Number(item.preco) === Number(produto.preco) &&
         !item.obs &&
-        item.enviado === false &&
+        item.enviado !== true &&
         !item.envioPendenteId &&
         (!idGarcom || String(item.garcomLancamento?.nome || '') === idGarcom.nome)
       );
@@ -224,7 +224,9 @@
       mesa.itens.forEach((item, index) => {
         const setorItem = item.setor === 'bar' ? 'bar' : 'cozinha';
         const setorOk = !setor || setorItem === setor;
-        const estadoOk = item.enviado === false && (incluirRascunho || item.rascunho !== true);
+        // Compatibilidade com comandas antigas: ausência do campo `enviado`
+        // significa item ainda não enviado. Somente `true` é considerado enviado.
+        const estadoOk = item.enviado !== true && (incluirRascunho || item.rascunho !== true);
         if (!setorOk || !estadoOk) return;
         item.envioPendenteId = envioId;
         item.envioReservadoEm = agora();
