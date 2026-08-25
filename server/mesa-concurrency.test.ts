@@ -48,6 +48,15 @@ describe("concorrencia atomica de mesas", () => {
     expect(producao).not.toContain(".set(dadosMesa)");
   });
 
+  it("envio normal do pdv usa o estado autoritativo e nao bloqueia por copia local vazia", () => {
+    const producao = read("client/public/pdv/pdv-production.js");
+    const pdvSw = read("client/public/pdv/service-worker.js");
+    expect(producao).toContain("O envio normal nunca depende da cópia local da comanda");
+    expect(producao).toContain("MesaAtomic.reservarEnvio(numeroMesa");
+    expect(producao).not.toContain("if (!dadosMesa || !dadosMesa.itens.length) return alert('Comanda vazia!')");
+    expect(pdvSw).toContain("/pdv/pdv-production.js?v=39");
+  });
+
   it("fechamento e transferencia do pdv usam locks antes do update final", () => {
     const checkout = read("client/public/pdv/pdv-checkout-core.js");
     const operations = read("client/public/pdv/pdv-operations.js");
@@ -64,7 +73,7 @@ describe("concorrencia atomica de mesas", () => {
 
     expect(pdvSw.indexOf("/mesa-atomic.js?v=38")).toBeGreaterThanOrEqual(0);
     expect(pdvSw.indexOf("/mesa-atomic.js?v=38")).toBeLessThan(pdvSw.indexOf("/pdv/pdv-checkout-core.js"));
-    expect(pdvSw.lastIndexOf("/pdv/mesa-concurrency.js?v=36")).toBeGreaterThan(pdvSw.lastIndexOf("/pdv/pdv-production.js"));
+    expect(pdvSw.lastIndexOf("/pdv/mesa-concurrency.js?v=36")).toBeGreaterThan(pdvSw.lastIndexOf("/pdv/pdv-production.js?v=39"));
 
     expect(garcomSw.indexOf("/mesa-atomic.js?v=38")).toBeGreaterThanOrEqual(0);
     expect(garcomSw.indexOf("/mesa-atomic.js?v=38")).toBeLessThan(garcomSw.indexOf("/garcom/hotfix-sync.js"));
