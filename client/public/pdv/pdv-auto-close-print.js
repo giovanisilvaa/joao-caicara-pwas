@@ -1,10 +1,10 @@
 /* Impressão automática do fechamento feito pelo Garçom no PDV do caixa. */
 (() => {
-  if (window.PDV_AUTO_CLOSE_RUNTIME === 'v1') return;
-  window.PDV_AUTO_CLOSE_RUNTIME = 'v1';
+  if (window.PDV_AUTO_CLOSE_RUNTIME === 'v2') return;
+  window.PDV_AUTO_CLOSE_RUNTIME = 'v2';
 
   const EMAIL_PDV = 'adm@acesso.joaocaicara.app';
-  const CHECKPOINT_KEY = 'joao_caicara_auto_close_activation_v1';
+  const CHECKPOINT_KEY = 'joao_caicara_auto_close_activation_v2';
   const RECLAIM_MS = 120000;
   const sessao = `pdv-close_${Date.now()}_${Math.random().toString(36).slice(2, 9)}`;
   const fila = [];
@@ -13,6 +13,7 @@
   let processando = false;
   let refVendas = null;
   let onChildAdded = null;
+  let onValue = null;
   let conectadoUid = null;
 
   let ativadoEm = Number(localStorage.getItem(CHECKPOINT_KEY) || 0);
@@ -30,11 +31,34 @@
     return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(Number(valor) || 0);
   };
 
-  function vendaPendente(venda) {
-    if (!venda || venda.origem !== 'garcom') return false;
-    if (!Array.isArray(venda.itens) || !venda.itens.length) return false;
-    if (!(Number(venda.total) >= 0)) return false;
+  function lista(valor) {
+    if (Array.isArray(valor)) return valor.filter(Boolean);
+    if (valor && typeof valor === 'object') return Object.values(valor).filter(Boolean);
+    return [];
+  }
+
+  function normalizarVenda(venda) {
+    const origem = venda && typeof venda === 'object' ? venda : {};
+    return {
+      ...origem,
+      itens: lista(origem.itens),
+      garconsAtendimento: lista(origem.garconsAtendimento)
+    };
+  }
+
+  function vendaPendente(valor) {
+    const venda = normalizarVenda(valor);
+    const origemGarcom = String(venda.origem || '').toLowerCase() === 'garcom';
+    const solicitada = venda.imprimirFechamentoNoPdv === true;
+    if (!origemGarcom && !solicitada) return false;
+    if (!venda.itens.length) return false;
+    if (!Number.isFinite(Number(venda.total)) || Number(venda.total) < 0) return false;
     return venda.impressaoFechamentoPdv?.estado !== 'impresso' && !venda.fechamentoImpressoNoPdv;
+  }
+
+  function vendaAposAtivacao(venda) {
+    const criadoEm = Number(venda?.criadoEm || 0);
+    return criadoEm > 0 && criadoEm >= ativadoEm;
   }
 
   function reivindicar(chave) {
@@ -52,12 +76,13 @@
     });
   }
 
-  function prepararCupom(venda) {
+  function prepararCupom(valor) {
+    const venda = normalizarVenda(valor);
     const pagamentos = venda.pagamentos && typeof venda.pagamentos === 'object' ? venda.pagamentos : {};
     const garcomResponsavel = venda.garcomResponsavel && typeof venda.garcomResponsavel === 'object'
       ? venda.garcomResponsavel
       : null;
-    const atendentes = Array.isArray(venda.garconsAtendimento) ? venda.garconsAtendimento.filter(Boolean) : [];
+    const atendentes = venda.garconsAtendimento;
     const data = venda.dataHora || new Date(Number(venda.criadoEm) || Date.now()).toLocaleString('pt-BR');
 
     let detalhe = '';
@@ -102,14 +127,16 @@
     const inicio = Date.now();
     while (
       document.body.classList.contains('print-mode-producao') ||
-      document.body.classList.contains('print-mode-producao-lote')
+      document.body.classList.contains('print-mode-producao-lote') ||
+      document.body.classList.contains('print-mode-relatorio-garcons')
     ) {
       if (Date.now() - inicio > 15000) break;
       await new Promise(resolve => setTimeout(resolve, 150));
     }
   }
 
-  async function imprimirFechamento(chave, venda) {
+  async function imprimirFechamento(chave, valor) {
+    const venda = normalizarVenda(valor);
     const assumiu = await reivindicar(chave);
     if (!assumiu) return;
 
@@ -174,19 +201,29 @@
     }
   }
 
-  function enfileirar(chave, venda) {
-    if (!vendaPendente(venda) || emFila.has(chave)) return;
+  function enfileirar(chave, valor) {
+    const venda = normalizarVenda(valor);
+    if (!chave || !vendaPendente(venda) || !vendaAposAtivacao(venda) || emFila.has(chave)) return;
     emFila.add(chave);
     fila.push({ chave, venda });
     processarFila();
   }
 
+  function varrerSnapshot(snapshot) {
+    snapshot.forEach(child => {
+      conhecidos.add(child.key);
+      enfileirar(child.key, child.val() || {});
+    });
+  }
+
   function desconectar() {
-    if (refVendas && onChildAdded) {
-      try { refVendas.off('child_added', onChildAdded); } catch (_) {}
+    if (refVendas) {
+      if (onChildAdded) try { refVendas.off('child_added', onChildAdded); } catch (_) {}
+      if (onValue) try { refVendas.off('value', onValue); } catch (_) {}
     }
     refVendas = null;
     onChildAdded = null;
+    onValue = null;
     conectadoUid = null;
     conhecidos.clear();
   }
@@ -194,29 +231,24 @@
   async function conectar(user) {
     const email = String(user?.email || '').toLowerCase();
     if (!user || email !== EMAIL_PDV) return desconectar();
-    if (conectadoUid === user.uid && refVendas && onChildAdded) return;
+    if (conectadoUid === user.uid && refVendas && onChildAdded && onValue) return;
 
     desconectar();
     conectadoUid = user.uid;
     refVendas = db.ref('vendas');
 
     const inicial = await refVendas.once('value');
-    inicial.forEach(child => {
-      conhecidos.add(child.key);
-      const venda = child.val() || {};
-      if (vendaPendente(venda) && Number(venda.criadoEm || 0) >= ativadoEm) {
-        enfileirar(child.key, venda);
-      }
-    });
+    varrerSnapshot(inicial);
 
     onChildAdded = snap => {
       const chave = snap.key;
-      const venda = snap.val() || {};
-      if (conhecidos.has(chave)) return;
-      conhecidos.add(chave);
-      enfileirar(chave, venda);
+      if (!conhecidos.has(chave)) conhecidos.add(chave);
+      enfileirar(chave, snap.val() || {});
     };
-    refVendas.on('child_added', onChildAdded, erro => console.error('Falha na fila de fechamento automático:', erro));
+    onValue = snap => varrerSnapshot(snap);
+
+    refVendas.on('child_added', onChildAdded, erro => console.error('Falha no evento de fechamento automático:', erro));
+    refVendas.on('value', onValue, erro => console.error('Falha na varredura de fechamentos do Garçom:', erro));
   }
 
   function iniciar() {
@@ -229,5 +261,12 @@
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', iniciar, { once: true });
   else iniciar();
 
-  window.PdvFechamentoAutomatico = Object.freeze({ enfileirar, processarFila, reconectar: () => conectar(firebase.auth().currentUser), desconectar });
+  window.PdvFechamentoAutomatico = Object.freeze({
+    enfileirar,
+    processarFila,
+    reconectar: () => conectar(firebase.auth().currentUser),
+    desconectar,
+    normalizarVenda,
+    vendaPendente
+  });
 })();
