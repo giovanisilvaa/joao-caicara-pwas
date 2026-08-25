@@ -59,9 +59,9 @@
     };
     Object.entries(porSetor).forEach(([destino, lista]) => {
       if (!lista.length) return;
-      const ref = db.ref('pedidosProducao').push();
-      atualizacoes[`pedidosProducao/${ref.key}`] = {
-        chave: ref.key, mesa: numeroMesa, cliente, setor: destino, itens: lista,
+      const pedidoRef = db.ref('pedidosProducao').push();
+      atualizacoes[`pedidosProducao/${pedidoRef.key}`] = {
+        chave: pedidoRef.key, mesa: numeroMesa, cliente, setor: destino, itens: lista,
         status: 'recebido', origem: 'pdv', criadoEm, atualizadoEm: criadoEm
       };
     });
