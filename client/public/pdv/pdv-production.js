@@ -20,23 +20,38 @@
     document.body.classList.remove('print-mode-producao');
   }
 
+  async function lerMesaServidor(numeroMesa) {
+    const snap = await db.ref(`mesas/${numeroMesa}`).once('value');
+    const mesa = window.MesaAtomic
+      ? window.MesaAtomic.normalizarMesa(snap.val())
+      : (snap.val() || { itens: [], cliente: '', abertura: null });
+    mesas[numeroMesa] = mesa;
+    return mesa;
+  }
+
   window.imprimirProducao = async function imprimirProducaoSeguro(setor, reimprimirTudo) {
     if (!mesaAtualSelecionada) return alert('Selecione uma mesa!');
     const numeroMesa = mesaAtualSelecionada;
-    const dadosMesa = mesas[numeroMesa];
-    if (!dadosMesa || !dadosMesa.itens.length) return alert('Comanda vazia!');
 
     if (reimprimirTudo) {
-      const itensReimpressao = dadosMesa.itens.filter(item => {
-        const setorOk = setor === 'bar' ? item.setor === 'bar' : item.setor !== 'bar';
-        return setorOk && item.enviado === true;
-      });
-      if (!itensReimpressao.length) return alert(`Não há itens enviados de ${setor.toUpperCase()} nesta mesa.`);
-      prepararImpressao(setor, numeroMesa, dadosMesa.cliente || '', itensReimpressao, true);
-      imprimirAgora();
+      try {
+        const dadosMesa = await lerMesaServidor(numeroMesa);
+        const itensReimpressao = (dadosMesa.itens || []).filter(item => {
+          const setorOk = setor === 'bar' ? item.setor === 'bar' : item.setor !== 'bar';
+          return setorOk && item.enviado === true;
+        });
+        if (!itensReimpressao.length) return alert(`Não há itens enviados de ${setor.toUpperCase()} nesta mesa.`);
+        prepararImpressao(setor, numeroMesa, dadosMesa.cliente || '', itensReimpressao, true);
+        imprimirAgora();
+      } catch (erro) {
+        console.error('Falha ao consultar a mesa para reimpressão:', erro);
+        alert('Não foi possível consultar a comanda no servidor. Tente novamente.');
+      }
       return;
     }
 
+    // O envio normal nunca depende da cópia local da comanda. A transação abaixo
+    // consulta o estado autoritativo no Firebase e reserva somente itens ainda não enviados.
     if (!window.MesaAtomic) return alert('A proteção de concorrência ainda está carregando. Tente novamente em um instante.');
     let reserva = null;
     try {
@@ -47,7 +62,10 @@
       });
       if (!reserva.committed) {
         if (reserva.motivo === 'sem_itens') {
-          return alert(`Não há itens confirmados para ${setor.toUpperCase()}. Itens ainda em rascunho do garçom não são impressos.`);
+          await lerMesaServidor(numeroMesa).catch(() => null);
+          if (typeof gerarMesas === 'function') gerarMesas();
+          if (typeof renderizarComanda === 'function') renderizarComanda();
+          return alert(`Não há itens novos para ${setor.toUpperCase()} nesta mesa.`);
         }
         return alert('A mesa está concluindo outra operação. Aguarde um instante e tente novamente.');
       }
@@ -90,8 +108,7 @@
 
       // Pedido de produção e estado dos itens são confirmados juntos.
       await db.ref('/').update(atualizacoes);
-      const snap = await db.ref(`mesas/${numeroMesa}`).once('value');
-      mesas[numeroMesa] = window.MesaAtomic.normalizarMesa(snap.val());
+      await lerMesaServidor(numeroMesa);
       if (typeof gerarMesas === 'function') gerarMesas();
       if (typeof renderizarComanda === 'function') renderizarComanda();
 
