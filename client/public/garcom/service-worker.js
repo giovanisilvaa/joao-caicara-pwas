@@ -1,4 +1,4 @@
-const CACHE_NAME = 'joao-caicara-garcom-v15';
+const CACHE_NAME = 'joao-caicara-garcom-v16';
 const AUTH_SESSION_ASSET = '/auth-session-isolation.js?v=20';
 const LOGIN_ASSET = '/garcom/shared-login.js?v=17';
 const CARDAPIO_AUTH_ASSET = '/garcom/cardapio-auth-reconnect.js?v=20';
@@ -33,7 +33,17 @@ self.addEventListener('install', event => {
   event.waitUntil(caches.open(CACHE_NAME).then(cache => cache.addAll(APP_SHELL)).then(() => self.skipWaiting()));
 });
 self.addEventListener('activate', event => {
-  event.waitUntil(caches.keys().then(keys => Promise.all(keys.filter(key => key !== CACHE_NAME).map(key => caches.delete(key)))).then(() => self.clients.claim()));
+  event.waitUntil((async () => {
+    const keys = await caches.keys();
+    await Promise.all(keys.filter(key => key !== CACHE_NAME).map(key => caches.delete(key)));
+    await self.clients.claim();
+    const clientes = await self.clients.matchAll({ type: 'window', includeUncontrolled: true });
+    await Promise.all(clientes.map(client => {
+      const url = new URL(client.url);
+      if (url.origin !== self.location.origin || !url.pathname.startsWith('/garcom/')) return null;
+      return client.navigate(client.url);
+    }));
+  })());
 });
 self.addEventListener('fetch', event => {
   const request = event.request;
