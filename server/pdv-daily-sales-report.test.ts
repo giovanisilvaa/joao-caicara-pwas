@@ -39,6 +39,14 @@ describe('relatorio financeiro diario do PDV', () => {
     expect(report).toContain('window.print()');
   });
 
+  it('impede o modulo antigo de zeragem de sobrescrever o relatorio automaticamente', () => {
+    const reset = read('client/public/pdv/cash-reset.js');
+    expect(reset).not.toContain('MutationObserver');
+    expect(reset).not.toContain("filtro.addEventListener('input'");
+    expect(reset).toContain('As vendas continuarão guardadas no Firebase');
+    expect(reset).not.toContain("ref('vendas').remove");
+  });
+
   it('service worker publica o modulo novo e invalida o cache anterior', () => {
     const sw = read('client/public/pdv/service-worker.js');
     expect(sw).toContain("joao-caicara-pdv-v28-report-v29");
