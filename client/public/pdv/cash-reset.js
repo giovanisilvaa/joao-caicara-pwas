@@ -54,11 +54,9 @@
   }
 
   function instalar() {
+    // Mantém a função legada disponível, mas não observa nem redesenha automaticamente
+    // o modal de vendas. O relatório financeiro v29 é a fonte visual autoritativa.
     window.limparHistoricoGeral = zerarCaixa;
-    const filtro=document.getElementById('filtro-historico');
-    if(filtro && !filtro.dataset.caixaReset){ filtro.dataset.caixaReset='1'; filtro.addEventListener('input',()=>void renderizarCaixaZeravel()); }
-    const modal=document.getElementById('modal-historico');
-    if(modal) new MutationObserver(()=>{ if(modal.style.display==='flex') setTimeout(()=>void renderizarCaixaZeravel(),0); }).observe(modal,{attributes:true,attributeFilter:['style']});
   }
   if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',instalar,{once:true}); else instalar();
   window.PdvCaixaZeravel = Object.freeze({ renderizar:renderizarCaixaZeravel, zerar:zerarCaixa, corteAtual });
