@@ -1,4 +1,4 @@
-const CACHE_NAME = 'joao-caicara-pdv-v28';
+const CACHE_NAME = 'joao-caicara-pdv-v28-report-v29';
 const AUTH_SESSION_ASSET = '/auth-session-isolation.js?v=20';
 const MESA_ATOMIC_ASSET = '/mesa-atomic.js?v=38';
 const MESA_CONCURRENCY_ASSET = '/pdv/' + 'mesa-concurrency.js?v=40';
@@ -9,7 +9,8 @@ const PDV_CARDAPIO_AUTH_ASSET = '/pdv/' + 'cardapio-auth-reconnect.js?v=1';
 const AUTO_PRODUCTION_PRINT_ASSET = '/pdv/' + 'pdv-auto-production-print.js?v=3';
 const AUTO_CLOSE_PRINT_ASSET = '/pdv/' + 'pdv-auto-close-print.js?v=2';
 const RUNTIME_GUARD_ASSET = '/pdv/' + 'runtime-guard.js?v=40';
-const APP_SHELL = ['/pdv/', '/pdv/manifest.json', AUTH_SESSION_ASSET, MESA_ATOMIC_ASSET, '/pdv/access-control.js?v=31', '/pdv/admin-login.js?v=33', '/pdv/access-diagnostics.js?v=32', '/pdv/pdv-sync.js', PDV_MESAS_AUTH_ASSET, PDV_CARDAPIO_AUTH_ASSET, '/pdv/pdv-safety.js', '/pdv/pdv-operations.js', '/pdv/pdv-checkout-core.js', '/pdv/waiter-sales-report.js?v=28', '/pdv/service-fee-shifts.js?v=28', '/pdv/cash-reset.js?v=35', PDV_PRODUCTION_ASSET, MESA_CONCURRENCY_ASSET, MENU_ORDER_OPTIONS_ASSET, AUTO_PRODUCTION_PRINT_ASSET, AUTO_CLOSE_PRINT_ASSET, '/pdv/modern-hybrid.css', '/pdv/menu-admin-cta.css?v=34', '/pdv/fast-checkout.js', '/pdv/fast-checkout.css', '/pdv/fast-split.js', '/pdv/fast-split.css', RUNTIME_GUARD_ASSET, '/tradicao-caicara-logo.webp'];
+const DAILY_SALES_REPORT_ASSET = '/pdv/' + 'daily-sales-report.js?v=29';
+const APP_SHELL = ['/pdv/', '/pdv/manifest.json', AUTH_SESSION_ASSET, MESA_ATOMIC_ASSET, '/pdv/access-control.js?v=31', '/pdv/admin-login.js?v=33', '/pdv/access-diagnostics.js?v=32', '/pdv/pdv-sync.js', PDV_MESAS_AUTH_ASSET, PDV_CARDAPIO_AUTH_ASSET, '/pdv/pdv-safety.js', '/pdv/pdv-operations.js', '/pdv/pdv-checkout-core.js', '/pdv/waiter-sales-report.js?v=28', '/pdv/service-fee-shifts.js?v=28', '/pdv/cash-reset.js?v=35', PDV_PRODUCTION_ASSET, MESA_CONCURRENCY_ASSET, MENU_ORDER_OPTIONS_ASSET, AUTO_PRODUCTION_PRINT_ASSET, AUTO_CLOSE_PRINT_ASSET, '/pdv/modern-hybrid.css', '/pdv/menu-admin-cta.css?v=34', '/pdv/fast-checkout.js', '/pdv/fast-checkout.css', '/pdv/fast-split.js', '/pdv/fast-split.css', RUNTIME_GUARD_ASSET, DAILY_SALES_REPORT_ASSET, '/tradicao-caicara-logo.webp'];
 const respostaHtmlComHotfix = async (response) => {
   let html = await response.text();
   if (!html.includes('/pdv/modern-hybrid.css')) html = html.replace('</head>', '<link rel="stylesheet" href="/pdv/modern-hybrid.css"></head>');
@@ -38,6 +39,7 @@ const respostaHtmlComHotfix = async (response) => {
   if (!html.includes('/pdv/fast-checkout.js')) html = html.replace('</body>', '<script src="/pdv/fast-checkout.js"></script></body>');
   if (!html.includes('/pdv/fast-split.js')) html = html.replace('</body>', '<script src="/pdv/fast-split.js"></script></body>');
   if (!html.includes('/pdv/runtime-guard.js')) html = html.replace('</body>', '<script src="/pdv/runtime-guard.js?v=40"></script></body>');
+  if (!html.includes('/pdv/daily-sales-report.js')) html = html.replace('</body>', '<script src="/pdv/daily-sales-report.js?v=29"></script></body>');
   const headers = new Headers(response.headers);
   headers.delete('content-length');
   headers.delete('content-encoding');
