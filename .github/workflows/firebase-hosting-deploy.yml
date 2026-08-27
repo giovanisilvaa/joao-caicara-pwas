@@ -79,5 +79,69 @@ jobs:
       - name: Deploy to Firebase Hosting
         run: npx firebase-tools@latest deploy --only hosting --project joaocaicaratradicao --non-interactive
 
+      - name: Verify PWA deployment propagation
+        shell: bash
+        run: |
+          set -euo pipefail
+          BASE_URL="https://joaocaicaratradicao.web.app"
+
+          verificar_arquivo() {
+            local caminho="$1"
+            local arquivo="$2"
+            local temporario
+            temporario="$(mktemp)"
+
+            for tentativa in $(seq 1 12); do
+              if curl --fail --silent --show-error \
+                -H 'Cache-Control: no-cache' \
+                "${BASE_URL}${caminho}?verify=${GITHUB_SHA}-${tentativa}" \
+                -o "$temporario" && cmp -s "$arquivo" "$temporario"; then
+                echo "Publicado e conferido: ${caminho}"
+                rm -f "$temporario"
+                return 0
+              fi
+              echo "Aguardando propagação de ${caminho} (tentativa ${tentativa}/12)..."
+              sleep 5
+            done
+
+            echo "::error::O Firebase Hosting não está servindo a versão esperada de ${caminho}."
+            diff -u "$arquivo" "$temporario" || true
+            rm -f "$temporario"
+            return 1
+          }
+
+          verificar_no_cache() {
+            local caminho="$1"
+            local cabecalhos
+
+            for tentativa in $(seq 1 12); do
+              cabecalhos="$(curl --fail --silent --show-error --head \
+                -H 'Cache-Control: no-cache' \
+                "${BASE_URL}${caminho}?headers=${GITHUB_SHA}-${tentativa}" || true)"
+              if printf '%s\n' "$cabecalhos" | grep -qi '^cache-control:.*no-store'; then
+                echo "Cache-Control confirmado: ${caminho}"
+                return 0
+              fi
+              echo "Aguardando Cache-Control de ${caminho} (tentativa ${tentativa}/12)..."
+              sleep 5
+            done
+
+            echo "::error::Cabeçalho no-store não confirmado em ${caminho}."
+            printf '%s\n' "$cabecalhos"
+            return 1
+          }
+
+          verificar_arquivo '/pdv/service-worker.js' 'client/public/pdv/service-worker.js'
+          verificar_arquivo '/garcom/service-worker.js' 'client/public/garcom/service-worker.js'
+          verificar_arquivo '/pwa-live-update.js' 'client/public/pwa-live-update.js'
+          verificar_arquivo '/pdv/' 'client/public/pdv/index.html'
+          verificar_arquivo '/garcom/' 'client/public/garcom/index.html'
+
+          verificar_no_cache '/pdv/service-worker.js'
+          verificar_no_cache '/garcom/service-worker.js'
+          verificar_no_cache '/pwa-live-update.js'
+          verificar_no_cache '/pdv/'
+          verificar_no_cache '/garcom/'
+
       - name: Deploy Realtime Database rules
         run: npx firebase-tools@latest deploy --only database --project joaocaicaratradicao --non-interactive
