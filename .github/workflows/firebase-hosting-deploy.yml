@@ -76,6 +76,16 @@ jobs:
           console.log('Perfil administrativo confirmado no Firebase.');
           NODE
 
+      - name: Audit current menu (read only)
+        shell: bash
+        run: |
+          set -euo pipefail
+          npx firebase-tools@latest database:get /cardapio \
+            --instance joaocaicaratradicao-default-rtdb \
+            --project joaocaicaratradicao \
+            --non-interactive > /tmp/cardapio-atual.json
+          node scripts/audit-cardapio-20260828.mjs /tmp/cardapio-atual.json
+
       - name: Deploy to Firebase Hosting
         run: npx firebase-tools@latest deploy --only hosting --project joaocaicaratradicao --non-interactive
 
@@ -144,4 +154,4 @@ jobs:
           verificar_no_cache '/garcom/'
 
       - name: Deploy Realtime Database rules
-        run: npx firebase-tools@latest deploy --only database --project joaocaicaratradicao --non-interactive
+        run: npx firebase-tools@latest deploy --only database --project joaocaicaradicao --non-interactive
