@@ -98,12 +98,14 @@ describe('atualização do cardápio 28/08/2026', () => {
     }
   });
 
-  it('workflow usa gravação condicional e mantém backup antes de alterar produção', () => {
+  it('mantém a migração como histórico, mas impede repetição automática em futuros deploys', () => {
     const workflow = fs.readFileSync('.github/workflows/firebase-hosting-deploy.yml', 'utf8');
-    expect(workflow).toContain('X-Firebase-ETag: true');
-    expect(workflow).toContain('If-Match:');
-    expect(workflow).toContain('cardapio-backup-antes-20260828.json');
-    expect(workflow).toContain('cardapio-update-20260828.mjs transform');
-    expect(workflow).toContain('cardapio-update-20260828.mjs verify');
+    const migration = fs.readFileSync('scripts/cardapio-update-20260828.mjs', 'utf8');
+    expect(migration).toContain('aplicarAtualizacao');
+    expect(migration).toContain('validarAtualizacao');
+    expect(workflow).not.toContain('Prepare validated menu update');
+    expect(workflow).not.toContain('Apply conditional menu update');
+    expect(workflow).not.toContain('cardapio-update-20260828.mjs transform');
+    expect(workflow).toContain("verificar_arquivo '/menu-20260828.js'");
   });
 });
