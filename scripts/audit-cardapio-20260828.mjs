@@ -3,50 +3,55 @@ import fs from 'node:fs';
 const arquivo = process.argv[2];
 if (!arquivo) throw new Error('Informe o JSON do cardápio.');
 const dados = JSON.parse(fs.readFileSync(arquivo, 'utf8'));
+if (!Array.isArray(dados)) throw new Error('O cardápio de produção deixou de ser uma lista. Auditoria interrompida.');
 
 const normalizar = valor => String(valor ?? '')
   .normalize('NFD').replace(/[\u0300-\u036f]/g, '')
   .toLowerCase().replace(/[^a-z0-9]+/g, ' ').trim();
 
-const alvos = [
-  'Suco de polpa', 'Suco de laranja', 'Suco de laranja com polpa',
-  'Risoto de palmito e champignon', 'Risoto de shimeji',
-  'Espaguete ao molho branco com palmito',
-  'Espaguete com champignon, alcaparras e cebola roxa, puxado no azeite',
-  'Peixe com molho de camarão', 'Peixe com legumes', 'Moqueca de peixe',
-  'Caldeirada', 'Macarrão ao fundo do mar', 'Heineken 600 ml Zero'
-].map(normalizar);
+const categoriasRelevantes = ['aperitivo', 'suco', 'vegan', 'veget', 'peixe', 'carne', 'ostra', 'cerveja'];
+const categorias = new Map();
 
-const encontrados = [];
-const categorias = [];
-
-function visitar(valor, caminho = 'cardapio') {
-  if (!valor || typeof valor !== 'object') return;
-
-  if (!Array.isArray(valor)) {
-    const nome = valor.nome ?? valor.name ?? valor.titulo ?? valor.title ?? null;
-    const preco = valor.preco ?? valor.price ?? valor.valor ?? null;
-    if (nome != null) {
-      const item = { caminho, nome: String(nome), preco, chaves: Object.keys(valor) };
-      if (alvos.includes(normalizar(nome))) encontrados.push(item);
-      const filhos = Object.entries(valor).filter(([, v]) => Array.isArray(v) || (v && typeof v === 'object'));
-      if (filhos.some(([k]) => /itens|produtos|items|products/i.test(k))) categorias.push(item);
-    }
-  }
-
-  for (const [chave, filho] of Object.entries(valor)) {
-    if (filho && typeof filho === 'object') visitar(filho, `${caminho}/${chave}`);
-  }
+for (let indice = 0; indice < dados.length; indice++) {
+  const item = dados[indice] || {};
+  const categoria = String(item.categoria ?? 'SEM CATEGORIA');
+  if (!categorias.has(categoria)) categorias.set(categoria, { primeira: indice, ultima: indice, total: 0 });
+  const info = categorias.get(categoria);
+  info.ultima = indice;
+  info.total += 1;
 }
 
-visitar(dados);
-
 console.log('=== AUDITORIA CARDÁPIO — SOMENTE LEITURA ===');
-console.log('Tipo raiz:', Array.isArray(dados) ? 'array' : typeof dados);
-console.log('Chaves raiz:', dados && typeof dados === 'object' ? Object.keys(dados).join(', ') : '-');
-console.log('\nCategorias detectadas:');
-for (const cat of categorias) console.log(JSON.stringify(cat));
-console.log('\nItens-alvo encontrados:');
-for (const item of encontrados) console.log(JSON.stringify(item));
-console.log(`\nTotal categorias detectadas: ${categorias.length}`);
-console.log(`Total itens-alvo encontrados: ${encontrados.length}`);
+console.log(`Total de itens: ${dados.length}`);
+console.log('\nORDEM DAS CATEGORIAS:');
+for (const [categoria, info] of categorias) {
+  console.log(`${info.primeira}-${info.ultima}\t${info.total} item(ns)\t${categoria}`);
+}
+
+console.log('\nITENS DAS CATEGORIAS RELEVANTES:');
+for (let indice = 0; indice < dados.length; indice++) {
+  const item = dados[indice] || {};
+  const categoria = String(item.categoria ?? '');
+  const textoCategoria = normalizar(categoria);
+  const nome = String(item.nome ?? '');
+  const textoNome = normalizar(nome);
+  const relevante = categoriasRelevantes.some(chave => textoCategoria.includes(chave)) ||
+    /baiacu|file mignon|risoto|espaguete|macarrao|caldeirada|molho de camarao|molho de camarão|heineken/.test(textoNome);
+  if (!relevante) continue;
+  console.log(JSON.stringify({
+    indice,
+    id: item.id,
+    categoria,
+    nome,
+    preco: item.preco,
+    ativo: item.ativo,
+    favorito: item.favorito,
+    servePara2: item.servePara2,
+    setor: item.setor
+  }));
+}
+
+console.log('\nAMOSTRA DO ESQUEMA DOS ÚLTIMOS ITENS:');
+for (let indice = Math.max(0, dados.length - 5); indice < dados.length; indice++) {
+  console.log(JSON.stringify({ indice, item: dados[indice] }));
+}
