@@ -154,4 +154,4 @@ jobs:
           verificar_no_cache '/garcom/'
 
       - name: Deploy Realtime Database rules
-        run: npx firebase-tools@latest deploy --only database --project joaocaicaradicao --non-interactive
+        run: npx firebase-tools@latest deploy --only database --project joaocaicaratradicao --non-interactive
