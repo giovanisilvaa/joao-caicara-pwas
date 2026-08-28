@@ -76,15 +76,67 @@ jobs:
           console.log('Perfil administrativo confirmado no Firebase.');
           NODE
 
-      - name: Audit current menu (read only)
+      - name: Prepare validated menu update
         shell: bash
         run: |
           set -euo pipefail
-          npx firebase-tools@latest database:get /cardapio \
-            --instance joaocaicaratradicao-default-rtdb \
-            --project joaocaicaratradicao \
-            --non-interactive > /tmp/cardapio-atual.json
-          node scripts/audit-cardapio-20260828.mjs /tmp/cardapio-atual.json
+          DB_URL='https://joaocaicaratradicao-default-rtdb.firebaseio.com/cardapio.json'
+          ACCESS_TOKEN="$(gcloud auth print-access-token)"
+          curl --fail-with-body --silent --show-error \
+            -D /tmp/cardapio-headers.txt \
+            -H "Authorization: Bearer ${ACCESS_TOKEN}" \
+            -H 'X-Firebase-ETag: true' \
+            "${DB_URL}" \
+            -o cardapio-backup-antes-20260828.json
+
+          ETAG="$(tr -d '\r' < /tmp/cardapio-headers.txt | awk 'BEGIN{IGNORECASE=1} /^etag:/ {sub(/^[^:]+:[[:space:]]*/, ""); print; exit}')"
+          if [ -z "${ETAG}" ]; then
+            echo '::error::Firebase não retornou ETag; atualização do cardápio abortada sem gravação.'
+            exit 1
+          fi
+          printf '%s' "${ETAG}" > /tmp/cardapio-etag.txt
+
+          node scripts/cardapio-update-20260828.mjs transform \
+            cardapio-backup-antes-20260828.json \
+            /tmp/cardapio-atualizado-20260828.json
+
+      - name: Preserve menu backup before write
+        uses: actions/upload-artifact@v4
+        with:
+          name: cardapio-backup-antes-20260828-${{ github.run_id }}
+          path: cardapio-backup-antes-20260828.json
+          retention-days: 30
+          if-no-files-found: error
+
+      - name: Apply conditional menu update
+        shell: bash
+        run: |
+          set -euo pipefail
+          DB_URL='https://joaocaicaratradicao-default-rtdb.firebaseio.com/cardapio.json'
+          ACCESS_TOKEN="$(gcloud auth print-access-token)"
+          ETAG="$(cat /tmp/cardapio-etag.txt)"
+
+          STATUS="$(curl --silent --show-error \
+            -o /tmp/cardapio-put-response.json \
+            -w '%{http_code}' \
+            -X PUT \
+            -H "Authorization: Bearer ${ACCESS_TOKEN}" \
+            -H "If-Match: ${ETAG}" \
+            -H 'Content-Type: application/json' \
+            --data-binary @/tmp/cardapio-atualizado-20260828.json \
+            "${DB_URL}")"
+
+          if [ "${STATUS}" != '200' ]; then
+            echo "::error::Gravação condicional do cardápio recusada (HTTP ${STATUS}). Nenhuma edição concorrente será sobrescrita."
+            cat /tmp/cardapio-put-response.json || true
+            exit 1
+          fi
+
+          curl --fail-with-body --silent --show-error \
+            -H "Authorization: Bearer ${ACCESS_TOKEN}" \
+            "${DB_URL}" \
+            -o /tmp/cardapio-pos-gravacao.json
+          node scripts/cardapio-update-20260828.mjs verify /tmp/cardapio-pos-gravacao.json
 
       - name: Deploy to Firebase Hosting
         run: npx firebase-tools@latest deploy --only hosting --project joaocaicaratradicao --non-interactive
@@ -144,6 +196,7 @@ jobs:
           verificar_arquivo '/pdv/service-worker.js' 'client/public/pdv/service-worker.js'
           verificar_arquivo '/garcom/service-worker.js' 'client/public/garcom/service-worker.js'
           verificar_arquivo '/pwa-live-update.js' 'client/public/pwa-live-update.js'
+          verificar_arquivo '/menu-20260828.js' 'client/public/menu-20260828.js'
           verificar_arquivo '/pdv/' 'client/public/pdv/index.html'
           verificar_arquivo '/garcom/' 'client/public/garcom/index.html'
 

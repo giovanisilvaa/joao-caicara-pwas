@@ -6,7 +6,7 @@ const read = (path: string) => fs.readFileSync(path, "utf8");
 describe("atualizacao do PWA do Garcom", () => {
   it("invalida o cache antigo ao publicar uma nova versao", () => {
     const sw = read("client/public/garcom/service-worker.js");
-    expect(sw).toContain("const CACHE_NAME = 'joao-caicara-garcom-v15-fresh-20260826-live-v18'");
+    expect(sw).toContain("const CACHE_NAME = 'joao-caicara-garcom-v15-fresh-20260826-live-v18-menu-v19'");
   });
 
   it("recarrega clientes do Garcom quando o novo service worker assume", () => {
@@ -26,5 +26,12 @@ describe("atualizacao do PWA do Garcom", () => {
     const sw = read("client/public/garcom/service-worker.js");
     expect(sw).toContain("LIVE_UPDATE_ASSET");
     expect(sw).toContain("/pwa-live-update.js?v=1");
+  });
+
+  it("publica o complemento de categorias e estilo do cardapio", () => {
+    const sw = read("client/public/garcom/service-worker.js");
+    expect(sw).toContain("const MENU_UPDATE_ASSET = '/menu-20260828.js?v=1'");
+    expect(sw).toContain('MENU_UPDATE_ASSET');
+    expect(sw).toContain("if (!html.includes('/menu-20260828.js'))");
   });
 });
