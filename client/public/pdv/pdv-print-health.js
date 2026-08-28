@@ -5,6 +5,8 @@
 
   const CHAVE = 'joao_caicara_print_health_v1';
   const LIMITE_DIALOGO_MS = 2500;
+  const PRINT_ORIGINAL = typeof window.print === 'function' ? window.print.bind(window) : null;
+  let monitorGlobalInstalado = false;
 
   function versaoNavegador() {
     const ua = String(navigator.userAgent || '');
@@ -61,6 +63,7 @@
       #pdv-print-health-banner button{border:0;border-radius:7px;padding:7px 9px;cursor:pointer;font-weight:800;background:#0f4c5c;color:#fff}
       #pdv-print-health-banner button.sec{background:#68787b}
       #pdv-print-health-teste{display:none}
+      @media(max-width:700px){#pdv-print-health-banner{top:70px;flex-direction:column;align-items:stretch}#pdv-print-health-banner .acoes{justify-content:flex-end}}
       @media print{
         body.print-mode-health-test > *{display:none!important}
         body.print-mode-health-test #pdv-print-health-teste{display:block!important;width:80mm!important;margin:0 auto!important;padding:5mm!important;box-sizing:border-box!important;background:#fff!important;color:#000!important;font-family:'Courier New',monospace!important;text-align:center!important}
@@ -127,6 +130,18 @@
     }
   }
 
+  function instalarMonitorGlobal() {
+    if (monitorGlobalInstalado || !PRINT_ORIGINAL) return;
+    try {
+      window.print = function printMonitorado() {
+        return imprimirMonitorado(() => PRINT_ORIGINAL(), 'window_print');
+      };
+      monitorGlobalInstalado = true;
+    } catch (erro) {
+      console.warn('Não foi possível instalar monitor de impressão:', erro);
+    }
+  }
+
   function antesDeEnviar() {
     const d = diagnostico();
     if (d.ok) return true;
@@ -137,11 +152,20 @@
     return window.confirm(texto);
   }
 
+  function protegerCliqueDeEnvio(event) {
+    const alvo = event.target instanceof Element ? event.target.closest('#btn-enviar-producao-pdv,.btn-kitchen,.btn-bar') : null;
+    if (!alvo || alvo.disabled || /reimprimir/i.test(alvo.textContent || '')) return;
+    if (antesDeEnviar()) return;
+    event.preventDefault();
+    event.stopImmediatePropagation();
+  }
+
   async function testar() {
     garantirInterface();
+    if (!PRINT_ORIGINAL) return alert('Não foi possível acessar a função de impressão do navegador.');
     document.body.classList.add('print-mode-health-test');
     try {
-      imprimirMonitorado(() => window.print(), 'teste_manual');
+      imprimirMonitorado(() => PRINT_ORIGINAL(), 'teste_manual');
     } finally {
       document.body.classList.remove('print-mode-health-test');
     }
@@ -153,6 +177,8 @@
 
   function iniciar() {
     garantirInterface();
+    instalarMonitorGlobal();
+    document.addEventListener('click', protegerCliqueDeEnvio, true);
     window.addEventListener('focus', atualizarAviso);
     document.addEventListener('visibilitychange', () => {
       if (document.visibilityState === 'visible') atualizarAviso();
