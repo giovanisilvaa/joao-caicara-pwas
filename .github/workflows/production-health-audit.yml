@@ -2,7 +2,10 @@ name: Production Health Audit
 
 on:
   push:
-    branches: [chore/health-audit-20260829]
+    branches: [main]
+  schedule:
+    - cron: '17 * * * *'
+  workflow_dispatch:
 
 permissions:
   contents: read
