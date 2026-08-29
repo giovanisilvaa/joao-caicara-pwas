@@ -1,9 +1,9 @@
-const CACHE_NAME = 'joao-caicara-pdv-v28-report-v29-live-v30-print-v31-menu-v32';
+const CACHE_NAME = 'joao-caicara-pdv-v28-report-v29-live-v30-print-v31-menu-v32-half-v33';
 const AUTH_SESSION_ASSET = '/auth-session-isolation.js?v=20';
 const MESA_ATOMIC_ASSET = '/mesa-atomic.js?v=38';
 const MESA_CONCURRENCY_ASSET = '/pdv/' + 'mesa-concurrency.js?v=40';
 const MENU_ORDER_OPTIONS_ASSET = '/menu-order-options.js?v=1';
-const SALAD_HALF_ASSET = '/menu-salad-half.js?v=1';
+const SALAD_HALF_ASSET = '/menu-salad-half.js?v=2';
 const MENU_UPDATE_ASSET = '/menu-20260828.js?v=1';
 const PDV_PRODUCTION_ASSET = '/pdv/' + 'pdv-production.js?v=40&flow=2';
 const PDV_MESAS_AUTH_ASSET = '/pdv/' + 'mesas-auth-reconnect.js?v=1';
@@ -39,7 +39,7 @@ const respostaHtmlComHotfix = async (response) => {
   if (!html.includes('/pdv/pdv-production.js')) html = html.replace('</body>', '<script src="/pdv/pdv-production.js?v=40&flow=2"></script></body>');
   if (!html.includes('/pdv/mesa-concurrency.js')) html = html.replace('</body>', '<script src="/pdv/mesa-concurrency.js?v=40"></script></body>');
   if (!html.includes('/menu-order-options.js')) html = html.replace('</body>', '<script src="/menu-order-options.js?v=1"></script></body>');
-  if (!html.includes('/menu-salad-half.js')) html = html.replace('</body>', '<script src="/menu-salad-half.js?v=1"></script></body>');
+  if (!html.includes('/menu-salad-half.js')) html = html.replace('</body>', '<script src="/menu-salad-half.js?v=2"></script></body>');
   if (!html.includes('/menu-20260828.js')) html = html.replace('</body>', '<script src="/menu-20260828.js?v=1"></script></body>');
   if (!html.includes('/pdv/pdv-auto-production-print.js')) html = html.replace('</body>', '<script src="/pdv/pdv-auto-production-print.js?v=3"></script></body>');
   if (!html.includes('/pdv/pdv-auto-close-print.js')) html = html.replace('</body>', '<script src="/pdv/pdv-auto-close-print.js?v=2"></script></body>');

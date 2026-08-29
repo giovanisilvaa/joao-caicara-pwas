@@ -1,9 +1,11 @@
-/* Meia salada — reutiliza o fluxo compartilhado de meio prato com preço de 60%. */
+/* Meio prato por categoria — saladas e aperitivos a 60%, sem alterar o cadastro no Firebase. */
 (() => {
-  if (window.MENU_SALAD_HALF_RUNTIME === 'v1') return;
-  window.MENU_SALAD_HALF_RUNTIME = 'v1';
+  if (window.MENU_SALAD_HALF_RUNTIME === 'v2') return;
+  window.MENU_SALAD_HALF_RUNTIME = 'v2';
 
   const SALAD_CATEGORY = 'saladas';
+  const APPETIZER_CATEGORY = 'aperitivos';
+  const HALF_CATEGORIES = Object.freeze([SALAD_CATEGORY, APPETIZER_CATEGORY]);
   const HALF_RATIO = 0.60;
   let decoracaoAgendada = false;
 
@@ -26,15 +28,41 @@
     return listaProdutos().find(item => String(item?.id) === String(id)) || null;
   }
 
+  function categoriaPermiteMeio(produto) {
+    return HALF_CATEGORIES.includes(String(produto?.categoria || ''));
+  }
+
   function ehSalada(produto) {
     return produto?.categoria === SALAD_CATEGORY;
   }
 
-  function precoMeiaSalada(produto) {
+  function ehAperitivo(produto) {
+    return produto?.categoria === APPETIZER_CATEGORY;
+  }
+
+  function precoMeioCategoria(produto) {
     try {
       if (window.MenuOrderOptions?.precoMeio) return window.MenuOrderOptions.precoMeio(produto);
     } catch (_) {}
     return Math.round((Number(produto?.preco) || 0) * HALF_RATIO * 100) / 100;
+  }
+
+  // Compatibilidade com a API criada para saladas na versão anterior.
+  const precoMeiaSalada = precoMeioCategoria;
+
+  function rotulos(produto) {
+    if (ehSalada(produto)) {
+      return {
+        botao: '½ Meia salada',
+        titulo: 'Meia salada',
+        detalhe: '60% da salada normal'
+      };
+    }
+    return {
+      botao: '½ Meio prato',
+      titulo: 'Meio prato',
+      detalhe: '60% do aperitivo normal'
+    };
   }
 
   function idProdutoDoCard(card) {
@@ -44,19 +72,22 @@
     return match ? String(match[1]).replace(/['"]/g, '').trim() : '';
   }
 
-  function abrirMeiaSalada(produto) {
-    if (!ehSalada(produto)) return;
+  function abrirMeioCategoria(produto) {
+    if (!categoriaPermiteMeio(produto)) return;
     if (!window.MenuOrderOptions?.abrirOpcoes) {
       alert('As opções do cardápio ainda estão carregando. Tente novamente em instantes.');
       return;
     }
 
-    // O módulo original habilita meio prato por `servePara2`. Para a salada usamos
-    // uma cópia somente da interface, sem alterar o produto cadastrado no Firebase.
+    // O fluxo compartilhado habilita meio prato por `servePara2`. Para saladas e
+    // aperitivos que não usam essa flag, enviamos uma cópia apenas da interface.
+    // O produto original no Firebase permanece intacto.
     const produtoCompat = {
       ...produto,
       servePara2: true,
-      meiaSaladaPermitida: true,
+      meioCategoriaPermitido: true,
+      meiaSaladaPermitida: ehSalada(produto),
+      meioAperitivoPermitido: ehAperitivo(produto),
       servePara2Original: produto.servePara2 === true
     };
 
@@ -66,22 +97,29 @@
       const modal = document.getElementById('menu-order-options-modal');
       if (!modal?.classList.contains('open')) return;
 
+      const texto = rotulos(produto);
       const titulo = modal.querySelector('#menu-order-title');
       const preco = modal.querySelector('#menu-order-price');
       const modos = modal.querySelector('#menu-order-modes');
-      if (titulo) titulo.textContent = `${produto.nome} — Meia salada`;
-      if (preco) preco.textContent = `${moeda(precoMeiaSalada(produto))} · 60% da salada normal`;
+      if (titulo) titulo.textContent = `${produto.nome} — ${texto.titulo}`;
+      if (preco) preco.textContent = `${moeda(precoMeioCategoria(produto))} · ${texto.detalhe}`;
       if (modos) {
         modos.style.display = 'flex';
-        modos.innerHTML = '<button type="button" class="active" disabled>½ Meia salada · 60%</button>';
+        modos.innerHTML = `<button type="button" class="active" disabled>${texto.botao} · 60%</button>`;
       }
     });
   }
 
+  const abrirMeiaSalada = abrirMeioCategoria;
+
   function decorarCard(card) {
-    if (!card || card.querySelector('[data-menu-salad-half]')) return;
+    if (!card || card.querySelector('[data-menu-category-half]')) return;
     const produto = produtoPorId(idProdutoDoCard(card));
-    if (!ehSalada(produto)) return;
+    if (!categoriaPermiteMeio(produto)) return;
+
+    // Produtos que já são "servePara2" recebem o botão de meio prato do módulo
+    // compartilhado. Não criamos um segundo botão para o mesmo produto.
+    if (produto.servePara2 === true && card.querySelector('[data-menu-action="half"]')) return;
 
     let acoes = card.querySelector('.menu-opt-actions');
     if (!acoes) {
@@ -90,13 +128,17 @@
       card.appendChild(acoes);
     }
 
+    const texto = rotulos(produto);
     const botao = document.createElement('span');
     botao.className = 'menu-opt-action menu-opt-half';
     botao.setAttribute('role', 'button');
     botao.setAttribute('tabindex', '0');
-    botao.dataset.menuSaladHalf = '1';
+    botao.dataset.menuCategoryHalf = '1';
+    // Mantém o atributo anterior para compatibilidade com instalações já abertas.
+    if (ehSalada(produto)) botao.dataset.menuSaladHalf = '1';
+    if (ehAperitivo(produto)) botao.dataset.menuAppetizerHalf = '1';
     botao.dataset.produtoId = String(produto.id);
-    botao.textContent = `½ Meia salada · ${moeda(precoMeiaSalada(produto))}`;
+    botao.textContent = `${texto.botao} · ${moeda(precoMeioCategoria(produto))}`;
     acoes.appendChild(botao);
   }
 
@@ -112,16 +154,16 @@
   }
 
   document.addEventListener('click', event => {
-    const alvo = event.target instanceof Element ? event.target.closest('[data-menu-salad-half]') : null;
+    const alvo = event.target instanceof Element ? event.target.closest('[data-menu-category-half]') : null;
     if (!alvo) return;
     event.preventDefault();
     event.stopPropagation();
     event.stopImmediatePropagation();
-    abrirMeiaSalada(produtoPorId(alvo.dataset.produtoId));
+    abrirMeioCategoria(produtoPorId(alvo.dataset.produtoId));
   }, true);
 
   document.addEventListener('keydown', event => {
-    const alvo = event.target instanceof Element ? event.target.closest('[data-menu-salad-half]') : null;
+    const alvo = event.target instanceof Element ? event.target.closest('[data-menu-category-half]') : null;
     if (!alvo || (event.key !== 'Enter' && event.key !== ' ')) return;
     event.preventDefault();
     alvo.click();
@@ -135,9 +177,15 @@
 
   window.MenuSaladHalf = Object.freeze({
     SALAD_CATEGORY,
+    APPETIZER_CATEGORY,
+    HALF_CATEGORIES,
     HALF_RATIO,
+    categoriaPermiteMeio,
     ehSalada,
+    ehAperitivo,
+    precoMeioCategoria,
     precoMeiaSalada,
+    abrirMeioCategoria,
     abrirMeiaSalada,
     decorar: agendarDecoracao
   });
