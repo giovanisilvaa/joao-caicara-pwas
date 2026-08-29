@@ -135,6 +135,7 @@ jobs:
           verificar_arquivo '/garcom/service-worker.js' 'client/public/garcom/service-worker.js'
           verificar_arquivo '/pwa-live-update.js' 'client/public/pwa-live-update.js'
           verificar_arquivo '/menu-20260828.js' 'client/public/menu-20260828.js'
+          verificar_arquivo '/menu-salad-half.js' 'client/public/menu-salad-half.js'
           verificar_arquivo '/pdv/' 'client/public/pdv/index.html'
           verificar_arquivo '/garcom/' 'client/public/garcom/index.html'
 
