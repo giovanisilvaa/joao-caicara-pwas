@@ -31,13 +31,14 @@ jobs:
         run: |
           set -euo pipefail
           BASE='https://joaocaicaratradicao.web.app'
-          for path in /pdv/ /garcom/ /pdv/service-worker.js /garcom/service-worker.js /menu-20260828.js; do
+          for path in /pdv/ /garcom/ /pdv/service-worker.js /garcom/service-worker.js /menu-20260828.js /menu-salad-half.js; do
             curl --fail --silent --show-error -H 'Cache-Control: no-cache' "${BASE}${path}?health=${GITHUB_SHA}" -o "/tmp/$(echo "$path" | tr '/' '_').out"
             echo "HTTP OK: ${path}"
           done
           cmp -s client/public/pdv/service-worker.js /tmp/_pdv_service-worker.js.out
           cmp -s client/public/garcom/service-worker.js /tmp/_garcom_service-worker.js.out
           cmp -s client/public/menu-20260828.js /tmp/_menu-20260828.js.out
+          cmp -s client/public/menu-salad-half.js /tmp/_menu-salad-half.js.out
           for path in /pdv/ /garcom/ /pdv/service-worker.js /garcom/service-worker.js; do
             headers="$(curl --fail --silent --show-error --head -H 'Cache-Control: no-cache' "${BASE}${path}?headers=${GITHUB_SHA}")"
             printf '%s\n' "$headers" | grep -qi '^cache-control:.*no-store'
