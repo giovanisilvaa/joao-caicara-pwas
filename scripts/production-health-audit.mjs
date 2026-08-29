@@ -54,14 +54,16 @@ else {
   }
 }
 
-const mesasObj = mesas && typeof mesas === 'object' ? mesas : {};
+const entradasMesas = Array.isArray(mesas)
+  ? mesas.map((valor, indice) => [String(indice), valor]).filter(([, valor]) => valor != null)
+  : (mesas && typeof mesas === 'object' ? Object.entries(mesas).filter(([, valor]) => valor != null) : []);
 let mesasAbertas = 0;
 let itensAbertos = 0;
 let itensNovos = 0;
 let bloqueiosAtivos = 0;
 const enviosAbertos = [];
 
-for (const [chave, valor] of Object.entries(mesasObj)) {
+for (const [chave, valor] of entradasMesas) {
   const numero = num(chave);
   if (!mesasValidas.has(numero)) erro(`mesas: chave inválida ${chave}`);
   if (!valor || typeof valor !== 'object') { erro(`mesas/${chave}: registro inválido`); continue; }
@@ -98,18 +100,15 @@ for (const [chave, valor] of Object.entries(mesasObj)) {
 
 const pedidosLista = arr(pedidos);
 const combinacoesPedido = new Set();
-let pedidosInvalidos = 0;
 for (const pedido of pedidosLista) {
   const mesa = num(pedido?.mesa);
   const setor = String(pedido?.setor || '');
   const status = String(pedido?.status || '');
   const itens = arr(pedido?.itens);
-  let invalido = false;
-  if (!mesasValidas.has(mesa)) { erro('pedidosProducao: pedido com mesa inválida'); invalido = true; }
-  if (!['cozinha','bar'].includes(setor)) { erro('pedidosProducao: pedido com setor inválido'); invalido = true; }
-  if (!status) { erro('pedidosProducao: pedido sem status'); invalido = true; }
-  if (!itens.length) { erro('pedidosProducao: pedido sem itens'); invalido = true; }
-  if (invalido) pedidosInvalidos++;
+  if (!mesasValidas.has(mesa)) erro('pedidosProducao: pedido com mesa inválida');
+  if (!['cozinha','bar'].includes(setor)) erro('pedidosProducao: pedido com setor inválido');
+  if (!status) erro('pedidosProducao: pedido sem status');
+  if (!itens.length) erro('pedidosProducao: pedido sem itens');
   if (pedido?.envioId) {
     const chave = `${pedido.envioId}|${setor}`;
     if (combinacoesPedido.has(chave)) erro('pedidosProducao: envioId/setor duplicado');
@@ -123,14 +122,11 @@ for (const envio of enviosAbertos) {
 }
 
 const vendasLista = arr(vendas);
-let vendasInvalidas = 0;
 for (const venda of vendasLista) {
   const total = num(venda?.total);
   const mesa = num(venda?.mesa);
-  let invalida = false;
-  if (!Number.isFinite(total) || total < 0) { erro('vendas: registro com total inválido'); invalida = true; }
-  if (!Number.isFinite(mesa)) { erro('vendas: registro sem mesa numérica'); invalida = true; }
-  if (invalida) vendasInvalidas++;
+  if (!Number.isFinite(total) || total < 0) erro('vendas: registro com total inválido');
+  if (!Number.isFinite(mesa)) erro('vendas: registro sem mesa numérica');
 }
 
 console.log('=== HEALTH AUDIT PRODUÇÃO — SOMENTE LEITURA ===');
