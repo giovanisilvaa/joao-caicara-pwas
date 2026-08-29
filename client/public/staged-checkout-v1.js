@@ -223,7 +223,7 @@
       window.abrirFechamentoG = fecharParaConferencia;
       window.confirmarFechamentoG = finalizarProtegido;
     } else {
-      ['adicionarProduto','alterarQtdItem','editarObsItem','editarPrecoItem','transferirMesa','enviarProducaoCompletaPdv','atualizarNomeCliente'].forEach(nome => bloquearMutacao(nome));
+      ['adicionarProduto','alterarQtdItem','editarObsItem','editarPrecoItem','limparMesa','transferirMesa','imprimirProducao','enviarProducaoCompletaPdv','atualizarNomeCliente'].forEach(nome => bloquearMutacao(nome));
       window.abrirModalFechar = fecharParaConferencia;
       window.imprimirCaixa = finalizarProtegido;
     }
