@@ -1,0 +1,57 @@
+name: Production Health Audit
+
+on:
+  push:
+    branches: [main]
+  schedule:
+    - cron: '17 * * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  id-token: write
+
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Authenticate to Google Cloud
+        uses: google-github-actions/auth@v2
+        with:
+          workload_identity_provider: projects/777982220663/locations/global/workloadIdentityPools/github-actions-jo-o-cai-ara/providers/github
+          service_account: firebase-adminsdk-fbsvc@joaocaicaratradicao.iam.gserviceaccount.com
+          create_credentials_file: true
+          export_environment_variables: true
+
+      - name: Verify published PDV and Garcom
+        shell: bash
+        run: |
+          set -euo pipefail
+          BASE='https://joaocaicaratradicao.web.app'
+          for path in /pdv/ /garcom/ /pdv/service-worker.js /garcom/service-worker.js /menu-20260828.js; do
+            curl --fail --silent --show-error -H 'Cache-Control: no-cache' "${BASE}${path}?health=${GITHUB_SHA}" -o "/tmp/$(echo "$path" | tr '/' '_').out"
+            echo "HTTP OK: ${path}"
+          done
+          cmp -s client/public/pdv/service-worker.js /tmp/_pdv_service-worker.js.out
+          cmp -s client/public/garcom/service-worker.js /tmp/_garcom_service-worker.js.out
+          cmp -s client/public/menu-20260828.js /tmp/_menu-20260828.js.out
+          for path in /pdv/ /garcom/ /pdv/service-worker.js /garcom/service-worker.js; do
+            headers="$(curl --fail --silent --show-error --head -H 'Cache-Control: no-cache' "${BASE}${path}?headers=${GITHUB_SHA}")"
+            printf '%s\n' "$headers" | grep -qi '^cache-control:.*no-store'
+            echo "NO-STORE OK: ${path}"
+          done
+
+      - name: Read Firebase production state
+        shell: bash
+        run: |
+          set -euo pipefail
+          npx firebase-tools@latest database:get /cardapio --instance joaocaicaratradicao-default-rtdb --project joaocaicaratradicao --non-interactive > /tmp/cardapio.json
+          npx firebase-tools@latest database:get /mesas --instance joaocaicaratradicao-default-rtdb --project joaocaicaratradicao --non-interactive > /tmp/mesas.json
+          npx firebase-tools@latest database:get /pedidosProducao --instance joaocaicaratradicao-default-rtdb --project joaocaicaratradicao --non-interactive > /tmp/pedidos.json
+          npx firebase-tools@latest database:get /vendas --instance joaocaicaratradicao-default-rtdb --project joaocaicaratradicao --non-interactive > /tmp/vendas.json
+
+      - name: Validate synchronization and invariants
+        run: node scripts/production-health-audit.mjs /tmp/cardapio.json /tmp/mesas.json /tmp/pedidos.json /tmp/vendas.json
