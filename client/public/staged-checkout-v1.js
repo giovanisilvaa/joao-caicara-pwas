@@ -30,6 +30,10 @@
     return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(Number(valor) || 0);
   }
 
+  function setTexto(elemento, texto) {
+    if (elemento && elemento.textContent !== texto) elemento.textContent = texto;
+  }
+
   function taxaAtiva() {
     if (isGarcom) return window.GarcomTaxaServico?.ativa !== false;
     return true;
@@ -57,30 +61,20 @@
     agendarInterface();
   }
 
-  async function auditar(acao, numero, extra = {}) {
-    try {
-      const ref = db.ref('auditoria').push();
-      await ref.set({ acao, mesa: Number(numero), origem, criadoEm: Date.now(), ...clone(extra) });
-    } catch (erro) {
-      console.warn('Operação concluída, mas a auditoria complementar falhou:', erro);
-    }
-  }
-
   function imprimirConferenciaPdv(numero, mesa, resumo) {
     if (isGarcom) return;
     const ids = ['caixa-mesa','caixa-cliente','caixa-data','caixa-detalhe-pgto','caixa-subtotal-valor','caixa-total-valor','caixa-itens'];
     if (!ids.every(id => document.getElementById(id))) return;
     try {
-      document.getElementById('caixa-mesa').innerText = numero;
-      document.getElementById('caixa-cliente').innerText = mesa.cliente || 'Não informado';
-      document.getElementById('caixa-data').innerText = new Date().toLocaleString('pt-BR');
+      setTexto(document.getElementById('caixa-mesa'), String(numero));
+      setTexto(document.getElementById('caixa-cliente'), mesa.cliente || 'Não informado');
+      setTexto(document.getElementById('caixa-data'), new Date().toLocaleString('pt-BR'));
       document.getElementById('caixa-detalhe-pgto').innerHTML = '<strong>CONTA PARA CONFERÊNCIA</strong><br>Pagamento ainda não finalizado.<br>A mesa continua ocupada.';
-      document.getElementById('caixa-subtotal-valor').innerText = moeda(resumo.subtotal);
+      setTexto(document.getElementById('caixa-subtotal-valor'), moeda(resumo.subtotal));
       const linhaTaxa = document.getElementById('caixa-linha-taxa');
       if (linhaTaxa) linhaTaxa.style.display = resumo.taxa > 0 ? 'flex' : 'none';
-      const taxaValor = document.getElementById('caixa-taxa-valor');
-      if (taxaValor) taxaValor.innerText = moeda(resumo.taxa);
-      document.getElementById('caixa-total-valor').innerText = moeda(resumo.total);
+      setTexto(document.getElementById('caixa-taxa-valor'), moeda(resumo.taxa));
+      setTexto(document.getElementById('caixa-total-valor'), moeda(resumo.total));
       document.getElementById('caixa-itens').innerHTML = (mesa.itens || []).map(item =>
         `<div class="t-item"><span class="t-item-name">${Number(item.qtd) || 0}x ${String(item.nome || '')}</span><span>${moeda((Number(item.preco) || 0) * (Number(item.qtd) || 0))}</span></div>`
       ).join('');
@@ -194,10 +188,9 @@
       if (isGarcom) {
         const modal = document.getElementById('modal-fechar-g');
         const titulo = modal?.querySelector('h3,h2');
-        if (titulo) titulo.textContent = 'Finalizar pagamento e liberar mesa';
+        setTexto(titulo, 'Finalizar pagamento e liberar mesa');
       } else {
-        const botao = document.getElementById('btn-confirmar-pagamento');
-        if (botao) botao.textContent = 'FINALIZAR PAGAMENTO E LIBERAR MESA';
+        setTexto(document.getElementById('btn-confirmar-pagamento'), 'FINALIZAR PAGAMENTO E LIBERAR MESA');
       }
     }, 0);
   }
@@ -275,15 +268,16 @@
     banner.classList.toggle('open', fechada);
     if (fechada) {
       const resumo = mesa.fechamentoPendente || totais(mesa);
-      const txt = banner.querySelector('.staged-account-text');
-      if (txt) txt.textContent = `Mesa ${numero} · Total para conferência: ${moeda(resumo.total)}. A mesa continua ocupada e nenhum pagamento foi registrado ainda.`;
+      const texto = `Mesa ${numero} · Total para conferência: ${moeda(resumo.total)}. A mesa continua ocupada e nenhum pagamento foi registrado ainda.`;
+      setTexto(banner.querySelector('.staged-account-text'), texto);
     }
     const botao = isGarcom
       ? document.querySelector('.btn-fechar-g[onclick*="abrirFechamentoG"]')
       : document.querySelector('.btn-close[onclick*="abrirModalFechar"]');
     if (botao) {
       botao.classList.toggle('staged-pending', fechada);
-      botao.textContent = fechada ? 'FINALIZAR PAGAMENTO' : (isGarcom ? 'Fechar conta' : 'FECHAR CONTA (CONFERÊNCIA)');
+      const rotulo = fechada ? 'FINALIZAR PAGAMENTO' : (isGarcom ? 'Fechar conta' : 'FECHAR CONTA (CONFERÊNCIA)');
+      setTexto(botao, rotulo);
     }
   }
 
