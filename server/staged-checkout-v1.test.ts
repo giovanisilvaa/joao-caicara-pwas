@@ -35,7 +35,7 @@ describe('fechamento de conta em duas etapas', () => {
     const src = read('client/public/staged-checkout-v1.js');
     expect(src).toContain('Use “Reabrir conta” antes de alterar a comanda.');
     expect(src).toContain("['adicionarItemG','alterarQtdG','editarObsG','limparComandaG','enviarProducaoG','atualizarNomeClienteG']");
-    expect(src).toContain("['adicionarProduto','alterarQtdItem','editarObsItem','editarPrecoItem','transferirMesa','enviarProducaoCompletaPdv','atualizarNomeCliente']");
+    expect(src).toContain("['adicionarProduto','alterarQtdItem','editarObsItem','editarPrecoItem','limparMesa','transferirMesa','imprimirProducao','enviarProducaoCompletaPdv','atualizarNomeCliente']");
   });
 
   it('mantém as mesas existentes compatíveis sem migração ou reescrita em massa', () => {
