@@ -138,6 +138,7 @@ jobs:
           verificar_arquivo '/menu-salad-half.js' 'client/public/menu-salad-half.js'
           verificar_arquivo '/item-cancellation-v2.js' 'client/public/item-cancellation-v2.js'
           verificar_arquivo '/pdv/pdv-cancellation-print.js' 'client/public/pdv/pdv-cancellation-print.js'
+          verificar_arquivo '/staged-checkout-v1.js' 'client/public/staged-checkout-v1.js'
           verificar_arquivo '/pdv/' 'client/public/pdv/index.html'
           verificar_arquivo '/garcom/' 'client/public/garcom/index.html'
 
