@@ -6,7 +6,7 @@ const read = (path: string) => fs.readFileSync(path, "utf8");
 describe("atualizacao do PWA do Garcom", () => {
   it("invalida o cache antigo ao publicar uma nova versao", () => {
     const sw = read("client/public/garcom/service-worker.js");
-    expect(sw).toContain("const CACHE_NAME = 'joao-caicara-garcom-v15-fresh-20260826-live-v18-menu-v19-half-v20'");
+    expect(sw).toContain("const CACHE_NAME = 'joao-caicara-garcom-v15-fresh-20260826-live-v18-menu-v19-half-v20-cancel-v21'");
   });
 
   it("recarrega clientes do Garcom quando o novo service worker assume", () => {
@@ -39,5 +39,12 @@ describe("atualizacao do PWA do Garcom", () => {
     const sw = read("client/public/garcom/service-worker.js");
     expect(sw).toContain("const SALAD_HALF_ASSET = '/menu-salad-half.js?v=2'");
     expect(sw).toContain('<script src="/menu-salad-half.js?v=2"></script>');
+  });
+
+  it("publica o cancelamento atomico depois da concorrencia da mesa", () => {
+    const sw = read("client/public/garcom/service-worker.js");
+    expect(sw).toContain("const ITEM_CANCELLATION_ASSET = '/item-cancellation-v2.js?v=2'");
+    expect(sw).toContain('<script src="/item-cancellation-v2.js?v=2"></script>');
+    expect(sw.indexOf('MESA_CONCURRENCY_ASSET')).toBeLessThan(sw.indexOf('ITEM_CANCELLATION_ASSET'));
   });
 });
