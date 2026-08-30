@@ -28,29 +28,32 @@ describe("seguranca do login compartilhado do garcom", () => {
     expect(login).not.toContain("sessionStorage.setItem('senha");
   });
 
-  it("usa persistencia local do Firebase apenas no fluxo do garcom", () => {
+  it("isola a persistencia local em uma segunda instancia Firebase", () => {
     const login = read("client/public/garcom/shared-login.js");
+    expect(login).toContain("APP_AUTH_EXPEDIENTE = 'garcom-expediente-auth'");
+    expect(login).toContain("sdk.app(APP_AUTH_EXPEDIENTE)");
+    expect(login).toContain("sdk.initializeApp(config, APP_AUTH_EXPEDIENTE)");
+    expect(login).toContain("authExpedienteCache = app.auth()");
     expect(login).toContain("Persistence?.LOCAL");
     expect(login).toContain("firebaseAuth.setPersistence(modoLocal)");
-    expect(login).toContain("FirebaseAuthSessionIsolationReady");
-    expect(login).toContain("await configurarPersistenciaExpediente()");
+    expect(login).not.toContain("FirebaseAuthSessionIsolationReady");
   });
 
-  it("sair encerra identidade local e autenticacao Firebase", () => {
+  it("sair encerra somente a identidade persistente do expediente", () => {
     const login = read("client/public/garcom/shared-login.js");
     expect(login).toContain("botao.textContent = 'Sair'");
     expect(login).toContain("async function sairGarcom()");
     expect(login).toContain("removerNomeDaSessao()");
-    expect(login).toContain("await auth()?.signOut?.()");
+    expect(login).toContain("await authExpediente()?.signOut?.()");
     expect(login).toContain("sair: sairGarcom");
   });
 
-  it("forca carregamento da versao persistente do login e protege o bootstrap anonimo", () => {
+  it("mantem o Firebase principal do Garcom com a isolacao por sessao existente", () => {
     const sw = read("client/public/garcom/service-worker.js");
+    expect(sw).toContain("AUTH_SESSION_ASSET = '/auth-session-isolation.js?v=20'");
     expect(sw).toContain("session-v26");
     expect(sw).toContain("/garcom/shared-login.js?v=18");
-    expect(sw).toContain("protegerBootstrapAuthGarcom");
-    expect(sw).toContain("pararAuthInicialG = firebase.auth().onAuthStateChanged");
-    expect(sw).toContain("if (usuarioInicial) return");
+    expect(sw).toContain("replaceAll('<script src=\"/garcom/shared-login.js?v=17\"></script>', '')");
+    expect(sw).not.toContain("protegerBootstrapAuthGarcom");
   });
 });
