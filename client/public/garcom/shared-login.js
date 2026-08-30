@@ -3,6 +3,7 @@
   const LOGIN_COMPARTILHADO = 'garcom';
   const EMAIL_FIREBASE = 'garcom@acesso.joaocaicara.app';
   const CHAVE_NOME_SESSAO = 'joao_caicara_garcom_nome_sessao';
+  const CHAVE_ENTRADA_SESSAO = 'joao_caicara_garcom_entrada_sessao';
   const ESTADO = {
     autenticando: false,
     entradaEm: Date.now()
@@ -15,23 +16,81 @@
   }
 
   function nomeDaSessao() {
-    try { return limparNome(sessionStorage.getItem(CHAVE_NOME_SESSAO)); }
-    catch (_) { return ''; }
+    try {
+      const persistido = limparNome(localStorage.getItem(CHAVE_NOME_SESSAO));
+      if (persistido) return persistido;
+    } catch (_) {}
+    try {
+      const legado = limparNome(sessionStorage.getItem(CHAVE_NOME_SESSAO));
+      if (legado) {
+        try { localStorage.setItem(CHAVE_NOME_SESSAO, legado); } catch (_) {}
+        try { sessionStorage.removeItem(CHAVE_NOME_SESSAO); } catch (_) {}
+        return legado;
+      }
+    } catch (_) {}
+    return '';
+  }
+
+  function entradaDaSessao() {
+    try {
+      const valor = Number(localStorage.getItem(CHAVE_ENTRADA_SESSAO));
+      if (Number.isFinite(valor) && valor > 0) return valor;
+    } catch (_) {}
+    return Date.now();
   }
 
   function salvarNomeDaSessao(nome) {
     const limpo = limparNome(nome);
     if (!limpo) return false;
-    try { sessionStorage.setItem(CHAVE_NOME_SESSAO, limpo); } catch (_) {}
-    return true;
+    const entradaEm = Date.now();
+    let persistido = false;
+    try {
+      localStorage.setItem(CHAVE_NOME_SESSAO, limpo);
+      localStorage.setItem(CHAVE_ENTRADA_SESSAO, String(entradaEm));
+      persistido = true;
+    } catch (_) {}
+    if (!persistido) {
+      try {
+        sessionStorage.setItem(CHAVE_NOME_SESSAO, limpo);
+        persistido = true;
+      } catch (_) {}
+    }
+    ESTADO.entradaEm = entradaEm;
+    return persistido;
   }
 
   function removerNomeDaSessao() {
+    try {
+      localStorage.removeItem(CHAVE_NOME_SESSAO);
+      localStorage.removeItem(CHAVE_ENTRADA_SESSAO);
+    } catch (_) {}
     try { sessionStorage.removeItem(CHAVE_NOME_SESSAO); } catch (_) {}
   }
 
   function usuarioEhCompartilhado(user) {
     return Boolean(user && !user.isAnonymous && String(user.email || '').toLowerCase() === EMAIL_FIREBASE);
+  }
+
+  async function configurarPersistenciaExpediente() {
+    const firebaseAuth = auth();
+    const modoLocal = window.firebase?.auth?.Auth?.Persistence?.LOCAL;
+    if (!firebaseAuth || !modoLocal || typeof firebaseAuth.setPersistence !== 'function') {
+      throw new Error('Persistência local do Firebase Auth indisponível');
+    }
+    await firebaseAuth.setPersistence(modoLocal);
+    return true;
+  }
+
+  async function prepararPersistenciaExpediente() {
+    try {
+      const isolamento = window.FirebaseAuthSessionIsolationReady;
+      if (isolamento && typeof isolamento.then === 'function') await isolamento;
+      await configurarPersistenciaExpediente();
+      return true;
+    } catch (erro) {
+      console.warn('Não foi possível ativar a persistência do expediente do Garçom:', erro);
+      return false;
+    }
   }
 
   function sessaoAtual() {
@@ -61,16 +120,16 @@
     };
   }
 
-  function garantirBotaoTrocarGarcom() {
+  function garantirBotaoSairGarcom() {
     const usuario = document.getElementById('usuario-logado-g');
-    if (!usuario || document.getElementById('trocar-garcom-g')) return;
+    if (!usuario || document.getElementById('sair-garcom-g')) return;
     const botao = document.createElement('button');
-    botao.id = 'trocar-garcom-g';
+    botao.id = 'sair-garcom-g';
     botao.type = 'button';
-    botao.textContent = 'Trocar';
-    botao.title = 'Trocar garçom neste aparelho';
+    botao.textContent = 'Sair';
+    botao.title = 'Encerrar o expediente e sair deste aparelho';
     botao.style.cssText = 'border:0;border-radius:999px;padding:6px 8px;font-size:.68rem;font-weight:800;cursor:pointer;background:rgba(255,255,255,.15);color:#fff;';
-    botao.addEventListener('click', () => trocarGarcom());
+    botao.addEventListener('click', () => sairGarcom());
     usuario.insertAdjacentElement('afterend', botao);
   }
 
@@ -83,8 +142,8 @@
       el.textContent = usuarioEhCompartilhado(user) && nome ? nome : 'Bloqueado';
       el.title = usuarioEhCompartilhado(user) && nome ? `Garçom: ${nome}` : 'Garçom precisa entrar com nome e senha da equipe';
     }
-    if (usuarioEhCompartilhado(user) && nome) garantirBotaoTrocarGarcom();
-    else document.getElementById('trocar-garcom-g')?.remove();
+    if (usuarioEhCompartilhado(user) && nome) garantirBotaoSairGarcom();
+    else document.getElementById('sair-garcom-g')?.remove();
   }
 
   function criarEstilos() {
@@ -124,6 +183,7 @@
   async function tentarEntrar(senha) {
     const firebaseAuth = auth();
     if (!firebaseAuth) throw new Error('Firebase Auth indisponível');
+    await configurarPersistenciaExpediente();
     return firebaseAuth.signInWithEmailAndPassword(EMAIL_FIREBASE, senha);
   }
 
@@ -135,7 +195,7 @@
     overlay.innerHTML = `
       <div id="garcom-login-card" role="dialog" aria-modal="true" aria-labelledby="garcom-login-title">
         <h2 id="garcom-login-title">Acesso do Garçom</h2>
-        <p>Digite seu nome e use a senha única da equipe. Seu nome será registrado nas comandas e pedidos desta sessão.</p>
+        <p>Digite seu nome e use a senha única da equipe. O acesso ficará ativo neste aparelho durante o expediente até você tocar em Sair.</p>
         <label for="garcom-login-name">Seu nome</label>
         <input id="garcom-login-name" maxlength="60" autocomplete="name" placeholder="Ex.: João">
         <label for="garcom-login-password">Senha da equipe</label>
@@ -179,7 +239,6 @@
           throw new Error('Conta autenticada não é a conta compartilhada esperada');
         }
         salvarNomeDaSessao(nome);
-        ESTADO.entradaEm = Date.now();
         esconderLogin();
       } catch (erro) {
         console.warn('Falha no login compartilhado do Garçom:', erro);
@@ -196,19 +255,29 @@
     setTimeout(() => (nomeEl?.value ? senhaEl : nomeEl)?.focus(), 50);
   }
 
-  function trocarGarcom() {
+  async function sairGarcom() {
     removerNomeDaSessao();
     ESTADO.entradaEm = Date.now();
+    try { await auth()?.signOut?.(); }
+    catch (erro) { console.warn('Não foi possível encerrar a sessão Firebase do Garçom:', erro); }
     instalarIdentidadeOperacional();
     mostrarLogin();
   }
 
-  function iniciar() {
+  function trocarGarcom() {
+    return sairGarcom();
+  }
+
+  async function iniciar() {
     const firebaseAuth = auth();
     if (!firebaseAuth || typeof firebaseAuth.onAuthStateChanged !== 'function') {
       setTimeout(iniciar, 150);
       return;
     }
+
+    ESTADO.entradaEm = entradaDaSessao();
+    await prepararPersistenciaExpediente();
+
     firebaseAuth.onAuthStateChanged(user => {
       instalarIdentidadeOperacional();
       if (usuarioEhCompartilhado(user) && nomeDaSessao()) {
@@ -226,7 +295,9 @@
     emailInterno: EMAIL_FIREBASE,
     sessaoAtual,
     mostrarLogin,
+    sair: sairGarcom,
     trocarGarcom,
+    prepararPersistenciaExpediente,
     get nomeAtual() { return nomeDaSessao(); },
     get autenticado() { return usuarioEhCompartilhado(auth()?.currentUser) && Boolean(nomeDaSessao()); },
     get uid() { return usuarioEhCompartilhado(auth()?.currentUser) ? auth().currentUser.uid : null; }
