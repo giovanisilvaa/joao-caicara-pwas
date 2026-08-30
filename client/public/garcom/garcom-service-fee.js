@@ -37,12 +37,38 @@
     if (recebido) recebido.value = total.toFixed(2);
   }
 
+  function prepararModalPagamento() {
+    garantirUi();
+    const chk = document.getElementById('chk-taxa-servico-g');
+    if (chk) chk.checked = true;
+    taxaAtiva = true;
+    atualizarValores();
+  }
+
+  function observarAberturaModal() {
+    const overlay = document.getElementById('modal-fechar-g');
+    if (!overlay || overlay.__taxaServicoObserver) return;
+    let estavaAberto = false;
+    const sincronizar = () => {
+      const aberto = getComputedStyle(overlay).display !== 'none';
+      if (aberto && !estavaAberto) setTimeout(prepararModalPagamento, 0);
+      estavaAberto = aberto;
+    };
+    const observer = new MutationObserver(sincronizar);
+    observer.observe(overlay, { attributes: true, attributeFilter: ['style', 'class'] });
+    overlay.__taxaServicoObserver = observer;
+    sincronizar();
+  }
+
   function instalarFechamento() {
     const originalAbrir = window.abrirFechamentoG;
     if (typeof originalAbrir === 'function' && !originalAbrir.__taxa10) {
       const envolvida = function(...args) {
         const r = originalAbrir.apply(this, args);
-        setTimeout(() => { garantirUi(); const chk=document.getElementById('chk-taxa-servico-g'); if(chk) chk.checked=true; taxaAtiva=true; atualizarValores(); }, 0);
+        setTimeout(() => {
+          const overlay = document.getElementById('modal-fechar-g');
+          if (overlay && getComputedStyle(overlay).display !== 'none') prepararModalPagamento();
+        }, 0);
         return r;
       };
       envolvida.__taxa10 = true;
@@ -81,6 +107,7 @@
   function iniciar() {
     garantirUi();
     instalarFechamento();
+    observarAberturaModal();
     instalarInterceptadorVenda();
   }
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', iniciar, { once:true }); else iniciar();

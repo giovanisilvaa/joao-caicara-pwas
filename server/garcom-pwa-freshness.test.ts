@@ -6,7 +6,7 @@ const read = (path: string) => fs.readFileSync(path, "utf8");
 describe("atualizacao do PWA do Garcom", () => {
   it("invalida o cache antigo ao publicar uma nova versao", () => {
     const sw = read("client/public/garcom/service-worker.js");
-    expect(sw).toContain("const CACHE_NAME = 'joao-caicara-garcom-v15-fresh-20260826-live-v18-menu-v19-half-v20-cancel-v21-staged-v22'");
+    expect(sw).toContain("const CACHE_NAME = 'joao-caicara-garcom-v15-fresh-20260826-live-v18-menu-v19-half-v20-cancel-v21-staged-v22-closefix-v23'");
   });
 
   it("recarrega clientes do Garcom quando o novo service worker assume", () => {
@@ -53,5 +53,11 @@ describe("atualizacao do PWA do Garcom", () => {
     expect(sw).toContain("const STAGED_CHECKOUT_ASSET = '/staged-checkout-v1.js?v=1'");
     expect(sw).toContain('<script src="/staged-checkout-v1.js?v=1"></script>');
     expect(sw.indexOf('ITEM_CANCELLATION_ASSET')).toBeLessThan(sw.indexOf('STAGED_CHECKOUT_ASSET'));
+  });
+
+  it("força a versão corrigida da taxa de serviço no fechamento", () => {
+    const sw = read("client/public/garcom/service-worker.js");
+    expect(sw).toContain("'/garcom/garcom-service-fee.js?v=19'");
+    expect(sw).toContain('<script src="/garcom/garcom-service-fee.js?v=19"></script>');
   });
 });
