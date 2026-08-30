@@ -7,7 +7,8 @@ describe('central didatica de relatorios do PDV', () => {
   it('reutiliza a fonte e os calculos oficiais do relatorio financeiro', () => {
     const dashboard = read('client/public/pdv/report-dashboard-v1.js');
     expect(dashboard).toContain('window.PdvRelatorioFinanceiro');
-    expect(dashboard).toContain("typeof api.vendasDaData === 'function'");
+    expect(dashboard).toContain("typeof api.vendasDaData !== 'function'");
+    expect(dashboard).toContain('api.vendasDaData(data)');
     expect(dashboard).toContain("typeof api.resumir === 'function'");
     expect(dashboard).toContain('api.resumir(vendas)');
   });
@@ -30,16 +31,17 @@ describe('central didatica de relatorios do PDV', () => {
     expect(dashboard).toContain('taxa realmente registrada nas vendas');
   });
 
-  it('permite hoje, ontem e data personalizada sem alterar vendas', () => {
+  it('permite hoje, ontem e data personalizada sem escrever no Firebase', () => {
     const dashboard = read('client/public/pdv/report-dashboard-v1.js');
     expect(dashboard).toContain('data-rdu-data="hoje"');
     expect(dashboard).toContain('data-rdu-data="ontem"');
     expect(dashboard).toContain('type="date" id="rdu-data"');
     expect(dashboard).not.toContain('db.ref(');
-    expect(dashboard).not.toContain('.set(');
-    expect(dashboard).not.toContain('.update(');
-    expect(dashboard).not.toContain('.remove(');
-    expect(dashboard).not.toContain('.transaction(');
+    expect(dashboard).not.toContain('firebase.database(');
+    expect(dashboard).not.toContain("ref('vendas')");
+    expect(dashboard).not.toContain("ref('/vendas')");
+    expect(dashboard).not.toContain("ref('mesas')");
+    expect(dashboard).not.toContain("ref('/mesas')");
   });
 
   it('mantem historico e impressao existentes como fonte operacional', () => {
