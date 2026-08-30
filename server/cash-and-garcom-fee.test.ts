@@ -22,6 +22,6 @@ describe("zeragem do caixa e taxa do garcom", () => {
     expect(js).toContain("payload.total = totalComTaxa");
     expect(js).toContain("payload.taxaServicoPercentual");
     const sw = read("client/public/garcom/service-worker.js");
-    expect(sw).toContain("/garcom/garcom-service-fee.js?v=18");
+    expect(sw).toContain("/garcom/garcom-service-fee.js?v=19");
   });
 });
