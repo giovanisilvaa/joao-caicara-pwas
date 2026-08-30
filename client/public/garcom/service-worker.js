@@ -1,4 +1,4 @@
-const CACHE_NAME = 'joao-caicara-garcom-v15-fresh-20260826-live-v18-menu-v19-half-v20-cancel-v21-staged-v22-closefix-v23';
+const CACHE_NAME = 'joao-caicara-garcom-v15-fresh-20260826-live-v18-menu-v19-half-v20-cancel-v21-staged-v22-closefix-v23-restrict-v24';
 const AUTH_SESSION_ASSET = '/auth-session-isolation.js?v=20';
 const LOGIN_ASSET = '/garcom/shared-login.js?v=17';
 const CARDAPIO_AUTH_ASSET = '/garcom/cardapio-auth-reconnect.js?v=20';
@@ -7,11 +7,12 @@ const MESA_ATOMIC_ASSET = '/mesa-atomic.js?v=38';
 const MESA_CONCURRENCY_ASSET = '/garcom/' + 'mesa-concurrency.js?v=36';
 const ITEM_CANCELLATION_ASSET = '/item-cancellation-v2.js?v=2';
 const STAGED_CHECKOUT_ASSET = '/staged-checkout-v1.js?v=1';
+const GARCOM_RESTRICTIONS_ASSET = '/garcom/restricoes-operacionais.js?v=1';
 const MENU_ORDER_OPTIONS_ASSET = '/menu-order-options.js?v=1';
 const SALAD_HALF_ASSET = '/menu-salad-half.js?v=2';
 const MENU_UPDATE_ASSET = '/menu-20260828.js?v=1';
 const LIVE_UPDATE_ASSET = '/pwa-live-update.js?v=1';
-const APP_SHELL = ['/garcom/', '/garcom/manifest.json', AUTH_SESSION_ASSET, MESA_ATOMIC_ASSET, '/garcom/access-control.js', LOGIN_ASSET, MESAS_AUTH_ASSET, CARDAPIO_AUTH_ASSET, '/garcom/access-diagnostics.js', '/garcom/hotfix-sync.js', '/garcom/waiter-attribution.js', '/garcom/garcom-service-fee.js?v=19', '/garcom/modern-hybrid.css', '/garcom/waiter-speed.js', '/garcom/waiter-speed.css', MESA_CONCURRENCY_ASSET, ITEM_CANCELLATION_ASSET, STAGED_CHECKOUT_ASSET, MENU_ORDER_OPTIONS_ASSET, SALAD_HALF_ASSET, MENU_UPDATE_ASSET, LIVE_UPDATE_ASSET, '/tradicao-caicara-logo.webp'];
+const APP_SHELL = ['/garcom/', '/garcom/manifest.json', AUTH_SESSION_ASSET, MESA_ATOMIC_ASSET, '/garcom/access-control.js', LOGIN_ASSET, MESAS_AUTH_ASSET, CARDAPIO_AUTH_ASSET, '/garcom/access-diagnostics.js', '/garcom/hotfix-sync.js', '/garcom/waiter-attribution.js', '/garcom/garcom-service-fee.js?v=19', '/garcom/modern-hybrid.css', '/garcom/waiter-speed.js', '/garcom/waiter-speed.css', MESA_CONCURRENCY_ASSET, ITEM_CANCELLATION_ASSET, STAGED_CHECKOUT_ASSET, GARCOM_RESTRICTIONS_ASSET, MENU_ORDER_OPTIONS_ASSET, SALAD_HALF_ASSET, MENU_UPDATE_ASSET, LIVE_UPDATE_ASSET, '/tradicao-caicara-logo.webp'];
 const respostaHtmlComHotfix = async (response) => {
   let html = await response.text();
   if (!html.includes('/garcom/modern-hybrid.css')) html = html.replace('</head>', '<link rel="stylesheet" href="/garcom/modern-hybrid.css"></head>');
@@ -30,6 +31,7 @@ const respostaHtmlComHotfix = async (response) => {
   if (!html.includes('/garcom/mesa-concurrency.js')) html = html.replace('</body>', '<script src="/garcom/mesa-concurrency.js?v=36"></script></body>');
   if (!html.includes('/item-cancellation-v2.js')) html = html.replace('</body>', '<script src="/item-cancellation-v2.js?v=2"></script></body>');
   if (!html.includes('/staged-checkout-v1.js')) html = html.replace('</body>', '<script src="/staged-checkout-v1.js?v=1"></script></body>');
+  if (!html.includes('/garcom/restricoes-operacionais.js')) html = html.replace('</body>', '<script src="/garcom/restricoes-operacionais.js?v=1"></script></body>');
   if (!html.includes('/menu-order-options.js')) html = html.replace('</body>', '<script src="/menu-order-options.js?v=1"></script></body>');
   if (!html.includes('/menu-salad-half.js')) html = html.replace('</body>', '<script src="/menu-salad-half.js?v=2"></script></body>');
   if (!html.includes('/menu-20260828.js')) html = html.replace('</body>', '<script src="/menu-20260828.js?v=1"></script></body>');
