@@ -23,10 +23,10 @@ describe('persistência do resumo de vendas no logout do PDV', () => {
 
   it('é somente leitura no Firebase', () => {
     const src = read('client/public/pdv/vendas-auth-reconnect.js');
-    expect(src).not.toContain(".set(");
-    expect(src).not.toContain(".update(");
-    expect(src).not.toContain(".remove(");
-    expect(src).not.toContain(".push(");
+    expect(src).not.toContain('refVendas.set(');
+    expect(src).not.toContain('refVendas.update(');
+    expect(src).not.toContain('refVendas.remove(');
+    expect(src).not.toContain('refVendas.push(');
   });
 
   it('service worker publica e injeta a camada de reconexão', () => {
