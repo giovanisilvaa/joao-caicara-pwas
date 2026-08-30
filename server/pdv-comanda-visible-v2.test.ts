@@ -37,12 +37,12 @@ describe('comanda sempre visível no PDV', () => {
     expect(src).toContain('MutationObserver');
   });
 
-  it('service worker publica e injeta a nova camada por último', () => {
+  it('service worker publica e injeta a nova camada depois dos demais complementos', () => {
     const sw = read('client/public/pdv/service-worker.js');
     expect(sw).toContain('visible-v40');
     expect(sw).toContain("const COMANDA_VISIBLE_ASSET = '/pdv/comanda-visible-v2.js?v=2'");
     expect(sw).toContain('COMANDA_VISIBLE_ASSET');
     expect(sw).toContain('<script src="/pdv/comanda-visible-v2.js?v=2"></script>');
-    expect(sw.indexOf('/pwa-live-update.js?v=1')).toBeLessThan(sw.indexOf('/pdv/comanda-visible-v2.js?v=2'));
+    expect(sw.lastIndexOf('/pwa-live-update.js?v=1')).toBeLessThan(sw.lastIndexOf('/pdv/comanda-visible-v2.js?v=2'));
   });
 });
