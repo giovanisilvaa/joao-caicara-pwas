@@ -4,11 +4,13 @@ import fs from 'node:fs';
 const read = (path: string) => fs.readFileSync(path, 'utf8');
 
 describe('kids, observacao e meio prato nos dois sistemas', () => {
-  it('usa 60% somente para produtos que servem duas pessoas', () => {
+  it('usa 60% para pratos que servem duas pessoas e para a categoria Festival', () => {
     const modulo = read('client/public/menu-order-options.js');
     expect(modulo).toContain('const HALF_RATIO = 0.60');
     expect(modulo).toContain('Math.round((Number(produto?.preco) || 0) * HALF_RATIO * 100) / 100');
-    expect(modulo).toContain("if (!produto.servePara2) throw new Error('Este produto não permite meio prato.')");
+    expect(modulo).toContain('function permiteMeioPrato(produto)');
+    expect(modulo).toContain("return Boolean(produto?.servePara2) || String(produto?.categoria || '').trim().toLowerCase() === 'festival'");
+    expect(modulo).toContain("if (!permiteMeioPrato(produto)) throw new Error('Este produto não permite meio prato.')");
     expect(modulo).toContain('personalizado.meioPrato = true');
     expect(modulo).toContain('personalizado.percentualPreco = 60');
     expect(modulo).toContain("personalizado.nome = `${produto.nome} (Meio prato)`");
