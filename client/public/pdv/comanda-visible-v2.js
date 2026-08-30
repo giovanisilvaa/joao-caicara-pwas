@@ -1,17 +1,19 @@
-/* Comanda visível v3 — renderiza os itens diretamente na área nativa do PDV, com fallback pelo cache local. */
+/* Comanda visível v4 — renderiza os itens diretamente na área nativa do PDV, com fallback seguro pelo cache local. */
 (() => {
-  if (window.PDV_COMANDA_VISIBLE_RUNTIME === 'v3') return;
-  window.PDV_COMANDA_VISIBLE_RUNTIME = 'v3';
+  if (window.PDV_COMANDA_VISIBLE_RUNTIME === 'v4') return;
+  window.PDV_COMANDA_VISIBLE_RUNTIME = 'v4';
 
-  const STYLE_ID = 'pdv-comanda-visible-v3-style';
-  const OLD_STYLE_ID = 'pdv-comanda-visible-v2-style';
+  const STYLE_ID = 'pdv-comanda-visible-v4-style';
+  const OLD_STYLE_IDS = ['pdv-comanda-visible-v2-style', 'pdv-comanda-visible-v3-style'];
   const OLD_PANEL_ID = 'pdv-comanda-visible-v2';
   const CACHE_KEY = 'mesas_abertas_caicara_cache';
   let ultimaAssinatura = '';
   let timer = null;
 
   function limparVersaoAnterior() {
-    try { document.getElementById(OLD_STYLE_ID)?.remove(); } catch (_) {}
+    OLD_STYLE_IDS.forEach(id => {
+      try { document.getElementById(id)?.remove(); } catch (_) {}
+    });
     try { document.getElementById(OLD_PANEL_ID)?.remove(); } catch (_) {}
   }
 
@@ -88,12 +90,32 @@
     }
   }
 
+  function itensBrutos(mesa) {
+    if (!mesa || typeof mesa !== 'object') return [];
+    if (Array.isArray(mesa.itens)) return mesa.itens.filter(Boolean);
+    if (mesa.itens && typeof mesa.itens === 'object') return Object.values(mesa.itens).filter(Boolean);
+    return [];
+  }
+
+  function mesaTemConteudo(mesa) {
+    if (!mesa || typeof mesa !== 'object') return false;
+    return Boolean(
+      itensBrutos(mesa).length ||
+      String(mesa.cliente || '').trim() ||
+      mesa.abertura
+    );
+  }
+
   function dadosMesa(numero) {
     if (!numero) return null;
     const runtime = mesasDoRuntime();
-    if (runtime && runtime[numero]) return runtime[numero];
     const cache = mesasDoCache();
-    return cache[numero] || cache[String(numero)] || null;
+    const mesaRuntime = runtime?.[numero] || runtime?.[String(numero)] || null;
+    const mesaCache = cache?.[numero] || cache?.[String(numero)] || null;
+
+    if (mesaTemConteudo(mesaRuntime)) return mesaRuntime;
+    if (mesaTemConteudo(mesaCache)) return mesaCache;
+    return mesaRuntime || mesaCache || null;
   }
 
   function normalizarItens(valor) {
@@ -249,14 +271,14 @@
 
   function envolverRenderizacao() {
     try {
-      if (typeof renderizarComanda !== 'function' || renderizarComanda.__comandaVisibleV3) return;
+      if (typeof renderizarComanda !== 'function' || renderizarComanda.__comandaVisibleV4) return;
       const original = renderizarComanda;
       const envolvida = function(...args) {
         const resultado = original.apply(this, args);
         queueMicrotask(() => renderizar(true));
         return resultado;
       };
-      envolvida.__comandaVisibleV3 = true;
+      envolvida.__comandaVisibleV4 = true;
       renderizarComanda = envolvida;
       window.renderizarComanda = envolvida;
     } catch (erro) {
@@ -268,15 +290,15 @@
     const titulo = document.getElementById('mesa-titulo');
     const total = document.getElementById('total-valor');
     [titulo, total].filter(Boolean).forEach(el => {
-      if (el.__pdvComandaVisibleV3Observer) return;
+      if (el.__pdvComandaVisibleV4Observer) return;
       const observer = new MutationObserver(() => queueMicrotask(() => renderizar(true)));
       observer.observe(el, { childList: true, characterData: true, subtree: true });
-      el.__pdvComandaVisibleV3Observer = observer;
+      el.__pdvComandaVisibleV4Observer = observer;
     });
 
     try {
-      if (typeof db !== 'undefined' && db && !window.__PDV_COMANDA_VISIBLE_V3_DB__) {
-        window.__PDV_COMANDA_VISIBLE_V3_DB__ = true;
+      if (typeof db !== 'undefined' && db && !window.__PDV_COMANDA_VISIBLE_V4_DB__) {
+        window.__PDV_COMANDA_VISIBLE_V4_DB__ = true;
         db.ref('mesas').on('value', () => setTimeout(() => renderizar(true), 0));
       }
     } catch (_) {}
@@ -294,5 +316,5 @@
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', iniciar, { once: true });
   window.addEventListener('load', iniciar, { once: true });
 
-  window.PdvComandaVisibleV3 = Object.freeze({ renderizar });
+  window.PdvComandaVisibleV4 = Object.freeze({ renderizar });
 })();
