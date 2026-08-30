@@ -1,4 +1,4 @@
-const CACHE_NAME = 'joao-caicara-pdv-v28-report-v29-live-v30-print-v31-menu-v32-half-v33-cancel-v34-staged-v35-transfer-v36-reports-v37-checkoutprint-v38-comanda-v39-visible-v40-native-v41-view-v42';
+const CACHE_NAME = 'joao-caicara-pdv-v28-report-v29-live-v30-print-v31-menu-v32-half-v33-cancel-v34-staged-v35-transfer-v36-reports-v37-checkoutprint-v38-comanda-v39-visible-v40-native-v41-view-v42-sales-v43';
 const AUTH_SESSION_ASSET = '/auth-session-isolation.js?v=20';
 const MESA_ATOMIC_ASSET = '/mesa-atomic.js?v=38';
 const MESA_CONCURRENCY_ASSET = '/pdv/' + 'mesa-concurrency.js?v=40';
@@ -11,6 +11,7 @@ const MENU_UPDATE_ASSET = '/menu-20260828.js?v=1';
 const PDV_PRODUCTION_ASSET = '/pdv/' + 'pdv-production.js?v=40&flow=2';
 const PDV_MESAS_AUTH_ASSET = '/pdv/' + 'mesas-auth-reconnect.js?v=1';
 const PDV_CARDAPIO_AUTH_ASSET = '/pdv/' + 'cardapio-auth-reconnect.js?v=1';
+const PDV_VENDAS_AUTH_ASSET = '/pdv/' + 'vendas-auth-reconnect.js?v=1';
 const AUTO_PRODUCTION_PRINT_ASSET = '/pdv/' + 'pdv-auto-production-print.js?v=3';
 const CANCELLATION_PRINT_ASSET = '/pdv/pdv-cancellation-print.js?v=1';
 const AUTO_CLOSE_PRINT_ASSET = '/pdv/' + 'pdv-auto-close-print.js?v=3';
@@ -20,7 +21,7 @@ const REPORT_DASHBOARD_ASSET = '/pdv/report-dashboard-v1.js?v=1';
 const PRINT_HEALTH_ASSET = '/pdv/' + 'pdv-print-health.js?v=1';
 const COMANDA_VISIBLE_ASSET = '/pdv/comanda-visible-v2.js?v=4';
 const LIVE_UPDATE_ASSET = '/pwa-live-update.js?v=1';
-const APP_SHELL = ['/pdv/', '/pdv/manifest.json', AUTH_SESSION_ASSET, MESA_ATOMIC_ASSET, '/pdv/access-control.js?v=31', '/pdv/admin-login.js?v=33', '/pdv/access-diagnostics.js?v=32', '/pdv/pdv-sync.js', PDV_MESAS_AUTH_ASSET, PDV_CARDAPIO_AUTH_ASSET, '/pdv/pdv-safety.js', '/pdv/pdv-operations.js', '/pdv/pdv-checkout-core.js', '/pdv/waiter-sales-report.js?v=28', '/pdv/service-fee-shifts.js?v=28', '/pdv/cash-reset.js?v=35', PRINT_HEALTH_ASSET, PDV_PRODUCTION_ASSET, MESA_CONCURRENCY_ASSET, ITEM_CANCELLATION_ASSET, STAGED_CHECKOUT_ASSET, ITEM_TRANSFER_ASSET, MENU_ORDER_OPTIONS_ASSET, SALAD_HALF_ASSET, MENU_UPDATE_ASSET, AUTO_PRODUCTION_PRINT_ASSET, CANCELLATION_PRINT_ASSET, AUTO_CLOSE_PRINT_ASSET, '/pdv/modern-hybrid.css', '/pdv/menu-admin-cta.css?v=34', '/pdv/fast-checkout.js', '/pdv/fast-checkout.css', '/pdv/fast-split.js', '/pdv/fast-split.css', RUNTIME_GUARD_ASSET, DAILY_SALES_REPORT_ASSET, REPORT_DASHBOARD_ASSET, COMANDA_VISIBLE_ASSET, LIVE_UPDATE_ASSET, '/tradicao-caicara-logo.webp'];
+const APP_SHELL = ['/pdv/', '/pdv/manifest.json', AUTH_SESSION_ASSET, MESA_ATOMIC_ASSET, '/pdv/access-control.js?v=31', '/pdv/admin-login.js?v=33', '/pdv/access-diagnostics.js?v=32', '/pdv/pdv-sync.js', PDV_MESAS_AUTH_ASSET, PDV_CARDAPIO_AUTH_ASSET, PDV_VENDAS_AUTH_ASSET, '/pdv/pdv-safety.js', '/pdv/pdv-operations.js', '/pdv/pdv-checkout-core.js', '/pdv/waiter-sales-report.js?v=28', '/pdv/service-fee-shifts.js?v=28', '/pdv/cash-reset.js?v=35', PRINT_HEALTH_ASSET, PDV_PRODUCTION_ASSET, MESA_CONCURRENCY_ASSET, ITEM_CANCELLATION_ASSET, STAGED_CHECKOUT_ASSET, ITEM_TRANSFER_ASSET, MENU_ORDER_OPTIONS_ASSET, SALAD_HALF_ASSET, MENU_UPDATE_ASSET, AUTO_PRODUCTION_PRINT_ASSET, CANCELLATION_PRINT_ASSET, AUTO_CLOSE_PRINT_ASSET, '/pdv/modern-hybrid.css', '/pdv/menu-admin-cta.css?v=34', '/pdv/fast-checkout.js', '/pdv/fast-checkout.css', '/pdv/fast-split.js', '/pdv/fast-split.css', RUNTIME_GUARD_ASSET, DAILY_SALES_REPORT_ASSET, REPORT_DASHBOARD_ASSET, COMANDA_VISIBLE_ASSET, LIVE_UPDATE_ASSET, '/tradicao-caicara-logo.webp'];
 const respostaHtmlComHotfix = async (response) => {
   let html = await response.text();
   if (!html.includes('/pdv/modern-hybrid.css')) html = html.replace('</head>', '<link rel="stylesheet" href="/pdv/modern-hybrid.css"></head>');
@@ -35,6 +36,7 @@ const respostaHtmlComHotfix = async (response) => {
   if (!html.includes('/pdv/pdv-sync.js')) html = html.replace('</body>', '<script src="/pdv/pdv-sync.js"></script></body>');
   if (!html.includes('/pdv/mesas-auth-reconnect.js')) html = html.replace('</body>', '<script src="/pdv/mesas-auth-reconnect.js?v=1"></script></body>');
   if (!html.includes('/pdv/cardapio-auth-reconnect.js')) html = html.replace('</body>', '<script src="/pdv/cardapio-auth-reconnect.js?v=1"></script></body>');
+  if (!html.includes('/pdv/vendas-auth-reconnect.js')) html = html.replace('</body>', '<script src="/pdv/vendas-auth-reconnect.js?v=1"></script></body>');
   if (!html.includes('/pdv/pdv-safety.js')) html = html.replace('</body>', '<script src="/pdv/pdv-safety.js"></script></body>');
   if (!html.includes('/pdv/pdv-operations.js')) html = html.replace('</body>', '<script src="/pdv/pdv-operations.js"></script></body>');
   if (!html.includes('/pdv/pdv-checkout-core.js')) html = html.replace('</body>', '<script src="/pdv/pdv-checkout-core.js"></script></body>');
