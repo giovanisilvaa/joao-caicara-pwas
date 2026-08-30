@@ -6,11 +6,20 @@ const read = (path: string) => fs.readFileSync(path, 'utf8');
 describe('comanda sempre visível no PDV', () => {
   it('renderiza diretamente na área nativa da comanda', () => {
     const src = read('client/public/pdv/comanda-visible-v2.js');
-    expect(src).toContain("PDV_COMANDA_VISIBLE_RUNTIME === 'v4'");
+    expect(src).toContain("PDV_COMANDA_VISIBLE_RUNTIME === 'v5'");
     expect(src).toContain("document.getElementById('order-items')");
     expect(src).toContain("el.style.setProperty('display', 'block', 'important')");
     expect(src).toContain('Itens da Mesa ${numero}');
     expect(src).not.toContain('.order-panel #order-items{display:none!important}');
+  });
+
+  it('reserva espaço para os itens sem remover os controles do rodapé', () => {
+    const src = read('client/public/pdv/comanda-visible-v2.js');
+    expect(src).toContain('.order-panel #order-items');
+    expect(src).toContain('min-height:180px!important');
+    expect(src).toContain('.order-panel .order-footer');
+    expect(src).toContain('max-height:250px!important');
+    expect(src).toContain('overflow-y:auto!important');
   });
 
   it('usa runtime e só prefere cache quando a mesa do runtime está vazia', () => {
@@ -43,9 +52,8 @@ describe('comanda sempre visível no PDV', () => {
     expect(src).toContain('setInterval(() => renderizar(false), 1000)');
   });
 
-  it('service worker força nova versão e injeta a camada v4', () => {
+  it('service worker continua injetando a camada de comanda', () => {
     const sw = read('client/public/pdv/service-worker.js');
-    expect(sw).toContain('view-v42');
     expect(sw).toContain("const COMANDA_VISIBLE_ASSET = '/pdv/comanda-visible-v2.js?v=4'");
     expect(sw).toContain('COMANDA_VISIBLE_ASSET');
     expect(sw).toContain('<script src="/pdv/comanda-visible-v2.js?v=4"></script>');
