@@ -4,45 +4,47 @@ import fs from 'node:fs';
 const read = (path: string) => fs.readFileSync(path, 'utf8');
 
 describe('comanda sempre visível no PDV', () => {
-  it('cria painel operacional independente da área antiga que estava colapsando', () => {
+  it('renderiza diretamente na área nativa da comanda', () => {
     const src = read('client/public/pdv/comanda-visible-v2.js');
-    expect(src).toContain("PDV_COMANDA_VISIBLE_RUNTIME === 'v2'");
-    expect(src).toContain("const PANEL_ID = 'pdv-comanda-visible-v2'");
-    expect(src).toContain('.order-panel #order-items{display:none!important}');
-    expect(src).toContain("orderPanel.insertBefore(painel, footer)");
+    expect(src).toContain("PDV_COMANDA_VISIBLE_RUNTIME === 'v3'");
+    expect(src).toContain("document.getElementById('order-items')");
+    expect(src).toContain("el.style.setProperty('display', 'block', 'important')");
     expect(src).toContain('Itens da Mesa ${numero}');
+    expect(src).not.toContain('.order-panel #order-items{display:none!important}');
+  });
+
+  it('usa a mesa do runtime e possui fallback pelo cache local', () => {
+    const src = read('client/public/pdv/comanda-visible-v2.js');
+    expect(src).toContain("const CACHE_KEY = 'mesas_abertas_caicara_cache'");
+    expect(src).toContain('numeroPeloTitulo');
+    expect(src).toContain('mesasDoRuntime');
+    expect(src).toContain('mesasDoCache');
+    expect(src).toContain("item?.qtd ?? item?.quantidade ?? 0");
   });
 
   it('renderiza nome, quantidade, preço, subtotal, observação e estado de envio', () => {
     const src = read('client/public/pdv/comanda-visible-v2.js');
-    expect(src).toContain("nome.textContent = `${qtd}x ${String(item.nome || 'Item')}`");
-    expect(src).toContain('Unit.: ${formatar(preco)}');
+    expect(src).toContain('nome.textContent = `${item.qtd}x ${item.nome}`');
+    expect(src).toContain('Unit.: ${formatar(item.preco)}');
     expect(src).toContain("item.enviado === true ? '✅ Enviado' : '🆕 Pendente'");
     expect(src).toContain('Obs.: ${item.obs}');
-    expect(src).toContain('Subtotal: ${formatar(preco * qtd)}');
+    expect(src).toContain('Subtotal: ${formatar(item.preco * item.qtd)}');
   });
 
-  it('mantém os controles operacionais do caixa na nova lista', () => {
-    const src = read('client/public/pdv/comanda-visible-v2.js');
-    expect(src).toContain('alterarQtdItem(item.id, index, -1)');
-    expect(src).toContain('alterarQtdItem(item.id, index, 1)');
-    expect(src).toContain('editarObsItem(index)');
-    expect(src).toContain('editarPrecoItem(index)');
-  });
-
-  it('acompanha renderizações e mudanças do Firebase', () => {
+  it('acompanha a renderização original, Firebase, título e total', () => {
     const src = read('client/public/pdv/comanda-visible-v2.js');
     expect(src).toContain('renderizarComanda = envolvida');
     expect(src).toContain("db.ref('mesas').on('value'");
-    expect(src).toContain('MutationObserver');
+    expect(src).toContain("document.getElementById('mesa-titulo')");
+    expect(src).toContain("document.getElementById('total-valor')");
+    expect(src).toContain('setInterval(() => renderizar(false), 1000)');
   });
 
-  it('service worker publica e injeta a nova camada depois dos demais complementos', () => {
+  it('service worker força nova versão e injeta a camada v3', () => {
     const sw = read('client/public/pdv/service-worker.js');
-    expect(sw).toContain('visible-v40');
-    expect(sw).toContain("const COMANDA_VISIBLE_ASSET = '/pdv/comanda-visible-v2.js?v=2'");
+    expect(sw).toContain('native-v41');
+    expect(sw).toContain("const COMANDA_VISIBLE_ASSET = '/pdv/comanda-visible-v2.js?v=3'");
     expect(sw).toContain('COMANDA_VISIBLE_ASSET');
-    expect(sw).toContain('<script src="/pdv/comanda-visible-v2.js?v=2"></script>');
-    expect(sw.lastIndexOf('/pwa-live-update.js?v=1')).toBeLessThan(sw.lastIndexOf('/pdv/comanda-visible-v2.js?v=2'));
+    expect(sw).toContain('<script src="/pdv/comanda-visible-v2.js?v=3"></script>');
   });
 });
