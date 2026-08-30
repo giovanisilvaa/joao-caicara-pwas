@@ -2,14 +2,34 @@
 (() => {
   const LOGIN_COMPARTILHADO = 'garcom';
   const EMAIL_FIREBASE = 'garcom@acesso.joaocaicara.app';
+  const APP_AUTH_EXPEDIENTE = 'garcom-expediente-auth';
   const CHAVE_NOME_SESSAO = 'joao_caicara_garcom_nome_sessao';
   const CHAVE_ENTRADA_SESSAO = 'joao_caicara_garcom_entrada_sessao';
   const ESTADO = {
     autenticando: false,
     entradaEm: Date.now()
   };
+  let authExpedienteCache = null;
 
-  const auth = () => window.firebase?.auth?.();
+  function authExpediente() {
+    if (authExpedienteCache) return authExpedienteCache;
+    try {
+      const sdk = window.firebase;
+      if (!sdk?.app || !sdk?.initializeApp) return null;
+      let app = null;
+      try { app = sdk.app(APP_AUTH_EXPEDIENTE); }
+      catch (_) {
+        const config = sdk.app()?.options;
+        if (!config) return null;
+        app = sdk.initializeApp(config, APP_AUTH_EXPEDIENTE);
+      }
+      authExpedienteCache = app.auth();
+      return authExpedienteCache;
+    } catch (erro) {
+      console.warn('Não foi possível iniciar a autenticação isolada do expediente:', erro);
+      return null;
+    }
+  }
 
   function limparNome(nome) {
     return String(nome || '').replace(/\s+/g, ' ').trim().slice(0, 60);
@@ -72,7 +92,7 @@
   }
 
   async function configurarPersistenciaExpediente() {
-    const firebaseAuth = auth();
+    const firebaseAuth = authExpediente();
     const modoLocal = window.firebase?.auth?.Auth?.Persistence?.LOCAL;
     if (!firebaseAuth || !modoLocal || typeof firebaseAuth.setPersistence !== 'function') {
       throw new Error('Persistência local do Firebase Auth indisponível');
@@ -83,8 +103,6 @@
 
   async function prepararPersistenciaExpediente() {
     try {
-      const isolamento = window.FirebaseAuthSessionIsolationReady;
-      if (isolamento && typeof isolamento.then === 'function') await isolamento;
       await configurarPersistenciaExpediente();
       return true;
     } catch (erro) {
@@ -94,7 +112,7 @@
   }
 
   function sessaoAtual() {
-    const user = auth()?.currentUser || null;
+    const user = authExpediente()?.currentUser || null;
     const nome = nomeDaSessao();
     if (usuarioEhCompartilhado(user) && nome) {
       return {
@@ -135,7 +153,7 @@
 
   function instalarIdentidadeOperacional() {
     window.sessaoGarcomAtual = sessaoAtual;
-    const user = auth()?.currentUser || null;
+    const user = authExpediente()?.currentUser || null;
     const nome = nomeDaSessao();
     const el = document.getElementById('usuario-logado-g');
     if (el) {
@@ -181,8 +199,8 @@
   }
 
   async function tentarEntrar(senha) {
-    const firebaseAuth = auth();
-    if (!firebaseAuth) throw new Error('Firebase Auth indisponível');
+    const firebaseAuth = authExpediente();
+    if (!firebaseAuth) throw new Error('Firebase Auth do expediente indisponível');
     await configurarPersistenciaExpediente();
     return firebaseAuth.signInWithEmailAndPassword(EMAIL_FIREBASE, senha);
   }
@@ -235,7 +253,7 @@
       try {
         const credencial = await tentarEntrar(senha);
         if (!usuarioEhCompartilhado(credencial?.user)) {
-          await auth()?.signOut?.();
+          await authExpediente()?.signOut?.();
           throw new Error('Conta autenticada não é a conta compartilhada esperada');
         }
         salvarNomeDaSessao(nome);
@@ -258,7 +276,7 @@
   async function sairGarcom() {
     removerNomeDaSessao();
     ESTADO.entradaEm = Date.now();
-    try { await auth()?.signOut?.(); }
+    try { await authExpediente()?.signOut?.(); }
     catch (erro) { console.warn('Não foi possível encerrar a sessão Firebase do Garçom:', erro); }
     instalarIdentidadeOperacional();
     mostrarLogin();
@@ -269,7 +287,7 @@
   }
 
   async function iniciar() {
-    const firebaseAuth = auth();
+    const firebaseAuth = authExpediente();
     if (!firebaseAuth || typeof firebaseAuth.onAuthStateChanged !== 'function') {
       setTimeout(iniciar, 150);
       return;
@@ -299,8 +317,8 @@
     trocarGarcom,
     prepararPersistenciaExpediente,
     get nomeAtual() { return nomeDaSessao(); },
-    get autenticado() { return usuarioEhCompartilhado(auth()?.currentUser) && Boolean(nomeDaSessao()); },
-    get uid() { return usuarioEhCompartilhado(auth()?.currentUser) ? auth().currentUser.uid : null; }
+    get autenticado() { return usuarioEhCompartilhado(authExpediente()?.currentUser) && Boolean(nomeDaSessao()); },
+    get uid() { return usuarioEhCompartilhado(authExpediente()?.currentUser) ? authExpediente().currentUser.uid : null; }
   });
 
   iniciar();
