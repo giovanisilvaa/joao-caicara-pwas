@@ -1,4 +1,4 @@
-const CACHE_NAME = 'joao-caicara-pdv-v28-report-v29-live-v30-print-v31-menu-v32-half-v33-cancel-v34-staged-v35-transfer-v36-reports-v37';
+const CACHE_NAME = 'joao-caicara-pdv-v28-report-v29-live-v30-print-v31-menu-v32-half-v33-cancel-v34-staged-v35-transfer-v36-reports-v37-checkoutprint-v38';
 const AUTH_SESSION_ASSET = '/auth-session-isolation.js?v=20';
 const MESA_ATOMIC_ASSET = '/mesa-atomic.js?v=38';
 const MESA_CONCURRENCY_ASSET = '/pdv/' + 'mesa-concurrency.js?v=40';
@@ -13,7 +13,7 @@ const PDV_MESAS_AUTH_ASSET = '/pdv/' + 'mesas-auth-reconnect.js?v=1';
 const PDV_CARDAPIO_AUTH_ASSET = '/pdv/' + 'cardapio-auth-reconnect.js?v=1';
 const AUTO_PRODUCTION_PRINT_ASSET = '/pdv/' + 'pdv-auto-production-print.js?v=3';
 const CANCELLATION_PRINT_ASSET = '/pdv/pdv-cancellation-print.js?v=1';
-const AUTO_CLOSE_PRINT_ASSET = '/pdv/' + 'pdv-auto-close-print.js?v=2';
+const AUTO_CLOSE_PRINT_ASSET = '/pdv/' + 'pdv-auto-close-print.js?v=3';
 const RUNTIME_GUARD_ASSET = '/pdv/' + 'runtime-guard.js?v=40';
 const DAILY_SALES_REPORT_ASSET = '/pdv/' + 'daily-sales-report.js?v=29';
 const REPORT_DASHBOARD_ASSET = '/pdv/report-dashboard-v1.js?v=1';
@@ -51,7 +51,7 @@ const respostaHtmlComHotfix = async (response) => {
   if (!html.includes('/menu-20260828.js')) html = html.replace('</body>', '<script src="/menu-20260828.js?v=1"></script></body>');
   if (!html.includes('/pdv/pdv-auto-production-print.js')) html = html.replace('</body>', '<script src="/pdv/pdv-auto-production-print.js?v=3"></script></body>');
   if (!html.includes('/pdv/pdv-cancellation-print.js')) html = html.replace('</body>', '<script src="/pdv/pdv-cancellation-print.js?v=1"></script></body>');
-  if (!html.includes('/pdv/pdv-auto-close-print.js')) html = html.replace('</body>', '<script src="/pdv/pdv-auto-close-print.js?v=2"></script></body>');
+  if (!html.includes('/pdv/pdv-auto-close-print.js')) html = html.replace('</body>', '<script src="/pdv/pdv-auto-close-print.js?v=3"></script></body>');
   if (!html.includes('/pdv/fast-checkout.js')) html = html.replace('</body>', '<script src="/pdv/fast-checkout.js"></script></body>');
   if (!html.includes('/pdv/fast-split.js')) html = html.replace('</body>', '<script src="/pdv/fast-split.js"></script></body>');
   if (!html.includes('/pdv/runtime-guard.js')) html = html.replace('</body>', '<script src="/pdv/runtime-guard.js?v=40"></script></body>');
