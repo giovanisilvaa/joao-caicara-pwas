@@ -141,6 +141,7 @@ jobs:
           verificar_arquivo '/staged-checkout-v1.js' 'client/public/staged-checkout-v1.js'
           verificar_arquivo '/garcom/restricoes-operacionais.js' 'client/public/garcom/restricoes-operacionais.js'
           verificar_arquivo '/pdv/pdv-item-transfer.js' 'client/public/pdv/pdv-item-transfer.js'
+          verificar_arquivo '/pdv/report-dashboard-v1.js' 'client/public/pdv/report-dashboard-v1.js'
           verificar_arquivo '/pdv/' 'client/public/pdv/index.html'
           verificar_arquivo '/garcom/' 'client/public/garcom/index.html'
 
