@@ -1,10 +1,10 @@
-/* Comanda visível v4 — renderiza os itens diretamente na área nativa do PDV, com fallback seguro pelo cache local. */
+/* Comanda visível v5 — mantém os itens legíveis no PDV e usa fallback seguro pelo cache local. */
 (() => {
-  if (window.PDV_COMANDA_VISIBLE_RUNTIME === 'v4') return;
-  window.PDV_COMANDA_VISIBLE_RUNTIME = 'v4';
+  if (window.PDV_COMANDA_VISIBLE_RUNTIME === 'v5') return;
+  window.PDV_COMANDA_VISIBLE_RUNTIME = 'v5';
 
-  const STYLE_ID = 'pdv-comanda-visible-v4-style';
-  const OLD_STYLE_IDS = ['pdv-comanda-visible-v2-style', 'pdv-comanda-visible-v3-style'];
+  const STYLE_ID = 'pdv-comanda-visible-v5-style';
+  const OLD_STYLE_IDS = ['pdv-comanda-visible-v2-style', 'pdv-comanda-visible-v3-style', 'pdv-comanda-visible-v4-style'];
   const OLD_PANEL_ID = 'pdv-comanda-visible-v2';
   const CACHE_KEY = 'mesas_abertas_caicara_cache';
   let ultimaAssinatura = '';
@@ -23,19 +23,27 @@
     const style = document.createElement('style');
     style.id = STYLE_ID;
     style.textContent = `
-      .order-panel{min-height:0!important}
+      .order-panel{min-height:0!important;overflow:hidden!important}
+      .order-panel .order-header{flex:0 0 auto!important}
       .order-panel #order-items{
         display:block!important;
         visibility:visible!important;
         opacity:1!important;
-        flex:1 1 240px!important;
-        min-height:220px!important;
-        max-height:45vh!important;
+        flex:1 1 auto!important;
+        min-height:180px!important;
+        max-height:none!important;
         overflow-y:auto!important;
         overscroll-behavior:contain;
         padding:10px 14px!important;
         background:#fff!important;
         color:#25383d!important;
+      }
+      .order-panel .order-footer{
+        flex:0 1 250px!important;
+        min-height:0!important;
+        max-height:250px!important;
+        overflow-y:auto!important;
+        overscroll-behavior:contain;
       }
       #order-items .pdv-cmd-title{
         position:sticky;top:0;z-index:3;display:flex;justify-content:space-between;align-items:center;gap:8px;
@@ -52,8 +60,19 @@
       #order-items .pdv-cmd-controls button.pdv-cmd-edit{min-width:auto;padding:0 8px;background:#f2e6d5;color:#5d4933;font-size:.7rem}
       #order-items .pdv-cmd-qtd{min-width:28px;text-align:center;font-weight:900;color:#25383d}
       #order-items .pdv-cmd-sub{grid-column:1/-1;text-align:right;font-size:.8rem;font-weight:900;color:var(--success,#2A9D8F)}
-      @media(max-width:1100px){.order-panel #order-items{min-height:260px!important;max-height:420px!important}}
-      @media(max-height:720px) and (min-width:1101px){.order-panel #order-items{min-height:180px!important;max-height:36vh!important}}
+      @media(max-height:900px) and (min-width:1101px){
+        .order-panel #order-items{min-height:170px!important}
+        .order-panel .order-footer{flex-basis:230px!important;max-height:230px!important}
+      }
+      @media(max-height:760px) and (min-width:1101px){
+        .order-panel #order-items{min-height:150px!important}
+        .order-panel .order-footer{flex-basis:210px!important;max-height:210px!important}
+      }
+      @media(max-width:1100px){
+        .order-panel{overflow:visible!important}
+        .order-panel #order-items{min-height:260px!important;max-height:420px!important}
+        .order-panel .order-footer{flex:0 0 auto!important;max-height:none!important;overflow-y:visible!important}
+      }
     `;
     document.head.appendChild(style);
   }
@@ -143,7 +162,6 @@
     el.style.setProperty('display', 'block', 'important');
     el.style.setProperty('visibility', 'visible', 'important');
     el.style.setProperty('opacity', '1', 'important');
-    el.style.setProperty('min-height', '220px', 'important');
     return el;
   }
 
@@ -271,14 +289,14 @@
 
   function envolverRenderizacao() {
     try {
-      if (typeof renderizarComanda !== 'function' || renderizarComanda.__comandaVisibleV4) return;
+      if (typeof renderizarComanda !== 'function' || renderizarComanda.__comandaVisibleV5) return;
       const original = renderizarComanda;
       const envolvida = function(...args) {
         const resultado = original.apply(this, args);
         queueMicrotask(() => renderizar(true));
         return resultado;
       };
-      envolvida.__comandaVisibleV4 = true;
+      envolvida.__comandaVisibleV5 = true;
       renderizarComanda = envolvida;
       window.renderizarComanda = envolvida;
     } catch (erro) {
@@ -290,15 +308,15 @@
     const titulo = document.getElementById('mesa-titulo');
     const total = document.getElementById('total-valor');
     [titulo, total].filter(Boolean).forEach(el => {
-      if (el.__pdvComandaVisibleV4Observer) return;
+      if (el.__pdvComandaVisibleV5Observer) return;
       const observer = new MutationObserver(() => queueMicrotask(() => renderizar(true)));
       observer.observe(el, { childList: true, characterData: true, subtree: true });
-      el.__pdvComandaVisibleV4Observer = observer;
+      el.__pdvComandaVisibleV5Observer = observer;
     });
 
     try {
-      if (typeof db !== 'undefined' && db && !window.__PDV_COMANDA_VISIBLE_V4_DB__) {
-        window.__PDV_COMANDA_VISIBLE_V4_DB__ = true;
+      if (typeof db !== 'undefined' && db && !window.__PDV_COMANDA_VISIBLE_V5_DB__) {
+        window.__PDV_COMANDA_VISIBLE_V5_DB__ = true;
         db.ref('mesas').on('value', () => setTimeout(() => renderizar(true), 0));
       }
     } catch (_) {}
@@ -316,5 +334,5 @@
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', iniciar, { once: true });
   window.addEventListener('load', iniciar, { once: true });
 
-  window.PdvComandaVisibleV4 = Object.freeze({ renderizar });
+  window.PdvComandaVisibleV5 = Object.freeze({ renderizar });
 })();
