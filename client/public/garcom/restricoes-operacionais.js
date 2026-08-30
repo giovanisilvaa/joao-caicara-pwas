@@ -16,16 +16,20 @@
     document.head.appendChild(style);
   }
 
+  function numeroAtual() {
+    try { return typeof mesaSelecionada !== 'undefined' ? mesaSelecionada : null; } catch (_) { return null; }
+  }
+
   function itemAtual(index) {
     try {
-      const numero = typeof mesaSelecionada !== 'undefined' ? mesaSelecionada : null;
+      const numero = numeroAtual();
       return numero ? mesas?.[numero]?.itens?.[index] || null : null;
     } catch (_) {
       return null;
     }
   }
 
-  function bloquearFuncoes() {
+  function instalarAjustesDeRascunho() {
     const alterarOriginal = window.alterarQtdG;
     if (typeof alterarOriginal === 'function' && !alterarOriginal.__restricaoGarcomV2) {
       const protegida = async function(index, delta, ...rest) {
@@ -41,6 +45,36 @@
       window.alterarQtdG = protegida;
     }
 
+    const adicionarOriginal = window.adicionarItemG;
+    if (typeof adicionarOriginal === 'function' && !adicionarOriginal.__mesclarRascunhoGarcomV2) {
+      const adicionarProtegido = async function(produtoId, ...rest) {
+        try {
+          const numero = numeroAtual();
+          const mesa = numero ? mesas?.[numero] : null;
+          const produto = typeof produtos !== 'undefined' ? produtos.find(p => p.id === produtoId) : null;
+          if (mesa && produto && Array.isArray(mesa.itens)) {
+            const index = mesa.itens.findIndex(item =>
+              item &&
+              item.id === produtoId &&
+              Number(item.preco) === Number(produto.preco) &&
+              !item.obs &&
+              item.enviado !== true &&
+              !item.envioPendenteId
+            );
+            if (index >= 0 && typeof window.alterarQtdG === 'function') {
+              return window.alterarQtdG(index, 1);
+            }
+          }
+        } catch (_) {}
+        return adicionarOriginal.call(this, produtoId, ...rest);
+      };
+      adicionarProtegido.__mesclarRascunhoGarcomV2 = true;
+      adicionarProtegido.__original = adicionarOriginal;
+      window.adicionarItemG = adicionarProtegido;
+    }
+  }
+
+  function bloquearLimpeza() {
     const limparOriginal = window.limparComandaG;
     if (typeof limparOriginal === 'function' && !limparOriginal.__bloqueadaNoGarcom) {
       const protegidaLimpeza = function() {
@@ -55,7 +89,8 @@
 
   function iniciar() {
     instalarEstilo();
-    bloquearFuncoes();
+    instalarAjustesDeRascunho();
+    bloquearLimpeza();
   }
 
   iniciar();
@@ -65,6 +100,7 @@
   window.GarcomRestricoesOperacionais = Object.freeze({
     runtime: 'v2',
     podeReduzirAntesEnvio: true,
+    podeSomarMesmoItemAntesEnvio: true,
     podeCancelarItemEnviado: false,
     podeLimparMesa: false
   });
