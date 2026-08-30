@@ -1,9 +1,9 @@
-/* Restrições operacionais do Garçom — cancelamento e limpeza ficam exclusivos do PDV. */
+/* Restrições operacionais do Garçom — ajustes antes do envio são permitidos; cancelamentos após envio e limpeza ficam exclusivos do PDV. */
 (() => {
-  if (window.GARCOM_RESTRICOES_RUNTIME === 'v1') return;
-  window.GARCOM_RESTRICOES_RUNTIME = 'v1';
+  if (window.GARCOM_RESTRICOES_RUNTIME === 'v2') return;
+  window.GARCOM_RESTRICOES_RUNTIME = 'v2';
 
-  const MENSAGEM_CANCELAMENTO = 'Cancelamento ou redução de item deve ser feito pelo caixa/PDV.';
+  const MENSAGEM_CANCELAMENTO = 'Depois de enviado à produção, a redução ou o cancelamento do item deve ser feito pelo caixa/PDV.';
   const MENSAGEM_LIMPEZA = 'Limpar mesa é uma operação exclusiva do caixa/PDV.';
 
   function instalarEstilo() {
@@ -12,22 +12,32 @@
     style.id = 'garcom-restricoes-style';
     style.textContent = `
       .btn-limpar-g{display:none!important}
-      .qty-ctrl-g button[onclick*="alterarQtdG"][onclick*="-1"]{display:none!important}
     `;
     document.head.appendChild(style);
   }
 
+  function itemAtual(index) {
+    try {
+      const numero = typeof mesaSelecionada !== 'undefined' ? mesaSelecionada : null;
+      return numero ? mesas?.[numero]?.itens?.[index] || null : null;
+    } catch (_) {
+      return null;
+    }
+  }
+
   function bloquearFuncoes() {
     const alterarOriginal = window.alterarQtdG;
-    if (typeof alterarOriginal === 'function' && !alterarOriginal.__semCancelamentoGarcom) {
+    if (typeof alterarOriginal === 'function' && !alterarOriginal.__restricaoGarcomV2) {
       const protegida = async function(index, delta, ...rest) {
-        if (Number(delta) < 0) {
+        const item = itemAtual(index);
+        if (Number(delta) < 0 && item?.enviado === true) {
           alert(MENSAGEM_CANCELAMENTO);
           return false;
         }
         return alterarOriginal.call(this, index, delta, ...rest);
       };
-      protegida.__semCancelamentoGarcom = true;
+      protegida.__restricaoGarcomV2 = true;
+      protegida.__original = alterarOriginal;
       window.alterarQtdG = protegida;
     }
 
@@ -53,8 +63,9 @@
   window.addEventListener('load', iniciar);
 
   window.GarcomRestricoesOperacionais = Object.freeze({
-    runtime: 'v1',
-    podeCancelarItem: false,
+    runtime: 'v2',
+    podeReduzirAntesEnvio: true,
+    podeCancelarItemEnviado: false,
     podeLimparMesa: false
   });
 })();
