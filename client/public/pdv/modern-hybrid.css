@@ -134,3 +134,28 @@ body{
   .order-footer{padding:10px}.btn{min-height:44px;border-radius:10px}
 }
 @media(prefers-reduced-motion:reduce){*{scroll-behavior:auto!important;transition:none!important;animation:none!important}}
+
+/* Mantém a lista da comanda sempre visível, mesmo em telas de PDV com pouca altura. */
+.order-panel{min-height:0!important;}
+.order-items{
+  display:block!important;
+  visibility:visible!important;
+  flex:1 1 220px!important;
+  min-height:180px!important;
+  overflow-y:auto!important;
+  overscroll-behavior:contain;
+}
+.order-footer{
+  flex:0 0 auto;
+  max-height:52vh;
+  overflow-y:auto;
+}
+@media (min-width:1101px) and (max-height:800px){
+  .order-items{min-height:160px!important;}
+  .order-footer{max-height:48vh;}
+}
+@media(max-width:1100px){
+  .order-panel{min-height:620px!important;}
+  .order-items{min-height:240px!important;}
+  .order-footer{max-height:none;overflow-y:visible;}
+}
