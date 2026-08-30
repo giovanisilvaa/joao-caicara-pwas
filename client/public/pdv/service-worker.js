@@ -1,4 +1,4 @@
-const CACHE_NAME = 'joao-caicara-pdv-v28-report-v29-live-v30-print-v31-menu-v32-half-v33-cancel-v34-staged-v35-transfer-v36-reports-v37-checkoutprint-v38';
+const CACHE_NAME = 'joao-caicara-pdv-v28-report-v29-live-v30-print-v31-menu-v32-half-v33-cancel-v34-staged-v35-transfer-v36-reports-v37-checkoutprint-v38-comanda-v39';
 const AUTH_SESSION_ASSET = '/auth-session-isolation.js?v=20';
 const MESA_ATOMIC_ASSET = '/mesa-atomic.js?v=38';
 const MESA_CONCURRENCY_ASSET = '/pdv/' + 'mesa-concurrency.js?v=40';
