@@ -37,6 +37,10 @@
     return Math.round((Number(produto?.preco) || 0) * HALF_RATIO * 100) / 100;
   }
 
+  function permiteMeioPrato(produto) {
+    return Boolean(produto?.servePara2) || String(produto?.categoria || '').trim().toLowerCase() === 'festival';
+  }
+
   function identidadeGarcom() {
     try {
       if (window.GarcomAtribuicao?.identidadeAtual) return window.GarcomAtribuicao.identidadeAtual();
@@ -166,7 +170,7 @@
       : moeda(produto.preco);
 
     const modos = modal.querySelector('#menu-order-modes');
-    if (produto.servePara2) {
+    if (permiteMeioPrato(produto)) {
       modos.style.display = 'flex';
       modos.innerHTML = `
         <button type="button" data-menu-mode="full" class="${meio ? '' : 'active'}">Prato normal</button>
@@ -181,7 +185,7 @@
   function abrirOpcoes(produto, meio = false) {
     if (!produto) return;
     if (!numeroMesaAtual()) return alert('Selecione uma mesa antes de adicionar o item.');
-    modalEstado = { produto, meio: Boolean(meio && produto.servePara2), enviando: false };
+    modalEstado = { produto, meio: Boolean(meio && permiteMeioPrato(produto)), enviando: false };
     const modal = garantirModal();
     modal.querySelector('#menu-order-obs').value = '';
     atualizarModal();
@@ -204,7 +208,7 @@
     personalizado.nomeOriginal = produto.nome;
 
     if (meio) {
-      if (!produto.servePara2) throw new Error('Este produto não permite meio prato.');
+      if (!permiteMeioPrato(produto)) throw new Error('Este produto não permite meio prato.');
       personalizado.id = `${produto.id}__meio`;
       personalizado.nome = `${produto.nome} (Meio prato)`;
       personalizado.precoOriginal = Number(produto.preco) || 0;
@@ -286,7 +290,7 @@
     const acoes = document.createElement('div');
     acoes.className = 'menu-opt-actions';
     acoes.innerHTML = `<span class="menu-opt-action" role="button" tabindex="0" data-menu-action="obs" data-produto-id="${escapar(produto.id)}">📝 Observação</span>`;
-    if (produto.servePara2) {
+    if (permiteMeioPrato(produto)) {
       acoes.innerHTML += `<span class="menu-opt-action menu-opt-half" role="button" tabindex="0" data-menu-action="half" data-produto-id="${escapar(produto.id)}">½ Meio · ${escapar(moeda(precoMeio(produto)))}</span>`;
     }
     card.appendChild(acoes);
