@@ -1,6 +1,6 @@
-const CACHE_NAME = 'joao-caicara-garcom-v15-fresh-20260826-live-v18-menu-v19-half-v20-cancel-v21-staged-v22-closefix-v23-restrict-v24-draft-v25';
+const CACHE_NAME = 'joao-caicara-garcom-v15-fresh-20260826-live-v18-menu-v19-half-v20-cancel-v21-staged-v22-closefix-v23-restrict-v24-draft-v25-session-v26';
 const AUTH_SESSION_ASSET = '/auth-session-isolation.js?v=20';
-const LOGIN_ASSET = '/garcom/shared-login.js?v=17';
+const LOGIN_ASSET = '/garcom/shared-login.js?v=18';
 const CARDAPIO_AUTH_ASSET = '/garcom/cardapio-auth-reconnect.js?v=20';
 const MESAS_AUTH_ASSET = '/garcom/mesas-auth-reconnect.js?v=37';
 const MESA_ATOMIC_ASSET = '/mesa-atomic.js?v=38';
@@ -13,14 +13,32 @@ const SALAD_HALF_ASSET = '/menu-salad-half.js?v=2';
 const MENU_UPDATE_ASSET = '/menu-20260828.js?v=1';
 const LIVE_UPDATE_ASSET = '/pwa-live-update.js?v=1';
 const APP_SHELL = ['/garcom/', '/garcom/manifest.json', AUTH_SESSION_ASSET, MESA_ATOMIC_ASSET, '/garcom/access-control.js', LOGIN_ASSET, MESAS_AUTH_ASSET, CARDAPIO_AUTH_ASSET, '/garcom/access-diagnostics.js', '/garcom/hotfix-sync.js', '/garcom/waiter-attribution.js', '/garcom/garcom-service-fee.js?v=19', '/garcom/modern-hybrid.css', '/garcom/waiter-speed.js', '/garcom/waiter-speed.css', MESA_CONCURRENCY_ASSET, ITEM_CANCELLATION_ASSET, STAGED_CHECKOUT_ASSET, GARCOM_RESTRICTIONS_ASSET, MENU_ORDER_OPTIONS_ASSET, SALAD_HALF_ASSET, MENU_UPDATE_ASSET, LIVE_UPDATE_ASSET, '/tradicao-caicara-logo.webp'];
+
+const protegerBootstrapAuthGarcom = html => {
+  const antigo = `    firebase.auth().signInAnonymously().catch((erro) => {
+        console.error('Erro ao autenticar no Firebase:', erro);
+        atualizarStatusConexaoG('🔴 erro de conexão', 'sync-error');
+    });`;
+  const novo = `    let pararAuthInicialG = null;
+    pararAuthInicialG = firebase.auth().onAuthStateChanged((usuarioInicial) => {
+        if (pararAuthInicialG) pararAuthInicialG();
+        if (usuarioInicial) return;
+        firebase.auth().signInAnonymously().catch((erro) => {
+            console.error('Erro ao autenticar no Firebase:', erro);
+            atualizarStatusConexaoG('🔴 erro de conexão', 'sync-error');
+        });
+    });`;
+  return html.includes(antigo) ? html.replace(antigo, novo) : html;
+};
+
 const respostaHtmlComHotfix = async (response) => {
-  let html = await response.text();
+  let html = protegerBootstrapAuthGarcom(await response.text());
   if (!html.includes('/garcom/modern-hybrid.css')) html = html.replace('</head>', '<link rel="stylesheet" href="/garcom/modern-hybrid.css"></head>');
   if (!html.includes('/garcom/waiter-speed.css')) html = html.replace('</head>', '<link rel="stylesheet" href="/garcom/waiter-speed.css"></head>');
   if (!html.includes('/auth-session-isolation.js')) html = html.replace('</body>', '<script src="/auth-session-isolation.js?v=20"></script></body>');
   if (!html.includes('/mesa-atomic.js')) html = html.replace('</body>', '<script src="/mesa-atomic.js?v=38"></script></body>');
   if (!html.includes('/garcom/access-control.js')) html = html.replace('</body>', '<script src="/garcom/access-control.js"></script></body>');
-  if (!html.includes('shared-login.js?v=17')) html = html.replace('</body>', '<script src="/garcom/shared-login.js?v=17"></script></body>');
+  if (!html.includes('shared-login.js?v=18')) html = html.replace('</body>', '<script src="/garcom/shared-login.js?v=18"></script></body>');
   if (!html.includes('/garcom/mesas-auth-reconnect.js')) html = html.replace('</body>', '<script src="/garcom/mesas-auth-reconnect.js?v=37"></script></body>');
   if (!html.includes('/garcom/cardapio-auth-reconnect.js')) html = html.replace('</body>', '<script src="/garcom/cardapio-auth-reconnect.js?v=20"></script></body>');
   if (!html.includes('/garcom/access-diagnostics.js')) html = html.replace('</body>', '<script src="/garcom/access-diagnostics.js"></script></body>');
