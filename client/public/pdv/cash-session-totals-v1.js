@@ -10,6 +10,7 @@
   let queryVendas = null;
   let listenerVendas = null;
   let sessaoAtual = null;
+  let vendasAtuais = [];
   let totaisAtuais = null;
 
   const numero = valor => {
@@ -132,7 +133,7 @@
     card.classList.toggle('ativo', ativa);
     if (!ativa) return;
 
-    const totais = totaisAtuais || calcular([], sessaoAtual);
+    const totais = totaisAtuais || calcular(vendasAtuais, sessaoAtual);
     const titulo = card.querySelector('.pcst-sessao');
     if (titulo) titulo.textContent = sessaoAtual.codigo || sessaoAtual.id;
     escrever('quantidadeVendas', totais.quantidadeVendas, false);
@@ -157,19 +158,22 @@
 
   function acompanharVendas(sessao) {
     desconectarVendas();
-    totaisAtuais = calcular([], sessao);
+    vendasAtuais = [];
+    totaisAtuais = calcular(vendasAtuais, sessao);
     renderizar();
     const database = db();
     if (!database || !sessao?.id) return;
 
     queryVendas = database.ref('vendas').orderByChild('sessaoCaixaId').equalTo(String(sessao.id));
     listenerVendas = snapshot => {
-      totaisAtuais = calcular(listaVendas(snapshot.val()), sessaoAtual);
+      vendasAtuais = listaVendas(snapshot.val());
+      totaisAtuais = calcular(vendasAtuais, sessaoAtual);
       renderizar();
     };
     queryVendas.on('value', listenerVendas, erro => {
       console.warn('Não foi possível calcular os totais da sessão de caixa:', erro);
-      totaisAtuais = calcular([], sessaoAtual);
+      vendasAtuais = [];
+      totaisAtuais = calcular(vendasAtuais, sessaoAtual);
       renderizar();
     });
   }
@@ -187,6 +191,7 @@
     desconectarSessao();
     if (!adminValido(user) || !db()) {
       sessaoAtual = null;
+      vendasAtuais = [];
       totaisAtuais = null;
       renderizar();
       return;
@@ -199,19 +204,21 @@
       sessaoAtual = proxima;
       if (!sessaoAtual?.id || sessaoAtual.status !== 'aberto') {
         desconectarVendas();
+        vendasAtuais = [];
         totaisAtuais = null;
         renderizar();
         return;
       }
       if (String(idAnterior || '') !== String(sessaoAtual.id)) acompanharVendas(sessaoAtual);
       else {
-        totaisAtuais = calcular(listaVendas(null), sessaoAtual);
-        acompanharVendas(sessaoAtual);
+        totaisAtuais = calcular(vendasAtuais, sessaoAtual);
+        renderizar();
       }
     };
     refSessao.on('value', listenerSessao, erro => {
       console.warn('Não foi possível acompanhar a sessão para calcular totais:', erro);
       sessaoAtual = null;
+      vendasAtuais = [];
       totaisAtuais = null;
       desconectarVendas();
       renderizar();
