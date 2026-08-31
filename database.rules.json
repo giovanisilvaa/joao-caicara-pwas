@@ -22,6 +22,7 @@
     },
     "vendas": {
       ".read": "auth != null && auth.token.email === 'adm@acesso.joaocaicara.app'",
+      ".indexOn": ["sessaoCaixaId"],
       "$vendaId": {
         ".write": "auth != null && ((auth.token.email === 'adm@acesso.joaocaicara.app' && newData.exists()) || (auth.token.email === 'garcom@acesso.joaocaicara.app' && !data.exists() && newData.exists()))",
         ".validate": "newData.hasChildren(['mesa', 'total']) && newData.child('mesa').isNumber() && newData.child('total').isNumber() && newData.child('total').val() >= 0"
