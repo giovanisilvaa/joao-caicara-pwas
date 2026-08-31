@@ -19,8 +19,10 @@ const esperados = [
   [124,'Filé Mignon à Parmegiana',210],[125,'Filé Mignon à Cubana',210],[126,'Filé Mignon com Fritas',195]
 ] as const;
 
+type ItemCatalogo = { id: number; nome: string; preco: number; categoria: string; setor: string };
+
 function catalogoComAdicoes() {
-  const base = esperados.map(([id, nome, preco]) => ({ id, nome, preco, categoria: 'Teste', setor: 'cozinha' }));
+  const base: ItemCatalogo[] = esperados.map(([id, nome, preco]) => ({ id, nome, preco, categoria: 'Teste', setor: 'cozinha' }));
   base.push(
     { id: 1001, nome: 'Produto incluído pelo PDV A', preco: 10, categoria: 'Teste', setor: 'cozinha' },
     { id: 1002, nome: 'Produto incluído pelo PDV B', preco: 12, categoria: 'Teste', setor: 'bar' }
