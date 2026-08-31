@@ -40,6 +40,7 @@
     if (!texto) return 0;
     if (texto.includes(',') && texto.includes('.')) texto = texto.replace(/\./g, '').replace(',', '.');
     else if (texto.includes(',')) texto = texto.replace(',', '.');
+    else if (/^\d{1,3}(\.\d{3})+$/.test(texto)) texto = texto.replace(/\./g, '');
     const n = Number(texto);
     return Number.isFinite(n) ? n : NaN;
   }
@@ -53,19 +54,23 @@
     return `${codigoSessao(agora)}-${Math.random().toString(36).slice(2, 7)}`;
   }
 
-  function mesasPendentes() {
-    try {
-      const origem = typeof mesas !== 'undefined' && mesas && typeof mesas === 'object' ? mesas : {};
-      return Object.entries(origem).filter(([, mesa]) => {
-        if (!mesa || typeof mesa !== 'object') return false;
-        const itens = Array.isArray(mesa.itens)
-          ? mesa.itens.filter(Boolean)
-          : (mesa.itens && typeof mesa.itens === 'object' ? Object.values(mesa.itens).filter(Boolean) : []);
-        return Boolean(mesa.abertura || itens.length || mesa.estadoConta === 'aguardando_pagamento');
-      }).map(([numero]) => numero);
-    } catch (_) {
-      return [];
-    }
+  function extrairMesasPendentes(valor) {
+    const origem = valor && typeof valor === 'object' ? valor : {};
+    return Object.entries(origem).filter(([, mesa]) => {
+      if (!mesa || typeof mesa !== 'object') return false;
+      const itens = Array.isArray(mesa.itens)
+        ? mesa.itens.filter(Boolean)
+        : (mesa.itens && typeof mesa.itens === 'object' ? Object.values(mesa.itens).filter(Boolean) : []);
+      return Boolean(mesa.abertura || itens.length || mesa.estadoConta === 'aguardando_pagamento');
+    }).map(([numero]) => numero);
+  }
+
+  async function mesasPendentesServidor() {
+    const database = db();
+    if (!database) throw new Error('Firebase Database indisponível.');
+    const refMesas = database.ref('mesas');
+    const snapshot = await refMesas.once('value');
+    return extrairMesasPendentes(snapshot.val());
   }
 
   function executarTransacao(mutador) {
@@ -152,7 +157,14 @@
       return false;
     }
 
-    const pendentes = mesasPendentes();
+    let pendentes = [];
+    try {
+      pendentes = await mesasPendentesServidor();
+    } catch (erro) {
+      console.warn('Não foi possível confirmar as mesas antes do encerramento do caixa:', erro);
+      alert('Não foi possível confirmar o estado das mesas no servidor. Por segurança, a sessão de caixa permanece aberta.');
+      return false;
+    }
     if (pendentes.length) {
       const amostra = pendentes.slice(0, 8).join(', ');
       const restante = pendentes.length > 8 ? ` e mais ${pendentes.length - 8}` : '';
@@ -245,7 +257,10 @@
     if (aberta) {
       if (status) status.textContent = `ABERTO · ${sessaoAtual.codigo || sessaoAtual.id}`;
       if (meta) meta.textContent = `Desde ${new Date(Number(sessaoAtual.abertoEm) || Date.now()).toLocaleString('pt-BR')} · Fundo ${moeda(sessaoAtual.fundoInicial)}`;
-      if (botao) botao.textContent = 'Encerrar sessão';
+      if (botao) {
+        botao.textContent = 'Encerrar sessão';
+        botao.disabled = false;
+      }
     } else {
       if (status) status.textContent = adminAtual() ? 'Nenhuma sessão aberta' : 'Aguardando login administrativo';
       if (meta) meta.textContent = adminAtual() ? 'Abra uma sessão para iniciar um novo período operacional.' : 'A sessão de caixa é exclusiva do administrador/PDV.';
