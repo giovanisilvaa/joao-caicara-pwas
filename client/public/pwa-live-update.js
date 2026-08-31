@@ -9,6 +9,7 @@
   let carregandoComanda = false;
   let carregandoSessaoCaixa = false;
   let carregandoVinculoVendasCaixa = false;
+  let carregandoTotaisSessaoCaixa = false;
   let observadorReparoPdv = null;
 
   function repararComandaPdv() {
@@ -98,6 +99,7 @@
       script.onload = () => {
         carregandoSessaoCaixa = false;
         garantirVinculoVendasCaixaPdv();
+        garantirTotaisSessaoCaixaPdv();
       };
       script.onerror = () => {
         carregandoSessaoCaixa = false;
@@ -133,10 +135,34 @@
     }
   }
 
+  function garantirTotaisSessaoCaixaPdv() {
+    if (escopo !== '/pdv/' || window.PDV_CASH_SESSION_TOTALS_RUNTIME === 'v1') return;
+    try {
+      if (carregandoTotaisSessaoCaixa || document.querySelector('script[data-pdv-cash-session-totals="v1"]')) return;
+      carregandoTotaisSessaoCaixa = true;
+      const script = document.createElement('script');
+      script.src = '/pdv/cash-session-totals-v1.js?v=1&direct=1';
+      script.async = false;
+      script.dataset.pdvCashSessionTotals = 'v1';
+      script.onload = () => {
+        carregandoTotaisSessaoCaixa = false;
+      };
+      script.onerror = () => {
+        carregandoTotaisSessaoCaixa = false;
+        console.warn('Falha ao carregar os totais da sessão de caixa. O fluxo de vendas permanece inalterado.');
+      };
+      (document.head || document.documentElement).appendChild(script);
+    } catch (erro) {
+      carregandoTotaisSessaoCaixa = false;
+      console.warn('Falha ao garantir os totais da sessão de caixa:', erro);
+    }
+  }
+
   async function verificarAtualizacao() {
     garantirComandaPdv();
     garantirSessaoCaixaPdv();
     garantirVinculoVendasCaixaPdv();
+    garantirTotaisSessaoCaixaPdv();
     if (!('serviceWorker' in navigator) || verificando || navigator.onLine === false) return;
     verificando = true;
     try {
@@ -153,6 +179,7 @@
       garantirComandaPdv();
       garantirSessaoCaixaPdv();
       garantirVinculoVendasCaixaPdv();
+      garantirTotaisSessaoCaixaPdv();
     }
   }
 
@@ -172,6 +199,7 @@
   garantirComandaPdv();
   garantirSessaoCaixaPdv();
   garantirVinculoVendasCaixaPdv();
+  garantirTotaisSessaoCaixaPdv();
   void verificarAtualizacao();
 
   window.JoaoCaicaraPwaUpdate = Object.freeze({
@@ -180,6 +208,7 @@
     garantirComandaPdv,
     repararComandaPdv,
     garantirSessaoCaixaPdv,
-    garantirVinculoVendasCaixaPdv
+    garantirVinculoVendasCaixaPdv,
+    garantirTotaisSessaoCaixaPdv
   });
 })();
