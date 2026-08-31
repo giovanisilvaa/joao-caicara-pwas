@@ -15,14 +15,20 @@ describe('sessão estrutural de caixa do PDV', () => {
     expect(src).toContain('registros: { ...registros, [esperada]: fechada }');
   });
 
-  it('registra abertura e encerramento sem apagar dados financeiros existentes', () => {
+  it('registra abertura e encerramento com resumo final sem alterar vendas', () => {
     const src = read('client/public/pdv/cash-session-v1.js');
     expect(src).toContain('fundoInicial');
     expect(src).toContain('operadorAbertura');
     expect(src).toContain('operadorFechamento');
     expect(src).toContain("status: STATUS_FECHADO");
-    expect(src).toContain("fase: 'estrutura_v1'");
-    expect(src).not.toContain("ref('vendas')");
+    expect(src).toContain('resumoFinal: clone(resumoFinal)');
+    expect(src).toContain("fase: 'resumo_final_v1'");
+    expect(src).toContain("database.ref('vendas')");
+    expect(src).toContain(".orderByChild('sessaoCaixaId')");
+    expect(src).toContain(".equalTo(String(sessaoId))");
+    expect(src).not.toContain("ref('vendas').push(");
+    expect(src).not.toContain("ref('vendas').set(");
+    expect(src).not.toContain("ref('vendas').update(");
     expect(src).not.toContain("ref('pedidosProducao')");
     expect(src).not.toContain("ref('fechamentosCaixa')");
     expect(src).not.toContain('.remove(');
@@ -37,9 +43,20 @@ describe('sessão estrutural de caixa do PDV', () => {
     expect(src).not.toContain('refMesas.remove(');
     expect(src).not.toContain('refMesas.transaction(');
     expect(src).toContain("mesa.estadoConta === 'aguardando_pagamento'");
-    expect(src).toContain('pendentes = await mesasPendentesServidor()');
+    expect(src).toContain('await confirmarMesasLivresAntesDoFechamento()');
     expect(src).toContain('Por segurança, a sessão de caixa permanece aberta.');
     expect(src).toContain('Não é possível encerrar o caixa com mesas/comandas abertas ou aguardando pagamento.');
+  });
+
+  it('estabiliza as vendas antes de preservar o retrato financeiro', () => {
+    const src = read('client/public/pdv/cash-session-v1.js');
+    expect(src).toContain('const ESTABILIZACAO_MS = 600');
+    expect(src).toContain('const MAX_LEITURAS_ESTABILIZACAO = 4');
+    expect(src).toContain('async function resumoFinanceiroEstavelServidor(sessao)');
+    expect(src).toContain('await esperar(ESTABILIZACAO_MS)');
+    expect(src).toContain('atual.assinatura === anterior.assinatura');
+    expect(src).toContain("throw new Error('As vendas da sessão ainda estão sincronizando.')");
+    expect(src).toContain('As vendas da sessão ainda não puderam ser confirmadas no servidor.');
   });
 
   it('aceita fundo inicial com vírgula, ponto decimal ou milhar comum', () => {
@@ -51,7 +68,7 @@ describe('sessão estrutural de caixa do PDV', () => {
     expect(src).toContain('fundoInicial < 0');
   });
 
-  it('deixa a sessão exclusiva do administrador e valida fechamento completo', () => {
+  it('deixa a sessão exclusiva do administrador e mantém o índice financeiro de vendas', () => {
     const regras = JSON.parse(read('database.rules.json')).rules;
     const caixa = regras.sessoesCaixa;
     expect(caixa).toBeTruthy();
@@ -66,9 +83,10 @@ describe('sessão estrutural de caixa do PDV', () => {
     expect(validarRegistro).toContain("newData.hasChildren(['fechadoEm', 'duracaoMs'])");
     expect(validarRegistro).toContain("newData.child('fechadoEm').isNumber()");
     expect(validarRegistro).toContain("newData.child('duracaoMs').val() >= 0");
+    expect(regras.vendas['.indexOn']).toEqual(['sessaoCaixaId']);
   });
 
-  it('publica a nova camada sem remover a zeragem e os relatórios legados', () => {
+  it('publica a camada sem remover a zeragem e os relatórios legados', () => {
     const sw = read('client/public/pdv/service-worker.js');
     expect(sw).toContain('cashsession-v44');
     expect(sw).toContain("const CASH_SESSION_ASSET = '/pdv/' + 'cash-session-v1.js?v=1'");
@@ -94,9 +112,10 @@ describe('sessão estrutural de caixa do PDV', () => {
     expect(src).toContain('botao.disabled = false');
   });
 
-  it('expõe apenas a API necessária para a próxima etapa de vincular vendas', () => {
+  it('expõe cálculo puro do resumo para validação e relatórios futuros', () => {
     const src = read('client/public/pdv/cash-session-v1.js');
     expect(src).toContain('window.PdvSessaoCaixa = Object.freeze');
+    expect(src).toContain('resumirVendas: (vendas, sessao, calculadoEm) =>');
     expect(src).toContain('idAtual: () =>');
     expect(src).toContain('codigoAtual: () =>');
     expect(src).toContain("runtime: 'v1'");
