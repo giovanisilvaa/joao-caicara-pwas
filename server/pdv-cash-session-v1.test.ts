@@ -23,24 +23,30 @@ describe('sessão estrutural de caixa do PDV', () => {
     expect(src).toContain("status: STATUS_FECHADO");
     expect(src).toContain("fase: 'estrutura_v1'");
     expect(src).not.toContain("ref('vendas')");
-    expect(src).not.toContain("ref('mesas')");
     expect(src).not.toContain("ref('pedidosProducao')");
     expect(src).not.toContain("ref('fechamentosCaixa')");
     expect(src).not.toContain('.remove(');
   });
 
-  it('bloqueia encerramento enquanto houver mesa/comanda pendente', () => {
+  it('consulta mesas somente leitura e falha fechado antes de encerrar', () => {
     const src = read('client/public/pdv/cash-session-v1.js');
-    expect(src).toContain('function mesasPendentes()');
+    expect(src).toContain("const refMesas = database.ref('mesas')");
+    expect(src).toContain("await refMesas.once('value')");
+    expect(src).not.toContain('refMesas.set(');
+    expect(src).not.toContain('refMesas.update(');
+    expect(src).not.toContain('refMesas.remove(');
+    expect(src).not.toContain('refMesas.transaction(');
     expect(src).toContain("mesa.estadoConta === 'aguardando_pagamento'");
-    expect(src).toContain('const pendentes = mesasPendentes()');
+    expect(src).toContain('pendentes = await mesasPendentesServidor()');
+    expect(src).toContain('Por segurança, a sessão de caixa permanece aberta.');
     expect(src).toContain('Não é possível encerrar o caixa com mesas/comandas abertas ou aguardando pagamento.');
   });
 
-  it('aceita fundo inicial com vírgula ou ponto sem ambiguidade comum', () => {
+  it('aceita fundo inicial com vírgula, ponto decimal ou milhar comum', () => {
     const src = read('client/public/pdv/cash-session-v1.js');
     expect(src).toContain("texto.includes(',') && texto.includes('.')");
     expect(src).toContain("else if (texto.includes(',')) texto = texto.replace(',', '.')");
+    expect(src).toContain("/^\\d{1,3}(\\.\\d{3})+$/.test(texto)");
     expect(src).toContain('Number.isFinite(fundoInicial)');
     expect(src).toContain('fundoInicial < 0');
   });
@@ -66,6 +72,12 @@ describe('sessão estrutural de caixa do PDV', () => {
     expect(sw).toContain('/pdv/cash-reset.js?v=35');
     expect(sw).toContain("DAILY_SALES_REPORT_ASSET = '/pdv/' + 'daily-sales-report.js?v=29'");
     expect(sw).toContain("REPORT_DASHBOARD_ASSET = '/pdv/report-dashboard-v1.js?v=1'");
+  });
+
+  it('reativa a ação após relogar com uma sessão já aberta', () => {
+    const src = read('client/public/pdv/cash-session-v1.js');
+    expect(src).toContain("botao.textContent = 'Encerrar sessão'");
+    expect(src).toContain('botao.disabled = false');
   });
 
   it('expõe apenas a API necessária para a próxima etapa de vincular vendas', () => {
