@@ -189,10 +189,10 @@
 
   function conectar(user) {
     desconectarSessao();
+    sessaoAtual = null;
+    vendasAtuais = [];
+    totaisAtuais = null;
     if (!adminValido(user) || !db()) {
-      sessaoAtual = null;
-      vendasAtuais = [];
-      totaisAtuais = null;
       renderizar();
       return;
     }
