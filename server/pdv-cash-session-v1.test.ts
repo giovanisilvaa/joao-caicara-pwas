@@ -79,6 +79,15 @@ describe('sessão estrutural de caixa do PDV', () => {
     expect(sw).toContain("REPORT_DASHBOARD_ASSET = '/pdv/report-dashboard-v1.js?v=1'");
   });
 
+  it('faz bootstrap da sessão mesmo quando o PDV ainda está sob service worker anterior', () => {
+    const live = read('client/public/pwa-live-update.js');
+    expect(live).toContain('function garantirSessaoCaixaPdv()');
+    expect(live).toContain("window.PDV_CASH_SESSION_RUNTIME === 'v1'");
+    expect(live).toContain("script.src = '/pdv/cash-session-v1.js?v=1&direct=1'");
+    expect(live).toContain('script.dataset.pdvCashSession = \'v1\'');
+    expect(live).toContain('garantirSessaoCaixaPdv();');
+  });
+
   it('reativa a ação após relogar com uma sessão já aberta', () => {
     const src = read('client/public/pdv/cash-session-v1.js');
     expect(src).toContain("botao.textContent = 'Encerrar sessão'");
