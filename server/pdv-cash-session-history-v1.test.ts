@@ -111,7 +111,7 @@ describe('histórico de sessões de caixa do PDV', () => {
   });
 
   it('identifica claramente sessões anteriores ao resumo final', () => {
-    expect(source).toContain('sem resumo final');
+    expect(source).toContain('Sem resumo final');
     expect(source).toContain('Histórico legado');
     expect(source).toContain('os totais não serão inventados nem reconstruídos automaticamente');
   });
