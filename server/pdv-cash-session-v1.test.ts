@@ -51,7 +51,7 @@ describe('sessão estrutural de caixa do PDV', () => {
     expect(src).toContain('fundoInicial < 0');
   });
 
-  it('deixa a sessão exclusiva do administrador nas regras do Firebase', () => {
+  it('deixa a sessão exclusiva do administrador e valida fechamento completo', () => {
     const regras = JSON.parse(read('database.rules.json')).rules;
     const caixa = regras.sessoesCaixa;
     expect(caixa).toBeTruthy();
@@ -60,7 +60,12 @@ describe('sessão estrutural de caixa do PDV', () => {
     expect(caixa['.read']).not.toContain('garcom@acesso.joaocaicara.app');
     expect(caixa['.write']).not.toContain('garcom@acesso.joaocaicara.app');
     expect(caixa.atual['.validate']).toContain("newData.child('status').val() === 'aberto'");
-    expect(caixa.registros['$sessaoId']['.validate']).toContain("newData.child('id').val() === $sessaoId");
+    const validarRegistro = caixa.registros['$sessaoId']['.validate'];
+    expect(validarRegistro).toContain("newData.child('id').val() === $sessaoId");
+    expect(validarRegistro).toContain("newData.child('status').val() === 'fechado'");
+    expect(validarRegistro).toContain("newData.hasChildren(['fechadoEm', 'duracaoMs'])");
+    expect(validarRegistro).toContain("newData.child('fechadoEm').isNumber()");
+    expect(validarRegistro).toContain("newData.child('duracaoMs').val() >= 0");
   });
 
   it('publica a nova camada sem remover a zeragem e os relatórios legados', () => {
