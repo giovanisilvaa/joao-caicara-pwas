@@ -8,6 +8,7 @@
   let verificando = false;
   let carregandoComanda = false;
   let carregandoSessaoCaixa = false;
+  let carregandoVinculoVendasCaixa = false;
   let observadorReparoPdv = null;
 
   function repararComandaPdv() {
@@ -96,6 +97,7 @@
       script.dataset.pdvCashSession = 'v1';
       script.onload = () => {
         carregandoSessaoCaixa = false;
+        garantirVinculoVendasCaixaPdv();
       };
       script.onerror = () => {
         carregandoSessaoCaixa = false;
@@ -108,9 +110,33 @@
     }
   }
 
+  function garantirVinculoVendasCaixaPdv() {
+    if (escopo !== '/pdv/' || window.PDV_CASH_SESSION_SALES_LINK_RUNTIME === 'v1') return;
+    try {
+      if (carregandoVinculoVendasCaixa || document.querySelector('script[data-pdv-cash-session-sales-link="v1"]')) return;
+      carregandoVinculoVendasCaixa = true;
+      const script = document.createElement('script');
+      script.src = '/pdv/cash-session-sales-link-v1.js?v=1&direct=1';
+      script.async = false;
+      script.dataset.pdvCashSessionSalesLink = 'v1';
+      script.onload = () => {
+        carregandoVinculoVendasCaixa = false;
+      };
+      script.onerror = () => {
+        carregandoVinculoVendasCaixa = false;
+        console.warn('Falha ao carregar o vínculo entre vendas e sessão de caixa. O fechamento continua no fluxo legado.');
+      };
+      (document.head || document.documentElement).appendChild(script);
+    } catch (erro) {
+      carregandoVinculoVendasCaixa = false;
+      console.warn('Falha ao garantir o vínculo entre vendas e sessão de caixa:', erro);
+    }
+  }
+
   async function verificarAtualizacao() {
     garantirComandaPdv();
     garantirSessaoCaixaPdv();
+    garantirVinculoVendasCaixaPdv();
     if (!('serviceWorker' in navigator) || verificando || navigator.onLine === false) return;
     verificando = true;
     try {
@@ -126,6 +152,7 @@
       verificando = false;
       garantirComandaPdv();
       garantirSessaoCaixaPdv();
+      garantirVinculoVendasCaixaPdv();
     }
   }
 
@@ -144,6 +171,7 @@
   // Também verifica imediatamente, inclusive em PWAs já instalados.
   garantirComandaPdv();
   garantirSessaoCaixaPdv();
+  garantirVinculoVendasCaixaPdv();
   void verificarAtualizacao();
 
   window.JoaoCaicaraPwaUpdate = Object.freeze({
@@ -151,6 +179,7 @@
     escopo,
     garantirComandaPdv,
     repararComandaPdv,
-    garantirSessaoCaixaPdv
+    garantirSessaoCaixaPdv,
+    garantirVinculoVendasCaixaPdv
   });
 })();
