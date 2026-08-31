@@ -45,6 +45,18 @@
         ".write": "auth != null && auth.token.email === 'adm@acesso.joaocaicara.app' && newData.exists()"
       }
     },
+    "sessoesCaixa": {
+      ".read": "auth != null && auth.token.email === 'adm@acesso.joaocaicara.app'",
+      ".write": "auth != null && auth.token.email === 'adm@acesso.joaocaicara.app'",
+      "atual": {
+        ".validate": "!newData.exists() || (newData.hasChildren(['id', 'codigo', 'status', 'abertoEm', 'fundoInicial', 'origem', 'versao']) && newData.child('id').isString() && newData.child('codigo').isString() && newData.child('status').val() === 'aberto' && newData.child('abertoEm').isNumber() && newData.child('fundoInicial').isNumber() && newData.child('fundoInicial').val() >= 0 && newData.child('origem').val() === 'pdv' && newData.child('versao').val() === 1)"
+      },
+      "registros": {
+        "$sessaoId": {
+          ".validate": "!newData.exists() || (newData.hasChildren(['id', 'codigo', 'status', 'abertoEm', 'fundoInicial', 'origem', 'versao']) && newData.child('id').isString() && newData.child('id').val() === $sessaoId && newData.child('codigo').isString() && (newData.child('status').val() === 'aberto' || (newData.child('status').val() === 'fechado' && newData.hasChildren(['fechadoEm', 'duracaoMs']) && newData.child('fechadoEm').isNumber() && newData.child('duracaoMs').isNumber() && newData.child('duracaoMs').val() >= 0)) && newData.child('abertoEm').isNumber() && newData.child('fundoInicial').isNumber() && newData.child('fundoInicial').val() >= 0 && newData.child('origem').val() === 'pdv' && newData.child('versao').val() === 1)"
+        }
+      }
+    },
     "perfisAcesso": {
       "$uid": {
         ".read": "auth != null && auth.uid === $uid",
