@@ -7,6 +7,7 @@
 
   let verificando = false;
   let carregandoComanda = false;
+  let carregandoSessaoCaixa = false;
   let observadorReparoPdv = null;
 
   function repararComandaPdv() {
@@ -84,8 +85,32 @@
     }
   }
 
+  function garantirSessaoCaixaPdv() {
+    if (escopo !== '/pdv/' || window.PDV_CASH_SESSION_RUNTIME === 'v1') return;
+    try {
+      if (carregandoSessaoCaixa || document.querySelector('script[data-pdv-cash-session="v1"]')) return;
+      carregandoSessaoCaixa = true;
+      const script = document.createElement('script');
+      script.src = '/pdv/cash-session-v1.js?v=1&direct=1';
+      script.async = false;
+      script.dataset.pdvCashSession = 'v1';
+      script.onload = () => {
+        carregandoSessaoCaixa = false;
+      };
+      script.onerror = () => {
+        carregandoSessaoCaixa = false;
+        console.warn('Falha ao carregar a sessão de caixa do PDV. O fluxo de vendas permanece inalterado.');
+      };
+      (document.head || document.documentElement).appendChild(script);
+    } catch (erro) {
+      carregandoSessaoCaixa = false;
+      console.warn('Falha ao garantir a sessão de caixa do PDV:', erro);
+    }
+  }
+
   async function verificarAtualizacao() {
     garantirComandaPdv();
+    garantirSessaoCaixaPdv();
     if (!('serviceWorker' in navigator) || verificando || navigator.onLine === false) return;
     verificando = true;
     try {
@@ -100,6 +125,7 @@
     } finally {
       verificando = false;
       garantirComandaPdv();
+      garantirSessaoCaixaPdv();
     }
   }
 
@@ -117,12 +143,14 @@
 
   // Também verifica imediatamente, inclusive em PWAs já instalados.
   garantirComandaPdv();
+  garantirSessaoCaixaPdv();
   void verificarAtualizacao();
 
   window.JoaoCaicaraPwaUpdate = Object.freeze({
     verificar: verificarAtualizacao,
     escopo,
     garantirComandaPdv,
-    repararComandaPdv
+    repararComandaPdv,
+    garantirSessaoCaixaPdv
   });
 })();
