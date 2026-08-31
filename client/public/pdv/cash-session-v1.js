@@ -1,4 +1,4 @@
-/* Sessão estrutural de caixa do PDV — abertura/encerramento atômicos, sem alterar vendas ou relatórios. */
+/* Sessão de caixa do PDV — abertura/encerramento atômicos com resumo financeiro final. */
 (() => {
   if (window.PDV_CASH_SESSION_RUNTIME === 'v1') return;
   window.PDV_CASH_SESSION_RUNTIME = 'v1';
@@ -7,6 +7,9 @@
   const ADMIN_EMAIL = 'adm@acesso.joaocaicara.app';
   const STATUS_ABERTO = 'aberto';
   const STATUS_FECHADO = 'fechado';
+  const RESUMO_VERSAO = 1;
+  const ESTABILIZACAO_MS = 600;
+  const MAX_LEITURAS_ESTABILIZACAO = 4;
   let sessaoAtual = null;
   let refAtual = null;
   let listenerAtual = null;
@@ -14,6 +17,12 @@
   const clone = valor => valor == null ? valor : JSON.parse(JSON.stringify(valor));
   const pad = valor => String(valor).padStart(2, '0');
   const moeda = valor => Number(valor || 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+  const esperar = ms => new Promise(resolve => setTimeout(resolve, ms));
+  const numeroSeguro = valor => {
+    const n = Number(valor);
+    return Number.isFinite(n) ? n : 0;
+  };
+  const naoNegativo = valor => Math.max(0, numeroSeguro(valor));
 
   function auth() {
     try { return window.firebase?.auth?.() || null; } catch (_) { return null; }
@@ -71,6 +80,85 @@
     const refMesas = database.ref('mesas');
     const snapshot = await refMesas.once('value');
     return extrairMesasPendentes(snapshot.val());
+  }
+
+  function listaVendas(valor) {
+    if (!valor || typeof valor !== 'object') return [];
+    return Object.values(valor).filter(venda => venda && typeof venda === 'object');
+  }
+
+  function calcularResumoFinanceiro(vendas, sessao, calculadoEm = Date.now()) {
+    const resumo = {
+      versao: RESUMO_VERSAO,
+      calculadoEm: Number(calculadoEm) || Date.now(),
+      quantidadeVendas: 0,
+      subtotal: 0,
+      taxaServico: 0,
+      totalVendas: 0,
+      dinheiroBruto: 0,
+      troco: 0,
+      dinheiroLiquido: 0,
+      pix: 0,
+      credito: 0,
+      debito: 0,
+      fundoInicial: naoNegativo(sessao?.fundoInicial),
+      especieEsperada: 0,
+      fonte: 'vendas_por_sessao'
+    };
+
+    (Array.isArray(vendas) ? vendas : []).forEach(venda => {
+      const total = naoNegativo(venda?.total);
+      const taxa = naoNegativo(venda?.taxa);
+      const subtotal = venda?.subtotal == null ? Math.max(0, total - taxa) : naoNegativo(venda.subtotal);
+      const pagamentos = venda?.pagamentos && typeof venda.pagamentos === 'object' ? venda.pagamentos : {};
+      const dinheiro = naoNegativo(pagamentos.dinheiro);
+      const troco = naoNegativo(venda?.troco);
+
+      resumo.quantidadeVendas += 1;
+      resumo.subtotal += subtotal;
+      resumo.taxaServico += taxa;
+      resumo.totalVendas += total;
+      resumo.dinheiroBruto += dinheiro;
+      resumo.troco += troco;
+      resumo.dinheiroLiquido += Math.max(0, dinheiro - troco);
+      resumo.pix += naoNegativo(pagamentos.pix);
+      resumo.credito += naoNegativo(pagamentos.credito);
+      resumo.debito += naoNegativo(pagamentos.debito);
+    });
+
+    resumo.especieEsperada = resumo.fundoInicial + resumo.dinheiroLiquido;
+    return resumo;
+  }
+
+  async function lerVendasSessaoServidor(sessaoId) {
+    const database = db();
+    if (!database) throw new Error('Firebase Database indisponível.');
+    const snapshot = await database.ref('vendas')
+      .orderByChild('sessaoCaixaId')
+      .equalTo(String(sessaoId))
+      .once('value');
+    const valor = snapshot.val() || null;
+    const entradas = valor && typeof valor === 'object'
+      ? Object.entries(valor).sort(([a], [b]) => String(a).localeCompare(String(b)))
+      : [];
+    return {
+      vendas: listaVendas(valor),
+      assinatura: JSON.stringify(entradas)
+    };
+  }
+
+  async function resumoFinanceiroEstavelServidor(sessao) {
+    if (!sessao?.id) throw new Error('Sessão de caixa inválida.');
+    let anterior = await lerVendasSessaoServidor(sessao.id);
+    for (let leitura = 1; leitura < MAX_LEITURAS_ESTABILIZACAO; leitura += 1) {
+      await esperar(ESTABILIZACAO_MS);
+      const atual = await lerVendasSessaoServidor(sessao.id);
+      if (atual.assinatura === anterior.assinatura) {
+        return calcularResumoFinanceiro(atual.vendas, sessao, Date.now());
+      }
+      anterior = atual;
+    }
+    throw new Error('As vendas da sessão ainda estão sincronizando.');
   }
 
   function executarTransacao(mutador) {
@@ -145,18 +233,7 @@
     }
   }
 
-  async function encerrar() {
-    const user = adminAtual();
-    if (!user) {
-      alert('Faça login como administrador no PDV antes de encerrar o caixa.');
-      return false;
-    }
-    const esperada = sessaoAtual?.id || null;
-    if (!esperada) {
-      alert('Não existe uma sessão de caixa aberta para encerrar.');
-      return false;
-    }
-
+  async function confirmarMesasLivresAntesDoFechamento() {
     let pendentes = [];
     try {
       pendentes = await mesasPendentesServidor();
@@ -171,8 +248,37 @@
       alert(`Não é possível encerrar o caixa com mesas/comandas abertas ou aguardando pagamento.\n\nPendentes: ${amostra}${restante}.`);
       return false;
     }
+    return true;
+  }
 
-    if (!confirm(`Encerrar a sessão ${sessaoAtual.codigo || esperada}?\n\nNesta etapa, isso encerra somente o período operacional. Vendas e relatórios existentes não serão apagados nem alterados.`)) return false;
+  async function encerrar() {
+    const user = adminAtual();
+    if (!user) {
+      alert('Faça login como administrador no PDV antes de encerrar o caixa.');
+      return false;
+    }
+    const esperada = sessaoAtual?.id || null;
+    if (!esperada) {
+      alert('Não existe uma sessão de caixa aberta para encerrar.');
+      return false;
+    }
+
+    if (!(await confirmarMesasLivresAntesDoFechamento())) return false;
+
+    if (!confirm(`Encerrar a sessão ${sessaoAtual.codigo || esperada}?\n\nO sistema confirmará novamente as mesas e as vendas antes de gravar o resumo final.`)) return false;
+
+    if (!(await confirmarMesasLivresAntesDoFechamento())) return false;
+
+    let resumoFinal = null;
+    try {
+      resumoFinal = await resumoFinanceiroEstavelServidor(sessaoAtual);
+    } catch (erro) {
+      console.warn('Não foi possível estabilizar os totais antes do encerramento:', erro);
+      alert('As vendas da sessão ainda não puderam ser confirmadas no servidor. Por segurança, o caixa permanece aberto. Aguarde alguns instantes e tente novamente.');
+      return false;
+    }
+
+    if (!(await confirmarMesasLivresAntesDoFechamento())) return false;
 
     const agora = Date.now();
     try {
@@ -186,7 +292,8 @@
           fechadoEm: agora,
           duracaoMs: Math.max(0, agora - Number(ativa.abertoEm || agora)),
           operadorFechamento: operador(user),
-          fase: 'estrutura_v1'
+          resumoFinal: clone(resumoFinal),
+          fase: 'resumo_final_v1'
         };
         const registros = raiz.registros && typeof raiz.registros === 'object' ? raiz.registros : {};
         const proxima = {
@@ -207,7 +314,7 @@
       const codigo = sessaoAtual?.codigo || esperada;
       sessaoAtual = null;
       renderizar();
-      alert(`Sessão ${codigo} encerrada. O histórico foi preservado no Firebase.`);
+      alert(`Sessão ${codigo} encerrada com resumo financeiro preservado.\n\n${resumoFinal.quantidadeVendas} venda(s) · Total ${moeda(resumoFinal.totalVendas)} · Espécie esperada ${moeda(resumoFinal.especieEsperada)}.`);
       return true;
     } catch (erro) {
       console.error('Falha ao encerrar sessão de caixa:', erro);
@@ -314,6 +421,7 @@
     runtime: 'v1',
     abrir,
     encerrar,
+    resumirVendas: (vendas, sessao, calculadoEm) => clone(calcularResumoFinanceiro(vendas, sessao, calculadoEm)),
     atual: () => clone(sessaoAtual),
     idAtual: () => sessaoAtual?.status === STATUS_ABERTO ? String(sessaoAtual.id || '') : '',
     codigoAtual: () => sessaoAtual?.status === STATUS_ABERTO ? String(sessaoAtual.codigo || '') : ''
