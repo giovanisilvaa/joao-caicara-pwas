@@ -10,6 +10,7 @@
   let carregandoSessaoCaixa = false;
   let carregandoVinculoVendasCaixa = false;
   let carregandoTotaisSessaoCaixa = false;
+  let carregandoHistoricoSessaoCaixa = false;
   let observadorReparoPdv = null;
 
   function repararComandaPdv() {
@@ -100,6 +101,7 @@
         carregandoSessaoCaixa = false;
         garantirVinculoVendasCaixaPdv();
         garantirTotaisSessaoCaixaPdv();
+        garantirHistoricoSessaoCaixaPdv();
       };
       script.onerror = () => {
         carregandoSessaoCaixa = false;
@@ -158,11 +160,35 @@
     }
   }
 
+  function garantirHistoricoSessaoCaixaPdv() {
+    if (escopo !== '/pdv/' || window.PDV_CASH_SESSION_HISTORY_RUNTIME === 'v1') return;
+    try {
+      if (carregandoHistoricoSessaoCaixa || document.querySelector('script[data-pdv-cash-session-history="v1"]')) return;
+      carregandoHistoricoSessaoCaixa = true;
+      const script = document.createElement('script');
+      script.src = '/pdv/cash-session-history-v1.js?v=1&direct=1';
+      script.async = false;
+      script.dataset.pdvCashSessionHistory = 'v1';
+      script.onload = () => {
+        carregandoHistoricoSessaoCaixa = false;
+      };
+      script.onerror = () => {
+        carregandoHistoricoSessaoCaixa = false;
+        console.warn('Falha ao carregar o histórico de sessões de caixa. O fluxo operacional permanece inalterado.');
+      };
+      (document.head || document.documentElement).appendChild(script);
+    } catch (erro) {
+      carregandoHistoricoSessaoCaixa = false;
+      console.warn('Falha ao garantir o histórico de sessões de caixa:', erro);
+    }
+  }
+
   async function verificarAtualizacao() {
     garantirComandaPdv();
     garantirSessaoCaixaPdv();
     garantirVinculoVendasCaixaPdv();
     garantirTotaisSessaoCaixaPdv();
+    garantirHistoricoSessaoCaixaPdv();
     if (!('serviceWorker' in navigator) || verificando || navigator.onLine === false) return;
     verificando = true;
     try {
@@ -180,6 +206,7 @@
       garantirSessaoCaixaPdv();
       garantirVinculoVendasCaixaPdv();
       garantirTotaisSessaoCaixaPdv();
+      garantirHistoricoSessaoCaixaPdv();
     }
   }
 
@@ -200,6 +227,7 @@
   garantirSessaoCaixaPdv();
   garantirVinculoVendasCaixaPdv();
   garantirTotaisSessaoCaixaPdv();
+  garantirHistoricoSessaoCaixaPdv();
   void verificarAtualizacao();
 
   window.JoaoCaicaraPwaUpdate = Object.freeze({
@@ -209,6 +237,7 @@
     repararComandaPdv,
     garantirSessaoCaixaPdv,
     garantirVinculoVendasCaixaPdv,
-    garantirTotaisSessaoCaixaPdv
+    garantirTotaisSessaoCaixaPdv,
+    garantirHistoricoSessaoCaixaPdv
   });
 })();
