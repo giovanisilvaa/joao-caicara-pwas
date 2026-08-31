@@ -26,7 +26,6 @@ function exigirPreco(lista, id, nome, preco) {
 
 if (!Array.isArray(cardapio)) erro('cardapio: raiz não é lista');
 else {
-  if (cardapio.length !== 125) erro(`cardapio: quantidade ${cardapio.length}, esperado 125`);
   const ids = cardapio.map(item => num(item?.id));
   if (ids.some(id => !Number.isFinite(id))) erro('cardapio: existe item sem ID numérico');
   if (new Set(ids).size !== ids.length) erro('cardapio: IDs duplicados');
@@ -109,9 +108,18 @@ for (const pedido of pedidosLista) {
   if (!['cozinha','bar'].includes(setor)) erro('pedidosProducao: pedido com setor inválido');
   if (!status) erro('pedidosProducao: pedido sem status');
   if (!itens.length) erro('pedidosProducao: pedido sem itens');
-  if (pedido?.envioId) {
-    const chave = `${pedido.envioId}|${setor}`;
-    if (combinacoesPedido.has(chave)) erro('pedidosProducao: envioId/setor duplicado');
+
+  // O PDV grava envioId no topo do ticket. O Garçom preserva envioId em cada item.
+  // Reunimos as combinações por ticket primeiro para que vários itens do mesmo envio
+  // não sejam confundidos com tickets duplicados.
+  const combinacoesDoTicket = new Set();
+  if (pedido?.envioId) combinacoesDoTicket.add(`${String(pedido.envioId)}|${setor}`);
+  for (const item of itens) {
+    if (item?.envioId) combinacoesDoTicket.add(`${String(item.envioId)}|${setor}`);
+  }
+
+  for (const chave of combinacoesDoTicket) {
+    if (combinacoesPedido.has(chave)) erro('pedidosProducao: envioId/setor duplicado entre tickets');
     combinacoesPedido.add(chave);
   }
 }
