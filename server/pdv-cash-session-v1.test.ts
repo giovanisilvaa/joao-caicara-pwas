@@ -29,6 +29,22 @@ describe('sessão estrutural de caixa do PDV', () => {
     expect(src).not.toContain('.remove(');
   });
 
+  it('bloqueia encerramento enquanto houver mesa/comanda pendente', () => {
+    const src = read('client/public/pdv/cash-session-v1.js');
+    expect(src).toContain('function mesasPendentes()');
+    expect(src).toContain("mesa.estadoConta === 'aguardando_pagamento'");
+    expect(src).toContain('const pendentes = mesasPendentes()');
+    expect(src).toContain('Não é possível encerrar o caixa com mesas/comandas abertas ou aguardando pagamento.');
+  });
+
+  it('aceita fundo inicial com vírgula ou ponto sem ambiguidade comum', () => {
+    const src = read('client/public/pdv/cash-session-v1.js');
+    expect(src).toContain("texto.includes(',') && texto.includes('.')");
+    expect(src).toContain("else if (texto.includes(',')) texto = texto.replace(',', '.')");
+    expect(src).toContain('Number.isFinite(fundoInicial)');
+    expect(src).toContain('fundoInicial < 0');
+  });
+
   it('deixa a sessão exclusiva do administrador nas regras do Firebase', () => {
     const regras = JSON.parse(read('database.rules.json')).rules;
     const caixa = regras.sessoesCaixa;
