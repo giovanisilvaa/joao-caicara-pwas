@@ -36,8 +36,10 @@
   }
 
   function numeroValor(valor) {
-    const texto = String(valor ?? '').trim().replace(/\s/g, '').replace(/\./g, '').replace(',', '.');
+    let texto = String(valor ?? '').trim().replace(/\s/g, '');
     if (!texto) return 0;
+    if (texto.includes(',') && texto.includes('.')) texto = texto.replace(/\./g, '').replace(',', '.');
+    else if (texto.includes(',')) texto = texto.replace(',', '.');
     const n = Number(texto);
     return Number.isFinite(n) ? n : NaN;
   }
@@ -49,6 +51,21 @@
 
   function idSessao(agora = Date.now()) {
     return `${codigoSessao(agora)}-${Math.random().toString(36).slice(2, 7)}`;
+  }
+
+  function mesasPendentes() {
+    try {
+      const origem = typeof mesas !== 'undefined' && mesas && typeof mesas === 'object' ? mesas : {};
+      return Object.entries(origem).filter(([, mesa]) => {
+        if (!mesa || typeof mesa !== 'object') return false;
+        const itens = Array.isArray(mesa.itens)
+          ? mesa.itens.filter(Boolean)
+          : (mesa.itens && typeof mesa.itens === 'object' ? Object.values(mesa.itens).filter(Boolean) : []);
+        return Boolean(mesa.abertura || itens.length || mesa.estadoConta === 'aguardando_pagamento');
+      }).map(([numero]) => numero);
+    } catch (_) {
+      return [];
+    }
   }
 
   function executarTransacao(mutador) {
@@ -134,6 +151,15 @@
       alert('Não existe uma sessão de caixa aberta para encerrar.');
       return false;
     }
+
+    const pendentes = mesasPendentes();
+    if (pendentes.length) {
+      const amostra = pendentes.slice(0, 8).join(', ');
+      const restante = pendentes.length > 8 ? ` e mais ${pendentes.length - 8}` : '';
+      alert(`Não é possível encerrar o caixa com mesas/comandas abertas ou aguardando pagamento.\n\nPendentes: ${amostra}${restante}.`);
+      return false;
+    }
+
     if (!confirm(`Encerrar a sessão ${sessaoAtual.codigo || esperada}?\n\nNesta etapa, isso encerra somente o período operacional. Vendas e relatórios existentes não serão apagados nem alterados.`)) return false;
 
     const agora = Date.now();
