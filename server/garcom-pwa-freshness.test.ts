@@ -6,7 +6,7 @@ const read = (path: string) => fs.readFileSync(path, "utf8");
 describe("atualizacao do PWA do Garcom", () => {
   it("invalida o cache antigo ao publicar uma nova versao", () => {
     const sw = read("client/public/garcom/service-worker.js");
-    expect(sw).toContain("const CACHE_NAME = 'joao-caicara-garcom-v15-fresh-20260826-live-v18-menu-v19-half-v20-cancel-v21-staged-v22-closefix-v23-restrict-v24-draft-v25-session-v26-checkout-v27'");
+    expect(sw).toContain("const CACHE_NAME = 'joao-caicara-garcom-v15-fresh-20260826-live-v18-menu-v19-half-v20-cancel-v21-staged-v22-closefix-v23-restrict-v24-draft-v25-session-v26-checkout-v27-authfix-v28'");
   });
 
   it("recarrega clientes do Garcom quando o novo service worker assume", () => {
