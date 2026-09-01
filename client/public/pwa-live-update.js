@@ -143,7 +143,7 @@
       if (carregandoTotaisSessaoCaixa || document.querySelector('script[data-pdv-cash-session-totals="v1"]')) return;
       carregandoTotaisSessaoCaixa = true;
       const script = document.createElement('script');
-      script.src = '/pdv/cash-session-totals-v1.js?v=1&direct=1';
+      script.src = '/pdv/cash-session-totals-v1.js?v=2&direct=1';
       script.async = false;
       script.dataset.pdvCashSessionTotals = 'v1';
       script.onload = () => {
