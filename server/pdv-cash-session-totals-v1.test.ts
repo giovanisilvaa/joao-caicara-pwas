@@ -123,7 +123,7 @@ describe('totais financeiros da sessão de caixa', () => {
     const sw = fs.readFileSync('client/public/pdv/service-worker.js', 'utf8');
     expect(live).toContain('function garantirTotaisSessaoCaixaPdv()');
     expect(live).toContain("window.PDV_CASH_SESSION_TOTALS_RUNTIME === 'v1'");
-    expect(live).toContain("script.src = '/pdv/cash-session-totals-v1.js?v=1&direct=1'");
+    expect(live).toContain("script.src = '/pdv/cash-session-totals-v1.js?v=2&direct=1'");
     expect(live).toContain("script.dataset.pdvCashSessionTotals = 'v1'");
     expect(sw).not.toContain('cash-session-totals-v1.js');
   });
@@ -134,5 +134,17 @@ describe('totais financeiros da sessão de caixa', () => {
     expect(source).toContain('Dinheiro líquido');
     expect(source).toContain('Fundo inicial');
     expect(source).toContain('Espécie esperada');
+  });
+
+  it('permite ocultar o total diário e recolher o movimento sem alterar dados', () => {
+    expect(source).toContain("CHAVE_OCULTAR_TOTAL_DIARIO = 'joao_caicara_pdv_ocultar_total_vendas'");
+    expect(source).toContain("CHAVE_RECOLHER_MOVIMENTO = 'joao_caicara_pdv_recolher_movimento_sessao'");
+    expect(source).toContain('Ocultar total de vendas');
+    expect(source).toContain('Mostrar total de vendas');
+    expect(source).toContain('Ocultar movimento');
+    expect(source).toContain('Mostrar movimento');
+    expect(source).toContain("localStorage.setItem(chave, ativo ? '1' : '0')");
+    expect(source).toContain("painel.classList.toggle('pcst-vendas-ocultas', oculto)");
+    expect(source).toContain("card.classList.toggle('recolhido', recolhido)");
   });
 });
