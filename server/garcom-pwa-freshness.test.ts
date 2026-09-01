@@ -6,7 +6,7 @@ const read = (path: string) => fs.readFileSync(path, "utf8");
 describe("atualizacao do PWA do Garcom", () => {
   it("invalida o cache antigo ao publicar uma nova versao", () => {
     const sw = read("client/public/garcom/service-worker.js");
-    expect(sw).toContain("const CACHE_NAME = 'joao-caicara-garcom-v15-fresh-20260826-live-v18-menu-v19-half-v20-cancel-v21-staged-v22-closefix-v23-restrict-v24-draft-v25-session-v26-checkout-v27-authfix-v28-menu-reconnect-v29-mesas-reconnect-v30-sync-guard-v31'");
+    expect(sw).toContain("const CACHE_NAME = 'joao-caicara-garcom-v15-fresh-20260826-live-v18-menu-v19-half-v20-cancel-v21-staged-v22-closefix-v23-restrict-v24-draft-v25-session-v26-checkout-v27-authfix-v28-menu-reconnect-v29-mesas-reconnect-v30-sync-guard-v31-freeze-fix-v32'");
   });
 
   it("recarrega clientes do Garcom quando o novo service worker assume", () => {
@@ -90,10 +90,11 @@ describe("atualizacao do PWA do Garcom", () => {
     expect(sw).toContain('<script src="/garcom/garcom-service-fee.js?v=19"></script>');
   });
 
-  it("carrega a versão 3 das restrições depois do fechamento em duas etapas", () => {
+  it("carrega a versão 4 das restrições depois do fechamento em duas etapas", () => {
     const sw = read("client/public/garcom/service-worker.js");
-    expect(sw).toContain("const GARCOM_RESTRICTIONS_ASSET = '/garcom/restricoes-operacionais.js?v=3'");
-    expect(sw).toContain('<script src="/garcom/restricoes-operacionais.js?v=3"></script>');
+    expect(sw).toContain("const GARCOM_RESTRICTIONS_ASSET = '/garcom/restricoes-operacionais.js?v=4'");
+    expect(sw).toContain("html.replaceAll('<script src=\"/garcom/restricoes-operacionais.js?v=3\"></script>', '')");
+    expect(sw).toContain('<script src="/garcom/restricoes-operacionais.js?v=4"></script>');
     expect(sw.indexOf('STAGED_CHECKOUT_ASSET')).toBeLessThan(sw.indexOf('GARCOM_RESTRICTIONS_ASSET'));
   });
 });

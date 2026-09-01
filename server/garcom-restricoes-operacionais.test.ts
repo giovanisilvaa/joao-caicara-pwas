@@ -50,6 +50,16 @@ describe('restrições operacionais do Garçom', () => {
     expect(src).toContain('Esta mesa já está fechada e aguardando pagamento.');
   });
 
+  it('não entra em loop de MutationObserver depois de fechar a conta', () => {
+    const src = read('client/public/garcom/restricoes-operacionais.js');
+    expect(src).toContain("const NOTA_PDV = 'Pagamento e liberação da mesa: somente no PDV.'");
+    expect(src).toContain('if (nota.textContent !== NOTA_PDV) nota.textContent = NOTA_PDV;');
+    expect(src).toContain('let reforcoInterfaceAgendado = false;');
+    expect(src).toContain('const observer = new MutationObserver(agendarReforcoInterface);');
+    expect(src).toContain('requestAnimationFrame(() => {');
+    expect(src).not.toContain('new MutationObserver(() => reforcarInterfaceFechamento())');
+  });
+
   it('mantém os botões de quantidade visíveis e oculta apenas ações proibidas', () => {
     const src = read('client/public/garcom/restricoes-operacionais.js');
     expect(src).toContain('.btn-limpar-g{display:none!important}');
