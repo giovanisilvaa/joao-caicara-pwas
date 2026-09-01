@@ -22,4 +22,18 @@ describe("layout móvel do Garçom", () => {
   it("mantém a comanda ancorada no rodapé do painel", () => {
     expect(css).toMatch(/\.comanda-fixa-container\{position:absolute!important;left:0;right:0;bottom:0;z-index:30\}/);
   });
+
+  it("usa uma coluna e cards legíveis no cardápio de celular", () => {
+    expect(css).toContain("grid-template-columns:1fr!important");
+    expect(css).toContain("min-height:132px!important");
+    expect(css).toContain("font-size:1rem!important");
+    expect(css).toContain("font-size:1.16rem!important");
+    expect(css).toContain("justify-content:flex-start!important");
+  });
+
+  it("mantém ações de observação e meio prato com área de toque confortável", () => {
+    expect(css).toContain(".menu-opt-actions{");
+    expect(css).toContain("min-height:34px!important");
+    expect(css).toContain("padding:7px 10px!important");
+  });
 });
