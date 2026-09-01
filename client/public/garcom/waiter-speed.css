@@ -29,3 +29,31 @@
 .speed-obs-save{flex:1.3;background:var(--success);color:#fff}
 @media(max-width:480px){.speed-product{min-height:88px}.speed-obs-modal{padding:0}.speed-obs-box{border-radius:20px 20px 0 0}.speed-obs-chips button{padding:10px 12px}}
 @media(prefers-reduced-motion:reduce){.speed-product,.speed-product.speed-added{animation:none;transition:none}}
+
+/* Estabilidade de viewport no Safari/iPhone.
+   O HTML legado liberava a rolagem do body e usava min-height:100dvh no painel,
+   combinação que pode deixar uma grande área branca após recarga/retorno do app.
+   Mantemos um único viewport e deixamos apenas o cardápio rolar. */
+@media(max-width:600px){
+  html,body{
+    width:100%;max-width:100%;height:100dvh!important;min-height:100dvh!important;
+    margin:0;padding:0;overflow:hidden!important;overscroll-behavior:none
+  }
+  body{position:relative;background-attachment:scroll!important}
+  .header{flex:0 0 auto}
+  #tela-pedido{
+    flex:1 1 auto!important;min-height:0!important;height:auto!important;
+    overflow:hidden!important;position:relative
+  }
+  #tela-pedido>.cliente-row,#busca-produto-g,#tabs-g,#speed-hint,#garcom-responsavel-comanda{flex:0 0 auto}
+  #grid-produtos-g{
+    flex:1 1 auto!important;min-height:0!important;max-height:none!important;
+    overflow-x:hidden!important;overflow-y:auto!important;-webkit-overflow-scrolling:touch;
+    align-content:start!important;padding-bottom:210px!important
+  }
+  .comanda-fixa-container{position:absolute!important;left:0;right:0;bottom:0;z-index:30}
+  .acoes-comanda-g{position:static!important}
+}
+@supports not (height:100dvh){
+  @media(max-width:600px){html,body{height:100vh!important;min-height:100vh!important}}
+}
