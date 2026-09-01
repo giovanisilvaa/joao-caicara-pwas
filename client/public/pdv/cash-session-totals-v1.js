@@ -5,6 +5,8 @@
   window.PDV_CASH_SESSION_TOTALS_RUNTIME = 'v1';
 
   const ADMIN_EMAIL = 'adm@acesso.joaocaicara.app';
+  const CHAVE_OCULTAR_TOTAL_DIARIO = 'joao_caicara_pdv_ocultar_total_vendas';
+  const CHAVE_RECOLHER_MOVIMENTO = 'joao_caicara_pdv_recolher_movimento_sessao';
   let refSessao = null;
   let listenerSessao = null;
   let queryVendas = null;
@@ -30,6 +32,14 @@
 
   function adminValido(user) {
     return Boolean(user && String(user.email || '').toLowerCase() === ADMIN_EMAIL);
+  }
+
+  function lerPreferencia(chave) {
+    try { return localStorage.getItem(chave) === '1'; } catch (_) { return false; }
+  }
+
+  function salvarPreferencia(chave, ativo) {
+    try { localStorage.setItem(chave, ativo ? '1' : '0'); } catch (_) {}
   }
 
   function listaVendas(valor) {
@@ -84,17 +94,87 @@
     style.textContent = `
       #pdv-cash-session-totals{grid-column:1/-1;display:none;background:#fff;border:1px solid var(--border);border-radius:10px;padding:10px 12px;box-shadow:0 3px 0 rgba(15,76,92,.05)}
       #pdv-cash-session-totals.ativo{display:block}
-      .pcst-head{display:flex;align-items:baseline;justify-content:space-between;gap:10px;margin-bottom:8px}.pcst-head strong{color:var(--primary);font-size:.82rem;text-transform:uppercase;letter-spacing:.05em}.pcst-head span{font-size:.7rem;color:#6d7b7d}
+      #pdv-cash-session-totals.recolhido{padding-top:8px;padding-bottom:8px}
+      #pdv-cash-session-totals.recolhido .pcst-head{margin-bottom:0}
+      #pdv-cash-session-totals.recolhido .pcst-grid{display:none}
+      .pcst-head{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:8px}.pcst-head-titulo{display:flex;align-items:baseline;justify-content:space-between;gap:10px;min-width:0;flex:1}.pcst-head strong{color:var(--primary);font-size:.82rem;text-transform:uppercase;letter-spacing:.05em}.pcst-head span{font-size:.7rem;color:#6d7b7d}
+      .pcst-toggle{border:1px solid #b9cfca;background:#f4faf8;color:var(--primary);border-radius:7px;padding:5px 9px;font-size:.68rem;font-weight:800;cursor:pointer;white-space:nowrap}.pcst-toggle:hover{background:#e8f4f0}.pcst-toggle:focus-visible{outline:2px solid var(--success);outline-offset:2px}
       .pcst-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:7px}.pcst-item{min-width:0;background:#f7faf8;border:1px solid #e6ece9;border-radius:8px;padding:7px 8px}.pcst-item small{display:block;font-size:.61rem;text-transform:uppercase;letter-spacing:.05em;color:#6d7b7d;font-weight:800}.pcst-item strong{display:block;margin-top:2px;color:var(--primary);font-size:.9rem;white-space:nowrap}.pcst-item.destaque{background:#edf8f4;border-color:#cce8de}
+      #pcst-toggle-vendas-diarias{margin-left:auto}
+      #painel-diario.pcst-vendas-ocultas{grid-template-columns:minmax(0,1fr) auto;align-items:center;padding-top:7px;padding-bottom:7px}
+      #painel-diario.pcst-vendas-ocultas .painel-diario-titulo{grid-column:1;min-width:0}
+      #painel-diario.pcst-vendas-ocultas .indicador-diario.vendas{display:none}
+      #painel-diario.pcst-vendas-ocultas .indicador-diario.mesas{grid-column:2;min-width:150px;padding:6px 10px;box-shadow:none}
+      #painel-diario.pcst-vendas-ocultas .indicador-diario.mesas small{font-size:.62rem}
+      #painel-diario.pcst-vendas-ocultas .indicador-diario.mesas strong{font-size:1rem;margin-top:1px}
       @media(max-width:850px){.pcst-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
-      @media(max-width:460px){.pcst-grid{grid-template-columns:1fr}}
+      @media(max-width:700px){#painel-diario.pcst-vendas-ocultas{grid-template-columns:1fr}#painel-diario.pcst-vendas-ocultas .painel-diario-titulo,#painel-diario.pcst-vendas-ocultas .indicador-diario.mesas{grid-column:1}}
+      @media(max-width:460px){.pcst-grid{grid-template-columns:1fr}.pcst-head-titulo{align-items:flex-start;flex-direction:column;gap:2px}}
     `;
     document.head.appendChild(style);
   }
 
+  function aplicarVisibilidadeTotalDiario() {
+    const painel = document.getElementById('painel-diario');
+    const botao = document.getElementById('pcst-toggle-vendas-diarias');
+    if (!painel || !botao) return;
+    const oculto = lerPreferencia(CHAVE_OCULTAR_TOTAL_DIARIO);
+    painel.classList.toggle('pcst-vendas-ocultas', oculto);
+    botao.textContent = oculto ? 'Mostrar total de vendas' : 'Ocultar total de vendas';
+    botao.title = oculto ? 'Mostrar novamente o total de vendas de hoje' : 'Ocultar o total de vendas e compactar o resumo de hoje';
+    botao.setAttribute('aria-pressed', String(oculto));
+  }
+
+  function garantirControleTotalDiario() {
+    const painel = document.getElementById('painel-diario');
+    const titulo = painel?.querySelector('.painel-diario-titulo');
+    if (!painel || !titulo) return;
+    let botao = document.getElementById('pcst-toggle-vendas-diarias');
+    if (!botao) {
+      botao = document.createElement('button');
+      botao.id = 'pcst-toggle-vendas-diarias';
+      botao.className = 'pcst-toggle';
+      botao.type = 'button';
+      botao.addEventListener('click', () => {
+        salvarPreferencia(CHAVE_OCULTAR_TOTAL_DIARIO, !lerPreferencia(CHAVE_OCULTAR_TOTAL_DIARIO));
+        aplicarVisibilidadeTotalDiario();
+      });
+      titulo.appendChild(botao);
+    }
+    aplicarVisibilidadeTotalDiario();
+  }
+
+  function aplicarVisibilidadeMovimento() {
+    const card = document.getElementById('pdv-cash-session-totals');
+    const botao = document.getElementById('pcst-toggle-movimento');
+    if (!card || !botao) return;
+    const recolhido = lerPreferencia(CHAVE_RECOLHER_MOVIMENTO);
+    card.classList.toggle('recolhido', recolhido);
+    botao.textContent = recolhido ? 'Mostrar movimento' : 'Ocultar movimento';
+    botao.title = recolhido ? 'Exibir os totais financeiros da sessão' : 'Recolher os totais financeiros para liberar espaço na tela';
+    botao.setAttribute('aria-expanded', String(!recolhido));
+  }
+
+  function configurarControlesVisibilidade() {
+    garantirControleTotalDiario();
+    const botaoMovimento = document.getElementById('pcst-toggle-movimento');
+    if (botaoMovimento && botaoMovimento.dataset.pcstLigado !== '1') {
+      botaoMovimento.dataset.pcstLigado = '1';
+      botaoMovimento.addEventListener('click', () => {
+        salvarPreferencia(CHAVE_RECOLHER_MOVIMENTO, !lerPreferencia(CHAVE_RECOLHER_MOVIMENTO));
+        aplicarVisibilidadeMovimento();
+      });
+    }
+    aplicarVisibilidadeMovimento();
+  }
+
   function garantirInterface() {
     instalarEstilo();
-    if (document.getElementById('pdv-cash-session-totals')) return true;
+    garantirControleTotalDiario();
+    if (document.getElementById('pdv-cash-session-totals')) {
+      configurarControlesVisibilidade();
+      return true;
+    }
     const cardSessao = document.getElementById('pdv-cash-session');
     const painel = document.getElementById('painel-diario');
     if (!painel || !cardSessao) return false;
@@ -102,7 +182,10 @@
     const card = document.createElement('div');
     card.id = 'pdv-cash-session-totals';
     card.innerHTML = `
-      <div class="pcst-head"><strong>Movimento da sessão</strong><span class="pcst-sessao"></span></div>
+      <div class="pcst-head">
+        <div class="pcst-head-titulo"><strong>Movimento da sessão</strong><span class="pcst-sessao"></span></div>
+        <button id="pcst-toggle-movimento" class="pcst-toggle" type="button" aria-expanded="true">Ocultar movimento</button>
+      </div>
       <div class="pcst-grid">
         <div class="pcst-item"><small>Vendas</small><strong data-pcst="quantidadeVendas">0</strong></div>
         <div class="pcst-item"><small>Subtotal</small><strong data-pcst="subtotal">R$ 0,00</strong></div>
@@ -116,6 +199,7 @@
         <div class="pcst-item destaque"><small>Espécie esperada</small><strong data-pcst="especieEsperada">R$ 0,00</strong></div>
       </div>`;
     cardSessao.insertAdjacentElement('afterend', card);
+    configurarControlesVisibilidade();
     renderizar();
     return true;
   }
@@ -131,6 +215,7 @@
     if (!card) return;
     const ativa = Boolean(sessaoAtual?.status === 'aberto' && sessaoAtual?.id);
     card.classList.toggle('ativo', ativa);
+    configurarControlesVisibilidade();
     if (!ativa) return;
 
     const totais = totaisAtuais || calcular(vendasAtuais, sessaoAtual);
