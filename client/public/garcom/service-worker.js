@@ -1,6 +1,6 @@
-const CACHE_NAME = 'joao-caicara-garcom-v15-fresh-20260826-live-v18-menu-v19-half-v20-cancel-v21-staged-v22-closefix-v23-restrict-v24-draft-v25-session-v26-checkout-v27';
+const CACHE_NAME = 'joao-caicara-garcom-v15-fresh-20260826-live-v18-menu-v19-half-v20-cancel-v21-staged-v22-closefix-v23-restrict-v24-draft-v25-session-v26-checkout-v27-authfix-v28';
 const AUTH_SESSION_ASSET = '/auth-session-isolation.js?v=20';
-const LOGIN_ASSET = '/garcom/shared-login.js?v=18';
+const LOGIN_ASSET = '/garcom/shared-login.js?v=19';
 const CARDAPIO_AUTH_ASSET = '/garcom/cardapio-auth-reconnect.js?v=20';
 const MESAS_AUTH_ASSET = '/garcom/mesas-auth-reconnect.js?v=37';
 const MESA_ATOMIC_ASSET = '/mesa-atomic.js?v=38';
@@ -21,7 +21,8 @@ const respostaHtmlComHotfix = async (response) => {
   if (!html.includes('/mesa-atomic.js')) html = html.replace('</body>', '<script src="/mesa-atomic.js?v=38"></script></body>');
   if (!html.includes('/garcom/access-control.js')) html = html.replace('</body>', '<script src="/garcom/access-control.js"></script></body>');
   html = html.replaceAll('<script src="/garcom/shared-login.js?v=17"></script>', '');
-  if (!html.includes('shared-login.js?v=18')) html = html.replace('</body>', '<script src="/garcom/shared-login.js?v=18"></script></body>');
+  html = html.replaceAll('<script src="/garcom/shared-login.js?v=18"></script>', '');
+  if (!html.includes('shared-login.js?v=19')) html = html.replace('</body>', '<script src="/garcom/shared-login.js?v=19"></script></body>');
   if (!html.includes('/garcom/mesas-auth-reconnect.js')) html = html.replace('</body>', '<script src="/garcom/mesas-auth-reconnect.js?v=37"></script></body>');
   if (!html.includes('/garcom/cardapio-auth-reconnect.js')) html = html.replace('</body>', '<script src="/garcom/cardapio-auth-reconnect.js?v=20"></script></body>');
   if (!html.includes('/garcom/access-diagnostics.js')) html = html.replace('</body>', '<script src="/garcom/access-diagnostics.js"></script></body>');
