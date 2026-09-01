@@ -39,21 +39,35 @@ describe("seguranca do login compartilhado do garcom", () => {
     expect(login).not.toContain("FirebaseAuthSessionIsolationReady");
   });
 
-  it("sair encerra somente a identidade persistente do expediente", () => {
+  it("restaura a conta real também no Firebase principal usado pelo banco", () => {
+    const login = read("client/public/garcom/shared-login.js");
+    expect(login).toContain("function authPrincipal()");
+    expect(login).toContain("Persistence?.SESSION");
+    expect(login).toContain("principal.updateCurrentUser(userExpediente)");
+    expect(login).toContain("principal.signInWithEmailAndPassword(EMAIL_FIREBASE, senha)");
+    expect(login).toContain("expediente.uid === principal.uid");
+    expect(login).toContain("principal.onAuthStateChanged");
+    expect(login).toContain("sincronizarAuthPrincipal");
+  });
+
+  it("sair encerra a identidade persistente e a sessao operacional", () => {
     const login = read("client/public/garcom/shared-login.js");
     expect(login).toContain("botao.textContent = 'Sair'");
     expect(login).toContain("async function sairGarcom()");
     expect(login).toContain("removerNomeDaSessao()");
     expect(login).toContain("await authExpediente()?.signOut?.()");
+    expect(login).toContain("await authPrincipal()?.signOut?.()");
     expect(login).toContain("sair: sairGarcom");
   });
 
-  it("mantem o Firebase principal do Garcom com a isolacao por sessao existente", () => {
+  it("mantem o Firebase principal do Garcom isolado por sessao e força cache novo", () => {
     const sw = read("client/public/garcom/service-worker.js");
     expect(sw).toContain("AUTH_SESSION_ASSET = '/auth-session-isolation.js?v=20'");
     expect(sw).toContain("session-v26");
-    expect(sw).toContain("/garcom/shared-login.js?v=18");
+    expect(sw).toContain("authfix-v28");
+    expect(sw).toContain("/garcom/shared-login.js?v=19");
     expect(sw).toContain("replaceAll('<script src=\"/garcom/shared-login.js?v=17\"></script>', '')");
+    expect(sw).toContain("replaceAll('<script src=\"/garcom/shared-login.js?v=18\"></script>', '')");
     expect(sw).not.toContain("protegerBootstrapAuthGarcom");
   });
 });
