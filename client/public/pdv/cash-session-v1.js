@@ -218,7 +218,7 @@
       if (!resultado.committed) {
         sessaoAtual = resultado.valor?.atual || sessaoAtual;
         renderizar();
-        alert(`Já existe uma sessão de caixa aberta${sessaoAtual?.codigo ? ` (${sessaoAtual.codigo})` : ''}. Encerre-a antes de abrir outra.`);
+        alert(`A sessão de caixa já está aberta${sessaoAtual?.codigo ? ` (${sessaoAtual.codigo})` : ''} e foi sincronizada neste PDV. Você pode continuar usando este computador normalmente.`);
         return false;
       }
 
@@ -257,7 +257,8 @@
       alert('Faça login como administrador no PDV antes de encerrar o caixa.');
       return false;
     }
-    const esperada = sessaoAtual?.id || null;
+    const sessaoAlvo = clone(sessaoAtual);
+    const esperada = sessaoAlvo?.id || null;
     if (!esperada) {
       alert('Não existe uma sessão de caixa aberta para encerrar.');
       return false;
@@ -265,13 +266,13 @@
 
     if (!(await confirmarMesasLivresAntesDoFechamento())) return false;
 
-    if (!confirm(`Encerrar a sessão ${sessaoAtual.codigo || esperada}?\n\nO sistema confirmará novamente as mesas e as vendas antes de gravar o resumo final.`)) return false;
+    if (!confirm(`Encerrar a sessão ${sessaoAlvo.codigo || esperada}?\n\nO sistema confirmará novamente as mesas e as vendas antes de gravar o resumo final.`)) return false;
 
     if (!(await confirmarMesasLivresAntesDoFechamento())) return false;
 
     let resumoFinal = null;
     try {
-      resumoFinal = await resumoFinanceiroEstavelServidor(sessaoAtual);
+      resumoFinal = await resumoFinanceiroEstavelServidor(sessaoAlvo);
     } catch (erro) {
       console.warn('Não foi possível estabilizar os totais antes do encerramento:', erro);
       alert('As vendas da sessão ainda não puderam ser confirmadas no servidor. Por segurança, o caixa permanece aberto. Aguarde alguns instantes e tente novamente.');
@@ -305,13 +306,20 @@
       });
 
       if (!resultado.committed) {
-        sessaoAtual = resultado.valor?.atual || null;
+        const registroEsperado = resultado.valor?.registros?.[esperada] || null;
+        sessaoAtual = resultado.valor?.atual?.status === STATUS_ABERTO ? clone(resultado.valor.atual) : null;
         renderizar();
-        alert('A sessão mudou em outro PDV. O estado atual foi recarregado; confira antes de tentar novamente.');
+        if (registroEsperado?.status === STATUS_FECHADO) {
+          const codigoFechado = registroEsperado.codigo || sessaoAlvo.codigo || esperada;
+          const proximaSessao = sessaoAtual?.codigo ? `\n\nSessão atualmente aberta: ${sessaoAtual.codigo}.` : '';
+          alert(`A sessão ${codigoFechado} já foi encerrada em outro PDV. Este computador foi sincronizado automaticamente.${proximaSessao}`);
+          return true;
+        }
+        alert('A sessão ativa mudou em outro PDV antes do encerramento. Nenhuma alteração foi gravada por este computador; o estado atual já foi sincronizado.');
         return false;
       }
 
-      const codigo = sessaoAtual?.codigo || esperada;
+      const codigo = sessaoAlvo.codigo || esperada;
       sessaoAtual = null;
       renderizar();
       alert(`Sessão ${codigo} encerrada com resumo financeiro preservado.\n\n${resumoFinal.quantidadeVendas} venda(s) · Total ${moeda(resumoFinal.totalVendas)} · Espécie esperada ${moeda(resumoFinal.especieEsperada)}.`);
