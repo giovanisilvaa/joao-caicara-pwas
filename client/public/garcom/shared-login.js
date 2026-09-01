@@ -10,6 +10,12 @@
     entradaEm: Date.now()
   };
   let authExpedienteCache = null;
+  let sincronizacaoPrincipalAtual = null;
+
+  function authPrincipal() {
+    try { return window.firebase?.auth?.() || null; }
+    catch (_) { return null; }
+  }
 
   function authExpediente() {
     if (authExpedienteCache) return authExpedienteCache;
@@ -91,6 +97,16 @@
     return Boolean(user && !user.isAnonymous && String(user.email || '').toLowerCase() === EMAIL_FIREBASE);
   }
 
+  function autenticacaoOperacionalAtiva() {
+    const expediente = authExpediente()?.currentUser || null;
+    const principal = authPrincipal()?.currentUser || null;
+    return Boolean(
+      usuarioEhCompartilhado(expediente) &&
+      usuarioEhCompartilhado(principal) &&
+      expediente.uid === principal.uid
+    );
+  }
+
   async function configurarPersistenciaExpediente() {
     const firebaseAuth = authExpediente();
     const modoLocal = window.firebase?.auth?.Auth?.Persistence?.LOCAL;
@@ -98,6 +114,16 @@
       throw new Error('Persistência local do Firebase Auth indisponível');
     }
     await firebaseAuth.setPersistence(modoLocal);
+    return true;
+  }
+
+  async function configurarPersistenciaPrincipal() {
+    const firebaseAuth = authPrincipal();
+    const modoSessao = window.firebase?.auth?.Auth?.Persistence?.SESSION;
+    if (!firebaseAuth || !modoSessao || typeof firebaseAuth.setPersistence !== 'function') {
+      throw new Error('Persistência de sessão do Firebase Auth principal indisponível');
+    }
+    await firebaseAuth.setPersistence(modoSessao);
     return true;
   }
 
@@ -111,10 +137,48 @@
     }
   }
 
+  async function sincronizarAuthPrincipal(userExpediente, senha = '') {
+    if (!usuarioEhCompartilhado(userExpediente)) return false;
+    if (sincronizacaoPrincipalAtual) return sincronizacaoPrincipalAtual;
+
+    sincronizacaoPrincipalAtual = (async () => {
+      const principal = authPrincipal();
+      if (!principal) throw new Error('Firebase Auth principal indisponível');
+
+      await configurarPersistenciaPrincipal();
+      if (usuarioEhCompartilhado(principal.currentUser) && principal.currentUser.uid === userExpediente.uid) return true;
+
+      let erroAtualizacao = null;
+      if (typeof principal.updateCurrentUser === 'function') {
+        try {
+          await principal.updateCurrentUser(userExpediente);
+        } catch (erro) {
+          erroAtualizacao = erro;
+          console.warn('Não foi possível restaurar automaticamente a sessão operacional do Garçom:', erro);
+        }
+      }
+
+      if (!(usuarioEhCompartilhado(principal.currentUser) && principal.currentUser.uid === userExpediente.uid) && senha) {
+        await principal.signInWithEmailAndPassword(EMAIL_FIREBASE, senha);
+      }
+
+      if (!(usuarioEhCompartilhado(principal.currentUser) && principal.currentUser.uid === userExpediente.uid)) {
+        throw erroAtualizacao || new Error('A sessão operacional do Garçom não pôde ser restaurada');
+      }
+      return true;
+    })();
+
+    try {
+      return await sincronizacaoPrincipalAtual;
+    } finally {
+      sincronizacaoPrincipalAtual = null;
+    }
+  }
+
   function sessaoAtual() {
     const user = authExpediente()?.currentUser || null;
     const nome = nomeDaSessao();
-    if (usuarioEhCompartilhado(user) && nome) {
+    if (autenticacaoOperacionalAtiva() && nome) {
       return {
         funcionarioId: user.uid,
         uid: user.uid,
@@ -153,14 +217,14 @@
 
   function instalarIdentidadeOperacional() {
     window.sessaoGarcomAtual = sessaoAtual;
-    const user = authExpediente()?.currentUser || null;
     const nome = nomeDaSessao();
+    const operacional = autenticacaoOperacionalAtiva();
     const el = document.getElementById('usuario-logado-g');
     if (el) {
-      el.textContent = usuarioEhCompartilhado(user) && nome ? nome : 'Bloqueado';
-      el.title = usuarioEhCompartilhado(user) && nome ? `Garçom: ${nome}` : 'Garçom precisa entrar com nome e senha da equipe';
+      el.textContent = operacional && nome ? nome : 'Bloqueado';
+      el.title = operacional && nome ? `Garçom: ${nome}` : 'Garçom precisa entrar com nome e senha da equipe';
     }
-    if (usuarioEhCompartilhado(user) && nome) garantirBotaoSairGarcom();
+    if (operacional && nome) garantirBotaoSairGarcom();
     else document.getElementById('sair-garcom-g')?.remove();
   }
 
@@ -185,6 +249,7 @@
   }
 
   function esconderLogin() {
+    if (!autenticacaoOperacionalAtiva() || !nomeDaSessao()) return;
     document.getElementById('garcom-login-overlay')?.remove();
     instalarIdentidadeOperacional();
   }
@@ -202,7 +267,13 @@
     const firebaseAuth = authExpediente();
     if (!firebaseAuth) throw new Error('Firebase Auth do expediente indisponível');
     await configurarPersistenciaExpediente();
-    return firebaseAuth.signInWithEmailAndPassword(EMAIL_FIREBASE, senha);
+    const credencial = await firebaseAuth.signInWithEmailAndPassword(EMAIL_FIREBASE, senha);
+    if (!usuarioEhCompartilhado(credencial?.user)) {
+      await firebaseAuth.signOut();
+      throw new Error('Conta autenticada não é a conta compartilhada esperada');
+    }
+    await sincronizarAuthPrincipal(credencial.user, senha);
+    return credencial;
   }
 
   function mostrarLogin() {
@@ -252,9 +323,8 @@
       msgEl.textContent = '';
       try {
         const credencial = await tentarEntrar(senha);
-        if (!usuarioEhCompartilhado(credencial?.user)) {
-          await authExpediente()?.signOut?.();
-          throw new Error('Conta autenticada não é a conta compartilhada esperada');
+        if (!usuarioEhCompartilhado(credencial?.user) || !autenticacaoOperacionalAtiva()) {
+          throw new Error('A autenticação operacional do Garçom não foi concluída');
         }
         salvarNomeDaSessao(nome);
         esconderLogin();
@@ -277,7 +347,9 @@
     removerNomeDaSessao();
     ESTADO.entradaEm = Date.now();
     try { await authExpediente()?.signOut?.(); }
-    catch (erro) { console.warn('Não foi possível encerrar a sessão Firebase do Garçom:', erro); }
+    catch (erro) { console.warn('Não foi possível encerrar a identidade persistente do Garçom:', erro); }
+    try { await authPrincipal()?.signOut?.(); }
+    catch (erro) { console.warn('Não foi possível encerrar a sessão operacional do Garçom:', erro); }
     instalarIdentidadeOperacional();
     mostrarLogin();
   }
@@ -286,9 +358,24 @@
     return sairGarcom();
   }
 
+  async function reconciliarSessao() {
+    const userExpediente = authExpediente()?.currentUser || null;
+    if (usuarioEhCompartilhado(userExpediente)) {
+      try {
+        await sincronizarAuthPrincipal(userExpediente);
+      } catch (erro) {
+        console.warn('A identidade do expediente existe, mas a sessão operacional precisa ser autenticada novamente:', erro);
+      }
+    }
+    instalarIdentidadeOperacional();
+    if (autenticacaoOperacionalAtiva() && nomeDaSessao()) esconderLogin();
+    else mostrarLogin();
+  }
+
   async function iniciar() {
     const firebaseAuth = authExpediente();
-    if (!firebaseAuth || typeof firebaseAuth.onAuthStateChanged !== 'function') {
+    const principal = authPrincipal();
+    if (!firebaseAuth || !principal || typeof firebaseAuth.onAuthStateChanged !== 'function' || typeof principal.onAuthStateChanged !== 'function') {
       setTimeout(iniciar, 150);
       return;
     }
@@ -296,16 +383,9 @@
     ESTADO.entradaEm = entradaDaSessao();
     await prepararPersistenciaExpediente();
 
-    firebaseAuth.onAuthStateChanged(user => {
-      instalarIdentidadeOperacional();
-      if (usuarioEhCompartilhado(user) && nomeDaSessao()) {
-        esconderLogin();
-      } else {
-        mostrarLogin();
-      }
-    });
-    instalarIdentidadeOperacional();
-    if (!usuarioEhCompartilhado(firebaseAuth.currentUser) || !nomeDaSessao()) mostrarLogin();
+    firebaseAuth.onAuthStateChanged(() => { void reconciliarSessao(); });
+    principal.onAuthStateChanged(() => { void reconciliarSessao(); });
+    await reconciliarSessao();
   }
 
   window.GarcomLoginCompartilhado = Object.freeze({
@@ -316,9 +396,10 @@
     sair: sairGarcom,
     trocarGarcom,
     prepararPersistenciaExpediente,
+    sincronizarAuthPrincipal,
     get nomeAtual() { return nomeDaSessao(); },
-    get autenticado() { return usuarioEhCompartilhado(authExpediente()?.currentUser) && Boolean(nomeDaSessao()); },
-    get uid() { return usuarioEhCompartilhado(authExpediente()?.currentUser) ? authExpediente().currentUser.uid : null; }
+    get autenticado() { return autenticacaoOperacionalAtiva() && Boolean(nomeDaSessao()); },
+    get uid() { return autenticacaoOperacionalAtiva() ? authExpediente()?.currentUser?.uid || null : null; }
   });
 
   iniciar();
