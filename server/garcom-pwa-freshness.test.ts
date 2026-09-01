@@ -6,7 +6,7 @@ const read = (path: string) => fs.readFileSync(path, "utf8");
 describe("atualizacao do PWA do Garcom", () => {
   it("invalida o cache antigo ao publicar uma nova versao", () => {
     const sw = read("client/public/garcom/service-worker.js");
-    expect(sw).toContain("const CACHE_NAME = 'joao-caicara-garcom-v15-fresh-20260826-live-v18-menu-v19-half-v20-cancel-v21-staged-v22-closefix-v23-restrict-v24-draft-v25-session-v26-checkout-v27-authfix-v28'");
+    expect(sw).toContain("const CACHE_NAME = 'joao-caicara-garcom-v15-fresh-20260826-live-v18-menu-v19-half-v20-cancel-v21-staged-v22-closefix-v23-restrict-v24-draft-v25-session-v26-checkout-v27-authfix-v28-menu-reconnect-v29'");
   });
 
   it("recarrega clientes do Garcom quando o novo service worker assume", () => {
@@ -26,6 +26,13 @@ describe("atualizacao do PWA do Garcom", () => {
     const sw = read("client/public/garcom/service-worker.js");
     expect(sw).toContain("LIVE_UPDATE_ASSET");
     expect(sw).toContain("/pwa-live-update.js?v=1");
+  });
+
+  it("publica a reconexão resiliente do cardápio do Garçom", () => {
+    const sw = read("client/public/garcom/service-worker.js");
+    expect(sw).toContain("const CARDAPIO_AUTH_ASSET = '/garcom/cardapio-auth-reconnect.js?v=21'");
+    expect(sw).toContain('<script src="/garcom/cardapio-auth-reconnect.js?v=21"></script>');
+    expect(sw).toContain('cardapio-auth-reconnect.js?v=20');
   });
 
   it("publica o complemento de categorias e estilo do cardapio", () => {

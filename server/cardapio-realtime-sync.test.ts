@@ -4,13 +4,14 @@ import fs from "node:fs";
 const read = (path: string) => fs.readFileSync(path, "utf8");
 
 describe("sincronizacao autenticada do cardapio", () => {
-  it("Garcom mantem listener autenticado permanente", () => {
+  it("Garcom mantem listener autenticado permanente e recuperável", () => {
     const modulo = read("client/public/garcom/cardapio-auth-reconnect.js");
     const sw = read("client/public/garcom/service-worker.js");
     expect(modulo).toContain("refCardapio.on('value'");
-    expect(modulo).toContain("auth.onAuthStateChanged(conectar)");
+    expect(modulo).toContain("auth.onAuthStateChanged(user => void conectar(user))");
     expect(modulo).toContain("garcom@acesso.joaocaicara.app");
-    expect(sw).toContain("cardapio-auth-reconnect.js?v=20");
+    expect(modulo).toContain("agendarRetry();");
+    expect(sw).toContain("cardapio-auth-reconnect.js?v=21");
   });
 
   it("PDV mantem listener autenticado permanente", () => {
