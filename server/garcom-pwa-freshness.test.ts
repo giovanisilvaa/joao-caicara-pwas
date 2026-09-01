@@ -6,7 +6,7 @@ const read = (path: string) => fs.readFileSync(path, "utf8");
 describe("atualizacao do PWA do Garcom", () => {
   it("invalida o cache antigo ao publicar uma nova versao", () => {
     const sw = read("client/public/garcom/service-worker.js");
-    expect(sw).toContain("const CACHE_NAME = 'joao-caicara-garcom-v15-fresh-20260826-live-v18-menu-v19-half-v20-cancel-v21-staged-v22-closefix-v23-restrict-v24-draft-v25-session-v26-checkout-v27-authfix-v28-menu-reconnect-v29-mesas-reconnect-v30'");
+    expect(sw).toContain("const CACHE_NAME = 'joao-caicara-garcom-v15-fresh-20260826-live-v18-menu-v19-half-v20-cancel-v21-staged-v22-closefix-v23-restrict-v24-draft-v25-session-v26-checkout-v27-authfix-v28-menu-reconnect-v29-mesas-reconnect-v30-sync-guard-v31'");
   });
 
   it("recarrega clientes do Garcom quando o novo service worker assume", () => {
@@ -26,6 +26,21 @@ describe("atualizacao do PWA do Garcom", () => {
     const sw = read("client/public/garcom/service-worker.js");
     expect(sw).toContain("LIVE_UPDATE_ASSET");
     expect(sw).toContain("/pwa-live-update.js?v=1");
+  });
+
+  it("remove os listeners legados antes de iniciar a sincronizacao autenticada", () => {
+    const sw = read("client/public/garcom/service-worker.js");
+    expect(sw).toContain("function removerListenersLegados(html)");
+    expect(sw).toContain("db.ref('cardapio').on('value', (snap) => {");
+    expect(sw).toContain("function mesaVazia() {");
+    expect(sw).toContain("/cardapio e /mesas são assinados somente pelos módulos autenticados do Garçom");
+  });
+
+  it("nao considera sessao anonima como autenticacao operacional", () => {
+    const sw = read("client/public/garcom/service-worker.js");
+    expect(sw).toContain("user && !user.isAnonymous");
+    expect(sw).toContain("garcom@acesso.joaocaicara.app");
+    expect(sw).toContain("window.GarcomMesasAuth?.conectado !== true");
   });
 
   it("publica a reconexão resiliente do cardápio do Garçom", () => {
