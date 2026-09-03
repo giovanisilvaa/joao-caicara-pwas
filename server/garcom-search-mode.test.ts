@@ -17,6 +17,7 @@ describe('modo de busca focado do Garçom', () => {
     expect(js).toContain('produtos.filter(produtoAtivo).filter');
     expect(js).toContain('nome.includes(busca) || categoria.includes(busca)');
     expect(js).toContain('renderizarBuscaRapida(busca.value)');
+    expect(js).toContain('<h4>${p.nome}</h4>');
   });
 
   it('sai do modo busca ao trocar categoria ou selecionar outra mesa', () => {
@@ -47,6 +48,18 @@ describe('modo de busca focado do Garçom', () => {
     expect(css).toContain('#tela-pedido.speed-search-mode #grid-produtos-g .speed-add');
     expect(css).toContain('grid-template-columns:1fr!important');
     expect(css).not.toContain('grid-template-columns:repeat(2,minmax(0,1fr))!important');
+  });
+
+  it('mantém o nome do produto visível no Safari/iPhone durante a busca', () => {
+    const inicio = css.indexOf('#tela-pedido.speed-search-mode #grid-produtos-g .prod-card-g h4');
+    const fim = css.indexOf('#tela-pedido.speed-search-mode #grid-produtos-g .prod-card-g p', inicio);
+    const regraNome = css.slice(inicio, fim);
+    expect(regraNome).toContain('display:block!important');
+    expect(regraNome).toContain('white-space:normal!important');
+    expect(regraNome).toContain('overflow:visible!important');
+    expect(regraNome).toContain('color:#133C4A!important');
+    expect(regraNome).not.toContain('-webkit-line-clamp');
+    expect(regraNome).not.toContain('-webkit-box-orient');
   });
 
   it('preserva as proteções de viewport e a comanda fixa', () => {
