@@ -1,4 +1,4 @@
-const CACHE_NAME = 'joao-caicara-garcom-v15-fresh-20260826-live-v18-menu-v19-half-v20-cancel-v21-staged-v22-closefix-v23-restrict-v24-draft-v25-session-v26-checkout-v27-authfix-v28-menu-reconnect-v29-mesas-reconnect-v30-sync-guard-v31-freeze-fix-v32-ui-compact-v33';
+const CACHE_NAME = 'joao-caicara-garcom-v15-fresh-20260826-live-v18-menu-v19-half-v20-cancel-v21-staged-v22-closefix-v23-restrict-v24-draft-v25-session-v26-checkout-v27-authfix-v28-menu-reconnect-v29-mesas-reconnect-v30-sync-guard-v31-freeze-fix-v32-ui-compact-v33-sushi-v34';
 const AUTH_SESSION_ASSET = '/auth-session-isolation.js?v=20';
 const LOGIN_ASSET = '/garcom/shared-login.js?v=19';
 const CARDAPIO_AUTH_ASSET = '/garcom/cardapio-auth-reconnect.js?v=21';
@@ -11,8 +11,10 @@ const GARCOM_RESTRICTIONS_ASSET = '/garcom/restricoes-operacionais.js?v=4';
 const MENU_ORDER_OPTIONS_ASSET = '/menu-order-options.js?v=1';
 const SALAD_HALF_ASSET = '/menu-salad-half.js?v=2';
 const MENU_UPDATE_ASSET = '/menu-20260828.js?v=1';
+const SUSHI_MENU_ASSET = '/menu-sushi-20260903.js?v=1';
+const SUSHI_CATALOG_ASSET = '/sushi-menu-20260903.json?v=1';
 const LIVE_UPDATE_ASSET = '/pwa-live-update.js?v=1';
-const APP_SHELL = ['/garcom/', '/garcom/manifest.json', AUTH_SESSION_ASSET, MESA_ATOMIC_ASSET, '/garcom/access-control.js', LOGIN_ASSET, MESAS_AUTH_ASSET, CARDAPIO_AUTH_ASSET, '/garcom/access-diagnostics.js', '/garcom/hotfix-sync.js', '/garcom/waiter-attribution.js', '/garcom/garcom-service-fee.js?v=19', '/garcom/modern-hybrid.css', '/garcom/waiter-speed.js', '/garcom/waiter-speed.css', MESA_CONCURRENCY_ASSET, ITEM_CANCELLATION_ASSET, STAGED_CHECKOUT_ASSET, GARCOM_RESTRICTIONS_ASSET, MENU_ORDER_OPTIONS_ASSET, SALAD_HALF_ASSET, MENU_UPDATE_ASSET, LIVE_UPDATE_ASSET, '/tradicao-caicara-logo.webp'];
+const APP_SHELL = ['/garcom/', '/garcom/manifest.json', AUTH_SESSION_ASSET, MESA_ATOMIC_ASSET, '/garcom/access-control.js', LOGIN_ASSET, MESAS_AUTH_ASSET, CARDAPIO_AUTH_ASSET, '/garcom/access-diagnostics.js', '/garcom/hotfix-sync.js', '/garcom/waiter-attribution.js', '/garcom/garcom-service-fee.js?v=19', '/garcom/modern-hybrid.css', '/garcom/waiter-speed.js', '/garcom/waiter-speed.css', MESA_CONCURRENCY_ASSET, ITEM_CANCELLATION_ASSET, STAGED_CHECKOUT_ASSET, GARCOM_RESTRICTIONS_ASSET, MENU_ORDER_OPTIONS_ASSET, SALAD_HALF_ASSET, MENU_UPDATE_ASSET, SUSHI_MENU_ASSET, SUSHI_CATALOG_ASSET, LIVE_UPDATE_ASSET, '/tradicao-caicara-logo.webp'];
 
 function removerListenersLegados(html) {
   const inicio = html.indexOf("    db.ref('cardapio').on('value', (snap) => {");
@@ -61,6 +63,7 @@ const respostaHtmlComHotfix = async (response) => {
   if (!html.includes('/menu-order-options.js')) html = html.replace('</body>', '<script src="/menu-order-options.js?v=1"></script></body>');
   if (!html.includes('/menu-salad-half.js')) html = html.replace('</body>', '<script src="/menu-salad-half.js?v=2"></script></body>');
   if (!html.includes('/menu-20260828.js')) html = html.replace('</body>', '<script src="/menu-20260828.js?v=1"></script></body>');
+  if (!html.includes('/menu-sushi-20260903.js')) html = html.replace('</body>', '<script src="/menu-sushi-20260903.js?v=1"></script></body>');
   if (!html.includes('/pwa-live-update.js')) html = html.replace('</body>', '<script src="/pwa-live-update.js?v=1"></script></body>');
   const headers = new Headers(response.headers);
   headers.delete('content-length');
