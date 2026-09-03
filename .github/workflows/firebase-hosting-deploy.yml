@@ -76,6 +76,49 @@ jobs:
           console.log('Perfil administrativo confirmado no Firebase.');
           NODE
 
+      - name: Seed Sushi menu safely
+        shell: bash
+        run: |
+          set -euo pipefail
+          DATABASE_URL='https://joaocaicaratradicao-default-rtdb.firebaseio.com/cardapio.json'
+          ACCESS_TOKEN="$(gcloud auth print-access-token)"
+          ATUAL="$(mktemp)"
+          CABECALHOS="$(mktemp)"
+          ATUALIZADO="$(mktemp)"
+          VERIFICACAO="$(mktemp)"
+          trap 'rm -f "$ATUAL" "$CABECALHOS" "$ATUALIZADO" "$VERIFICACAO"' EXIT
+
+          curl --fail-with-body --silent --show-error \
+            --dump-header "$CABECALHOS" \
+            -H "Authorization: Bearer ${ACCESS_TOKEN}" \
+            -H 'X-Firebase-ETag: true' \
+            "$DATABASE_URL" \
+            -o "$ATUAL"
+
+          ETAG="$(awk 'BEGIN{IGNORECASE=1} /^etag:/{gsub("\r",""); sub(/^[^:]*:[[:space:]]*/,""); print; exit}' "$CABECALHOS")"
+          if [ -z "$ETAG" ]; then
+            echo '::error::Firebase não retornou ETag para /cardapio; atualização Sushi abortada sem escrita.'
+            exit 1
+          fi
+
+          node scripts/sushi-cardapio-update.mjs "$ATUAL" > "$ATUALIZADO"
+
+          curl --fail-with-body --silent --show-error \
+            -X PUT \
+            -H "Authorization: Bearer ${ACCESS_TOKEN}" \
+            -H "If-Match: ${ETAG}" \
+            -H 'Content-Type: application/json' \
+            --data-binary @"$ATUALIZADO" \
+            "$DATABASE_URL" \
+            -o /dev/null
+
+          npx firebase-tools@latest database:get /cardapio \
+            --instance joaocaicaratradicao-default-rtdb \
+            --project joaocaicaratradicao \
+            --non-interactive > "$VERIFICACAO"
+          node scripts/sushi-cardapio-update.mjs "$VERIFICACAO" --validate-only
+          echo 'Cardápio Sushi persistido e validado no Firebase sem alterar mesas, pedidos ou vendas.'
+
       - name: Deploy to Firebase Hosting
         run: npx firebase-tools@latest deploy --only hosting --project joaocaicaratradicao --non-interactive
 
@@ -135,6 +178,8 @@ jobs:
           verificar_arquivo '/garcom/service-worker.js' 'client/public/garcom/service-worker.js'
           verificar_arquivo '/pwa-live-update.js' 'client/public/pwa-live-update.js'
           verificar_arquivo '/menu-20260828.js' 'client/public/menu-20260828.js'
+          verificar_arquivo '/menu-sushi-20260903.js' 'client/public/menu-sushi-20260903.js'
+          verificar_arquivo '/sushi-menu-20260903.json' 'client/public/sushi-menu-20260903.json'
           verificar_arquivo '/menu-salad-half.js' 'client/public/menu-salad-half.js'
           verificar_arquivo '/item-cancellation-v2.js' 'client/public/item-cancellation-v2.js'
           verificar_arquivo '/pdv/pdv-cancellation-print.js' 'client/public/pdv/pdv-cancellation-print.js'
