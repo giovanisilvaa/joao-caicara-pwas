@@ -23,23 +23,27 @@ describe("layout móvel do Garçom", () => {
     expect(css).toMatch(/\.comanda-fixa-container\{position:absolute!important;left:0;right:0;bottom:0;z-index:30\}/);
   });
 
-  it("mantém uma coluna compacta e legível em celulares comuns", () => {
+  it("usa uma coluna confortável em todo celular", () => {
     expect(css).toContain("grid-template-columns:1fr!important");
-    expect(css).toContain("min-height:108px!important");
-    expect(css).toContain("font-size:.96rem!important");
-    expect(css).toContain("font-size:1.08rem!important");
+    expect(css).toContain("min-height:126px!important");
+    expect(css).toContain("height:auto!important");
+    expect(css).toContain("font-size:1.02rem!important");
+    expect(css).toContain("font-size:1.12rem!important");
     expect(css).toContain("justify-content:flex-start!important");
+    expect(css).not.toContain("@media(min-width:560px) and (max-width:600px)");
+    expect(css).not.toContain("grid-template-columns:repeat(2,minmax(0,1fr))!important");
   });
 
-  it("usa duas colunas apenas em larguras móveis maiores", () => {
-    expect(css).toContain("@media(min-width:560px) and (max-width:600px)");
-    expect(css).toContain("grid-template-columns:repeat(2,minmax(0,1fr))!important");
-    expect(css).toContain("min-height:116px!important");
+  it("deixa resumo e detalhes do Sushi respirarem dentro dos cards", () => {
+    expect(css).toContain("#grid-produtos-g .sushi-card-meta{");
+    expect(css).toContain("font-size:.78rem!important");
+    expect(css).toContain("#grid-produtos-g .sushi-detail-link{");
+    expect(css).toContain("min-height:38px!important");
   });
 
   it("mantém ações de observação e meio prato com área de toque confortável", () => {
-    expect(css).toContain(".menu-opt-actions{");
-    expect(css).toContain("min-height:34px!important");
-    expect(css).toContain("padding:7px 10px!important");
+    expect(css).toContain("#grid-produtos-g .menu-opt-actions{");
+    expect(css).toContain("min-height:36px!important");
+    expect(css).toContain("padding:8px 11px!important");
   });
 });
