@@ -105,6 +105,16 @@
     });
   }
 
+  const filtrarCardapioOriginal = window.filtrarCardapioG;
+  if (typeof filtrarCardapioOriginal === 'function') {
+    window.filtrarCardapioG = function filtrarCardapioComSaidaBusca() {
+      const retorno = filtrarCardapioOriginal.apply(this, arguments);
+      buscaComFoco = false;
+      atualizarModoBusca();
+      return retorno;
+    };
+  }
+
   const adicionarOriginal = window.adicionarItemG;
   if (typeof adicionarOriginal === 'function') {
     window.adicionarItemG = function adicionarItemRapido(produtoId) {
