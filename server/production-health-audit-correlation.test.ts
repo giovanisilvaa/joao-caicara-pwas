@@ -5,6 +5,7 @@ import path from 'node:path';
 import { spawnSync } from 'node:child_process';
 
 const script = path.resolve('scripts/production-health-audit.mjs');
+const sushiCatalogo = JSON.parse(fs.readFileSync('client/public/sushi-menu-20260903.json', 'utf8'));
 
 const esperados = [
   [16,'Ostras · 12 unid.',75],[17,'Ostras · 6 unid.',45],[38,'Peixe com Molho de Camarão',145],
@@ -19,10 +20,11 @@ const esperados = [
   [124,'Filé Mignon à Parmegiana',210],[125,'Filé Mignon à Cubana',210],[126,'Filé Mignon com Fritas',195]
 ] as const;
 
-type ItemCatalogo = { id: number; nome: string; preco: number; categoria: string; setor: string };
+type ItemCatalogo = { id: number; nome: string; preco: number; categoria: string; setor: string; [key: string]: any };
 
 function catalogoComAdicoes() {
   const base: ItemCatalogo[] = esperados.map(([id, nome, preco]) => ({ id, nome, preco, categoria: 'Teste', setor: 'cozinha' }));
+  base.push(...sushiCatalogo.items.map((item: ItemCatalogo) => ({ ...item })));
   base.push(
     { id: 1001, nome: 'Produto incluído pelo PDV A', preco: 10, categoria: 'Teste', setor: 'cozinha' },
     { id: 1002, nome: 'Produto incluído pelo PDV B', preco: 12, categoria: 'Teste', setor: 'bar' }
@@ -77,6 +79,7 @@ describe('Production Health Audit — correlação de tickets', () => {
     expect(resultado.status).toBe(0);
     expect(resultado.stdout).toContain(`cardapio_itens=${catalogoComAdicoes().length}`);
     expect(resultado.stdout).not.toContain('esperado 125');
+    expect(resultado.stdout).toContain('sushi_itens=61/61');
     expect(resultado.stdout).toContain('erros=0');
   });
 
