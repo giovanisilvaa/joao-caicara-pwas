@@ -64,8 +64,8 @@
 
     if (relatorios && relatorios.parentElement !== barra) barra.appendChild(relatorios);
     if (relatorios) {
-      relatorios.textContent = '📊 Relatórios';
-      relatorios.title = 'Abrir a Central de Relatórios';
+      if (relatorios.textContent !== '📊 Relatórios') relatorios.textContent = '📊 Relatórios';
+      if (relatorios.title !== 'Abrir a Central de Relatórios') relatorios.title = 'Abrir a Central de Relatórios';
     }
 
     let caixa = document.getElementById('pdv-caixa-btn');
@@ -93,8 +93,10 @@
     const sessao = document.getElementById('pdv-cash-session');
     const aberta = Boolean(sessao?.classList.contains('aberto'));
     botao.classList.toggle('aberto', aberta);
-    botao.textContent = aberta ? '💰 Caixa · Aberto' : '💰 Caixa';
-    botao.title = aberta ? 'Abrir informações da sessão de caixa atual' : 'Abrir controles e histórico do caixa';
+    const texto = aberta ? '💰 Caixa · Aberto' : '💰 Caixa';
+    const titulo = aberta ? 'Abrir informações da sessão de caixa atual' : 'Abrir controles e histórico do caixa';
+    if (botao.textContent !== texto) botao.textContent = texto;
+    if (botao.title !== titulo) botao.title = titulo;
   }
 
   function reorganizar() {
