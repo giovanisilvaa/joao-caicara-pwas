@@ -130,4 +130,68 @@
     font-size:.76rem!important;
     line-height:1.2!important;
   }
+
+  /* Modo Busca: libera a maior parte da tela somente durante a pesquisa.
+     Nenhum componente é removido do DOM e a comanda continua ancorada no rodapé. */
+  #tela-pedido.speed-search-mode>.cliente-row,
+  #tela-pedido.speed-search-mode #tabs-g,
+  #tela-pedido.speed-search-mode #speed-hint,
+  #tela-pedido.speed-search-mode #garcom-responsavel-comanda,
+  #tela-pedido.speed-search-mode #sushi-subfilters{
+    display:none!important;
+  }
+  #tela-pedido.speed-search-mode #busca-produto-g{
+    width:calc(100% - 20px)!important;
+    min-height:48px!important;
+    margin:8px 10px 5px!important;
+    padding:10px 13px!important;
+    box-sizing:border-box!important;
+    font-size:1rem!important;
+    flex:0 0 auto!important;
+  }
+  #tela-pedido.speed-search-mode #grid-produtos-g{
+    gap:8px!important;
+    padding:7px 10px 205px!important;
+  }
+  #tela-pedido.speed-search-mode #grid-produtos-g .prod-card-g,
+  #tela-pedido.speed-search-mode #grid-produtos-g .speed-product{
+    min-height:84px!important;
+    padding:10px 13px!important;
+    gap:3px!important;
+    border-radius:13px!important;
+  }
+  #tela-pedido.speed-search-mode #grid-produtos-g .prod-card-g h4,
+  #tela-pedido.speed-search-mode #grid-produtos-g .speed-product h4{
+    margin:0 28px 1px 0!important;
+    font-size:.96rem!important;
+    line-height:1.22!important;
+    display:-webkit-box;
+    -webkit-line-clamp:2;
+    -webkit-box-orient:vertical;
+    overflow:hidden;
+  }
+  #tela-pedido.speed-search-mode #grid-produtos-g .prod-card-g p,
+  #tela-pedido.speed-search-mode #grid-produtos-g .speed-product p{
+    margin:0!important;
+    font-size:1.05rem!important;
+    line-height:1.15!important;
+  }
+  #tela-pedido.speed-search-mode #grid-produtos-g .speed-add{
+    display:none!important;
+  }
+  #tela-pedido.speed-search-mode #grid-produtos-g .prod-card-g small,
+  #tela-pedido.speed-search-mode #grid-produtos-g .speed-product small,
+  #tela-pedido.speed-search-mode #grid-produtos-g .sushi-card-meta{
+    margin-top:1px!important;
+    font-size:.72rem!important;
+    line-height:1.25!important;
+  }
+  #tela-pedido.speed-search-mode #grid-produtos-g .sushi-info-actions{
+    margin-top:3px!important;
+  }
+  #tela-pedido.speed-search-mode #grid-produtos-g .sushi-detail-link{
+    min-height:34px!important;
+    padding:6px 9px!important;
+    font-size:.72rem!important;
+  }
 }

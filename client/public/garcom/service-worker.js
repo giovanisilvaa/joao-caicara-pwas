@@ -1,4 +1,4 @@
-const CACHE_NAME = 'joao-caicara-garcom-v15-fresh-20260826-live-v18-menu-v19-half-v20-cancel-v21-staged-v22-closefix-v23-restrict-v24-draft-v25-session-v26-checkout-v27-authfix-v28-menu-reconnect-v29-mesas-reconnect-v30-sync-guard-v31-freeze-fix-v32-ui-compact-v33-sushi-v34';
+const CACHE_NAME = 'joao-caicara-garcom-v15-fresh-20260826-live-v18-menu-v19-half-v20-cancel-v21-staged-v22-closefix-v23-restrict-v24-draft-v25-session-v26-checkout-v27-authfix-v28-menu-reconnect-v29-mesas-reconnect-v30-sync-guard-v31-freeze-fix-v32-ui-compact-v33-sushi-v34-search-focus-v35';
 const AUTH_SESSION_ASSET = '/auth-session-isolation.js?v=20';
 const LOGIN_ASSET = '/garcom/shared-login.js?v=19';
 const CARDAPIO_AUTH_ASSET = '/garcom/cardapio-auth-reconnect.js?v=21';
