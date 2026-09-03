@@ -19,6 +19,13 @@ describe('modo de busca focado do Garçom', () => {
     expect(js).toContain('renderizarBuscaRapida(busca.value)');
   });
 
+  it('sai do modo busca ao trocar categoria ou selecionar outra mesa', () => {
+    expect(js).toContain('const filtrarCardapioOriginal = window.filtrarCardapioG');
+    expect(js).toContain('window.filtrarCardapioG = function filtrarCardapioComSaidaBusca()');
+    expect(js).toContain('buscaComFoco = false');
+    expect(js).toContain('atualizarModoBusca()');
+  });
+
   it('recolhe a comanda aberta somente ao entrar na pesquisa', () => {
     expect(js).toContain("toggle?.getAttribute('aria-expanded') !== 'true'");
     expect(js).toContain("if (typeof toggleComanda === 'function') toggleComanda()");
