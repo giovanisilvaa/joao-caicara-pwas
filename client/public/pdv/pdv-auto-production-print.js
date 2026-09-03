@@ -1,7 +1,7 @@
 /* Central autenticada de produção do PDV — recebe pedidos do garçom e imprime em lote na única impressora do caixa. */
 (() => {
-  if (window.PDV_AUTO_PRODUCTION_RUNTIME === 'v3') return;
-  window.PDV_AUTO_PRODUCTION_RUNTIME = 'v3';
+  if (window.PDV_AUTO_PRODUCTION_RUNTIME === 'v4') return;
+  window.PDV_AUTO_PRODUCTION_RUNTIME = 'v4';
 
   const fila = [];
   const emFila = new Set();
@@ -11,12 +11,20 @@
   const TEMPO_RECLAIM_MS = 120000;
   const AGUARDO_LOTE_MS = 650;
   const RECUPERAR_INICIAL_MS = 15 * 60 * 1000;
+  const RECONEXAO_MS = 3000;
   let processando = false;
   let timerProcessamento = null;
+  let timerReconexao = null;
   let conectado = false;
+  let conectando = false;
   let refProducao = null;
   let onValue = null;
   let onChildAdded = null;
+
+  function usuarioPdvAutenticado() {
+    const user = firebase?.auth?.().currentUser;
+    return Boolean(user && String(user.email || '').toLowerCase() === EMAIL_PDV);
+  }
 
   function pedidoPendente(pedido) {
     if (!pedido || pedido.origem !== 'garcom') return false;
@@ -171,6 +179,12 @@
     agendarProcessamento();
   }
 
+  function cancelarTimerReconexao() {
+    if (!timerReconexao) return;
+    clearTimeout(timerReconexao);
+    timerReconexao = null;
+  }
+
   function desconectar() {
     if (refProducao) {
       if (onValue) refProducao.off('value', onValue);
@@ -183,49 +197,100 @@
     conhecidos.clear();
   }
 
+  function agendarReconexao(atraso = RECONEXAO_MS) {
+    if (timerReconexao || conectado || conectando || !usuarioPdvAutenticado()) return;
+    timerReconexao = setTimeout(() => {
+      timerReconexao = null;
+      conectarAutenticado().catch(erro => {
+        console.error('Falha ao reconectar central de produção:', erro);
+        agendarReconexao();
+      });
+    }, Math.max(0, Number(atraso) || 0));
+  }
+
+  function tratarErroListener(rotulo, erro) {
+    console.error(rotulo, erro);
+    desconectar();
+    agendarReconexao();
+  }
+
   async function conectarAutenticado() {
-    if (conectado) return;
-    const user = firebase.auth().currentUser;
-    if (!user || String(user.email || '').toLowerCase() !== EMAIL_PDV) return;
+    if (conectado || conectando || !usuarioPdvAutenticado()) return;
+    conectando = true;
+    cancelarTimerReconexao();
+    try {
+      const referencia = db.ref('pedidosProducao');
+      const inicial = await referencia.once('value');
+      if (!usuarioPdvAutenticado()) return;
 
-    refProducao = db.ref('pedidosProducao');
-    const inicial = await refProducao.once('value');
-    sincronizarPainel(inicial);
-    conhecidos.clear();
-    inicial.forEach(child => {
-      conhecidos.add(child.key);
-      const pedido = child.val() || {};
-      if (deveRecuperarInicial(pedido)) enfileirar(child.key, pedido);
-    });
+      refProducao = referencia;
+      sincronizarPainel(inicial);
+      conhecidos.clear();
+      inicial.forEach(child => {
+        conhecidos.add(child.key);
+        const pedido = child.val() || {};
+        if (deveRecuperarInicial(pedido)) enfileirar(child.key, pedido);
+      });
 
-    onValue = snap => sincronizarPainel(snap);
-    onChildAdded = snap => {
-      const chave = snap.key;
-      const pedido = snap.val() || {};
-      if (conhecidos.has(chave)) return;
-      conhecidos.add(chave);
-      enfileirar(chave, pedido);
-    };
+      onValue = snap => sincronizarPainel(snap);
+      onChildAdded = snap => {
+        const chave = snap.key;
+        const pedido = snap.val() || {};
+        if (conhecidos.has(chave)) return;
+        conhecidos.add(chave);
+        enfileirar(chave, pedido);
+      };
 
-    refProducao.on('value', onValue, erro => console.error('Falha na leitura autenticada de pedidosProducao:', erro));
-    refProducao.on('child_added', onChildAdded, erro => console.error('Falha na fila autenticada de produção:', erro));
-    conectado = true;
+      refProducao.on('value', onValue, erro => tratarErroListener('Falha na leitura autenticada de pedidosProducao:', erro));
+      refProducao.on('child_added', onChildAdded, erro => tratarErroListener('Falha na fila autenticada de produção:', erro));
+      conectado = true;
+    } catch (erro) {
+      desconectar();
+      agendarReconexao();
+      throw erro;
+    } finally {
+      conectando = false;
+      if (!conectado && usuarioPdvAutenticado()) agendarReconexao();
+    }
+  }
+
+  function garantirConexao() {
+    if (!usuarioPdvAutenticado()) return;
+    if (!conectado && !conectando) agendarReconexao(0);
   }
 
   function iniciar() {
-    if (typeof firebase === 'undefined' || typeof db === 'undefined' || !db) return;
+    if (typeof firebase === 'undefined' || typeof db === 'undefined' || !db) {
+      setTimeout(iniciar, 300);
+      return;
+    }
     firebase.auth().onAuthStateChanged(user => {
       const email = String(user?.email || '').toLowerCase();
       if (email !== EMAIL_PDV) {
+        cancelarTimerReconexao();
         desconectar();
         return;
       }
-      conectarAutenticado().catch(erro => console.error('Falha ao conectar central de produção:', erro));
+      garantirConexao();
     });
+    window.addEventListener('online', garantirConexao);
+    window.addEventListener('focus', garantirConexao);
+    document.addEventListener('visibilitychange', () => {
+      if (document.visibilityState === 'visible') garantirConexao();
+    });
+    garantirConexao();
   }
 
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', iniciar, { once: true });
   else iniciar();
 
-  window.PdvImpressaoAutomatica = Object.freeze({ enfileirar, processarFila, conectarAutenticado, desconectar });
+  window.PdvImpressaoAutomatica = Object.freeze({
+    enfileirar,
+    processarFila,
+    conectarAutenticado,
+    desconectar,
+    garantirConexao,
+    get conectado() { return conectado; },
+    get conectando() { return conectando; }
+  });
 })();
