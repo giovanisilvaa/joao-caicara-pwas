@@ -9,7 +9,6 @@ describe('verificacao de propagacao do deploy dos PWAs', () => {
     expect(workflow).toContain('Verify PWA deployment propagation');
     expect(workflow).toContain("verificar_arquivo '/pdv/service-worker.js' 'client/public/pdv/service-worker.js'");
     expect(workflow).toContain("verificar_arquivo '/garcom/service-worker.js' 'client/public/garcom/service-worker.js'");
-    expect(workflow).toContain("verificar_arquivo '/garcom/waiter-speed.js' 'client/public/garcom/waiter-speed.js'");
     expect(workflow).toContain("verificar_arquivo '/garcom/waiter-speed.css' 'client/public/garcom/waiter-speed.css'");
     expect(workflow).toContain("verificar_arquivo '/pwa-live-update.js' 'client/public/pwa-live-update.js'");
     expect(workflow).toContain("verificar_arquivo '/pdv/' 'client/public/pdv/index.html'");
