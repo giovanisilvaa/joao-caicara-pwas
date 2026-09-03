@@ -54,12 +54,55 @@
   }
 
   const busca = document.getElementById('busca-produto-g');
+  const painelPedidoBusca = document.getElementById('tela-pedido');
+  let buscaComFoco = false;
+  let modoBuscaAtivo = false;
+
+  function recolherComandaAoPesquisar() {
+    const toggle = document.getElementById('comanda-toggle');
+    if (toggle?.getAttribute('aria-expanded') !== 'true') return;
+    try {
+      if (typeof toggleComanda === 'function') toggleComanda();
+    } catch (_) {}
+  }
+
+  function atualizarModoBusca() {
+    if (!busca || !painelPedidoBusca) return;
+    const ativo = buscaComFoco || Boolean(normalizarBuscaRapida(busca.value));
+    if (ativo && !modoBuscaAtivo) recolherComandaAoPesquisar();
+    modoBuscaAtivo = ativo;
+    painelPedidoBusca.classList.toggle('speed-search-mode', ativo);
+  }
+
   if (busca) {
+    busca.setAttribute('type', 'search');
     busca.setAttribute('autocomplete', 'off');
     busca.setAttribute('enterkeyhint', 'search');
+    busca.setAttribute('aria-label', 'Buscar produto no cardápio');
     busca.placeholder = 'Buscar produto rápido...';
-    busca.addEventListener('input', () => renderizarBuscaRapida(busca.value));
-    busca.addEventListener('search', () => renderizarBuscaRapida(busca.value));
+    busca.addEventListener('focus', () => {
+      buscaComFoco = true;
+      atualizarModoBusca();
+    });
+    busca.addEventListener('blur', () => {
+      buscaComFoco = false;
+      requestAnimationFrame(atualizarModoBusca);
+    });
+    busca.addEventListener('input', () => {
+      renderizarBuscaRapida(busca.value);
+      atualizarModoBusca();
+    });
+    busca.addEventListener('search', () => {
+      renderizarBuscaRapida(busca.value);
+      atualizarModoBusca();
+    });
+    busca.addEventListener('keydown', event => {
+      if (event.key !== 'Escape') return;
+      busca.value = '';
+      renderizarBuscaRapida('');
+      busca.blur();
+      atualizarModoBusca();
+    });
   }
 
   const adicionarOriginal = window.adicionarItemG;
