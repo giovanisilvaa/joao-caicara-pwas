@@ -177,6 +177,8 @@ jobs:
           verificar_arquivo '/pdv/service-worker.js' 'client/public/pdv/service-worker.js'
           verificar_arquivo '/garcom/service-worker.js' 'client/public/garcom/service-worker.js'
           verificar_arquivo '/pwa-live-update.js' 'client/public/pwa-live-update.js'
+          verificar_arquivo '/pdv/modern-hybrid.css' 'client/public/pdv/modern-hybrid.css'
+          verificar_arquivo '/garcom/waiter-speed.css' 'client/public/garcom/waiter-speed.css'
           verificar_arquivo '/menu-20260828.js' 'client/public/menu-20260828.js'
           verificar_arquivo '/menu-sushi-20260903.js' 'client/public/menu-sushi-20260903.js'
           verificar_arquivo '/sushi-menu-20260903.json' 'client/public/sushi-menu-20260903.json'
