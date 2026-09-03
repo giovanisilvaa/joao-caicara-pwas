@@ -32,9 +32,28 @@ describe('fluxo unico de producao com uma impressora', () => {
     const auto = read('client/public/pdv/pdv-auto-production-print.js');
     expect(auto).toContain("const EMAIL_PDV = 'adm@acesso.joaocaicara.app'");
     expect(auto).toContain('firebase.auth().onAuthStateChanged');
-    expect(auto).toContain("refProducao = db.ref('pedidosProducao')");
-    expect(auto).toContain("refProducao.once('value')");
+    expect(auto).toContain("db.ref('pedidosProducao')");
+    expect(auto).toContain("referencia.once('value')");
     expect(auto).toContain('deveRecuperarInicial');
+    expect(auto).toContain('usuarioPdvAutenticado');
+  });
+
+  it('recupera automaticamente a escuta se a leitura inicial ou um listener falhar', () => {
+    const auto = read('client/public/pdv/pdv-auto-production-print.js');
+    expect(auto).toContain('const RECONEXAO_MS = 3000');
+    expect(auto).toContain('function agendarReconexao');
+    expect(auto).toContain('function tratarErroListener');
+    expect(auto).toContain("tratarErroListener('Falha na leitura autenticada de pedidosProducao:'");
+    expect(auto).toContain("tratarErroListener('Falha na fila autenticada de produção:'");
+    expect(auto).toContain('if (!conectado && usuarioPdvAutenticado()) agendarReconexao()');
+  });
+
+  it('tenta restaurar a fila quando rede ou janela do PDV voltam', () => {
+    const auto = read('client/public/pdv/pdv-auto-production-print.js');
+    expect(auto).toContain("window.addEventListener('online', garantirConexao)");
+    expect(auto).toContain("window.addEventListener('focus', garantirConexao)");
+    expect(auto).toContain("document.addEventListener('visibilitychange'");
+    expect(auto).toContain("document.visibilityState === 'visible'");
   });
 
   it('pdv reconecta mesas autenticadas e atualiza a comanda selecionada', () => {
@@ -51,7 +70,8 @@ describe('fluxo unico de producao com uma impressora', () => {
     const sw = read('client/public/pdv/service-worker.js');
     expect(sw).toContain('mesas-auth-reconnect.js?v=1');
     expect(sw).toContain('pdv-production.js?v=40&flow=2');
-    expect(sw).toContain('pdv-auto-production-print.js?v=3');
+    expect(sw).toContain('pdv-auto-production-print.js?v=4');
+    expect(sw).toContain('auto-print-reconnect-v47');
     expect(sw.indexOf('/pdv/pdv-sync.js')).toBeLessThan(sw.indexOf('/pdv/mesas-auth-reconnect.js'));
     expect(sw.indexOf('/pdv/pdv-production.js')).toBeLessThan(sw.indexOf('/pdv/pdv-auto-production-print.js'));
   });
