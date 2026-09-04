@@ -6,7 +6,7 @@ const read = (path: string) => fs.readFileSync(path, "utf8");
 describe("atualizacao do PWA do Garcom", () => {
   it("invalida o cache antigo ao publicar uma nova versao", () => {
     const sw = read("client/public/garcom/service-worker.js");
-    expect(sw).toContain("const CACHE_NAME = 'joao-caicara-garcom-v15-fresh-20260826-live-v18-menu-v19-half-v20-cancel-v21-staged-v22-closefix-v23-restrict-v24-draft-v25-session-v26-checkout-v27-authfix-v28-menu-reconnect-v29-mesas-reconnect-v30-sync-guard-v31-freeze-fix-v32-ui-compact-v33-sushi-v34-search-focus-v35'");
+    expect(sw).toContain("const CACHE_NAME = 'joao-caicara-garcom-v15-fresh-20260826-live-v18-menu-v19-half-v20-cancel-v21-staged-v22-closefix-v23-restrict-v24-draft-v25-session-v26-checkout-v27-authfix-v28-menu-reconnect-v29-mesas-reconnect-v30-sync-guard-v31-freeze-fix-v32-ui-compact-v33-sushi-v34-search-focus-v35-menu-clean-v36'");
   });
 
   it("recarrega clientes do Garcom quando o novo service worker assume", () => {
@@ -96,5 +96,13 @@ describe("atualizacao do PWA do Garcom", () => {
     expect(sw).toContain("html.replaceAll('<script src=\"/garcom/restricoes-operacionais.js?v=3\"></script>', '')");
     expect(sw).toContain('<script src="/garcom/restricoes-operacionais.js?v=4"></script>');
     expect(sw.indexOf('STAGED_CHECKOUT_ASSET')).toBeLessThan(sw.indexOf('GARCOM_RESTRICTIONS_ASSET'));
+  });
+
+  it("publica o cardapio compacto depois das camadas operacionais", () => {
+    const sw = read("client/public/garcom/service-worker.js");
+    expect(sw).toContain("const MENU_COMPACT_CSS_ASSET = '/garcom/menu-compact-v1.css?v=1'");
+    expect(sw).toContain("const MENU_COMPACT_JS_ASSET = '/garcom/menu-compact-v1.js?v=1'");
+    expect(sw).toContain('<link rel="stylesheet" href="/garcom/menu-compact-v1.css?v=1">');
+    expect(sw).toContain('<script src="/garcom/menu-compact-v1.js?v=1"></script>');
   });
 });
