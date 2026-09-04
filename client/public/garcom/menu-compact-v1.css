@@ -1,0 +1,302 @@
+/* Cardápio compacto do Garçom — somente layout móvel. */
+#garcom-menu-compact-bar,#garcom-menu-category-row,#garcom-category-overlay{display:none}
+
+@media(max-width:700px){
+  body.garcom-menu-compact-active .header{display:none!important}
+
+  body.garcom-menu-compact-active #tela-pedido{
+    background:#f7f7f2!important;
+  }
+
+  body.garcom-menu-compact-active #garcom-menu-compact-bar{
+    display:grid!important;
+    grid-template-columns:38px minmax(0,1fr) auto auto;
+    align-items:center;
+    gap:6px;
+    min-height:48px;
+    padding:6px 8px;
+    flex:0 0 auto;
+    background:#0b5963;
+    color:#fff;
+    border-bottom:2px solid #e66b45;
+    box-shadow:0 3px 10px rgba(18,62,72,.13);
+    z-index:35;
+  }
+  #garcom-menu-back,#garcom-menu-status,#garcom-menu-client{
+    border:0;
+    min-height:34px;
+    border-radius:9px;
+    font-weight:850;
+    cursor:pointer;
+  }
+  #garcom-menu-back{background:#d8b07a;color:#173d45;font-size:1.1rem;padding:0}
+  #garcom-menu-title{font-family:Georgia,serif;font-size:1rem;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  #garcom-menu-status{background:rgba(255,255,255,.11);color:#fff;padding:6px 8px;font-size:.68rem;white-space:nowrap}
+  #garcom-menu-client{background:rgba(255,255,255,.13);color:#fff;padding:6px 8px;font-size:.68rem;max-width:112px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+
+  body.garcom-menu-compact-active #tela-pedido>.cliente-row{
+    display:none!important;
+  }
+  body.garcom-menu-compact-active #tela-pedido.garcom-client-edit-open>.cliente-row{
+    display:block!important;
+    order:1;
+    padding:6px 8px!important;
+    background:#f3f7f5!important;
+    border-bottom:1px solid #d8e2df!important;
+  }
+  body.garcom-menu-compact-active #tela-pedido.garcom-client-edit-open>.cliente-row input{
+    min-height:40px!important;
+    padding:8px 10px!important;
+    border-radius:10px!important;
+    font-size:.9rem!important;
+  }
+
+  body.garcom-menu-compact-active #garcom-responsavel-comanda,
+  body.garcom-menu-compact-active #speed-hint,
+  body.garcom-menu-compact-active #tabs-g{
+    display:none!important;
+  }
+
+  body.garcom-menu-compact-active #busca-produto-g{
+    order:2;
+    width:calc(100% - 16px)!important;
+    min-height:44px!important;
+    margin:7px 8px 5px!important;
+    padding:9px 12px!important;
+    border:1px solid #cadbd6!important;
+    border-radius:12px!important;
+    background:#fff!important;
+    box-sizing:border-box!important;
+    font-size:.96rem!important;
+    flex:0 0 auto!important;
+    box-shadow:0 2px 8px rgba(18,62,72,.05);
+  }
+
+  body.garcom-menu-compact-active #garcom-menu-category-row{
+    order:3;
+    display:flex!important;
+    align-items:center;
+    gap:7px;
+    padding:0 8px 6px;
+    flex:0 0 auto;
+    background:#f7f7f2;
+  }
+  #garcom-menu-category-row button{
+    min-height:38px;
+    border:1px solid #d5e0dc;
+    border-radius:10px;
+    background:#fff;
+    color:#123e48;
+    font-weight:850;
+    font-size:.75rem;
+    cursor:pointer;
+  }
+  #garcom-menu-favorites{flex:0 0 auto;padding:7px 10px}
+  #garcom-menu-favorites.active{background:#fff7df;border-color:#e3c267;color:#775719}
+  #garcom-menu-categories{flex:1;display:flex;align-items:center;justify-content:space-between;gap:8px;padding:7px 10px;min-width:0}
+  #garcom-menu-category-label{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+
+  body.garcom-menu-compact-active #tela-pedido.speed-search-mode #garcom-menu-category-row,
+  body.garcom-menu-compact-active #tela-pedido.speed-search-mode #sushi-subfilters{
+    display:none!important;
+  }
+  body.garcom-menu-compact-active #tela-pedido.speed-search-mode #busca-produto-g{
+    width:calc(100% - 16px)!important;
+    min-height:44px!important;
+    margin:7px 8px 5px!important;
+    padding:9px 12px!important;
+  }
+
+  body.garcom-menu-compact-active #sushi-subfilters.open{
+    order:3;
+    min-height:36px!important;
+    padding:4px 8px 6px!important;
+    gap:5px!important;
+  }
+  body.garcom-menu-compact-active .sushi-subfilter{
+    min-height:30px!important;
+    padding:5px 8px!important;
+    font-size:.68rem!important;
+  }
+
+  body.garcom-menu-compact-active #grid-produtos-g,
+  body.garcom-menu-compact-active #tela-pedido.speed-search-mode #grid-produtos-g{
+    order:4;
+    grid-template-columns:1fr!important;
+    gap:7px!important;
+    padding:6px 8px 108px!important;
+    min-height:0!important;
+    max-height:none!important;
+    overflow-y:auto!important;
+    align-content:start!important;
+  }
+
+  body.garcom-menu-compact-active #grid-produtos-g .prod-card-g,
+  body.garcom-menu-compact-active #grid-produtos-g .speed-product,
+  body.garcom-menu-compact-active #tela-pedido.speed-search-mode #grid-produtos-g .prod-card-g,
+  body.garcom-menu-compact-active #tela-pedido.speed-search-mode #grid-produtos-g .speed-product{
+    position:relative!important;
+    min-height:78px!important;
+    height:auto!important;
+    padding:9px 88px 9px 11px!important;
+    border-radius:13px!important;
+    display:flex!important;
+    flex-direction:column!important;
+    align-items:stretch!important;
+    justify-content:center!important;
+    gap:2px!important;
+    text-align:left!important;
+    box-shadow:0 2px 8px rgba(18,62,72,.06)!important;
+  }
+
+  body.garcom-menu-compact-active #grid-produtos-g .prod-card-g h4,
+  body.garcom-menu-compact-active #grid-produtos-g .speed-product h4,
+  body.garcom-menu-compact-active #tela-pedido.speed-search-mode #grid-produtos-g .prod-card-g h4,
+  body.garcom-menu-compact-active #tela-pedido.speed-search-mode #grid-produtos-g .speed-product h4{
+    margin:0!important;
+    font-size:.94rem!important;
+    line-height:1.18!important;
+    color:#133c4a!important;
+    display:block!important;
+    overflow:visible!important;
+    white-space:normal!important;
+    overflow-wrap:anywhere!important;
+    -webkit-line-clamp:unset!important;
+    -webkit-box-orient:unset!important;
+  }
+  body.garcom-menu-compact-active #grid-produtos-g .prod-card-g p,
+  body.garcom-menu-compact-active #grid-produtos-g .speed-product p,
+  body.garcom-menu-compact-active #tela-pedido.speed-search-mode #grid-produtos-g .prod-card-g p,
+  body.garcom-menu-compact-active #tela-pedido.speed-search-mode #grid-produtos-g .speed-product p{
+    margin:1px 0 0!important;
+    font-size:1rem!important;
+    line-height:1.12!important;
+    font-weight:900!important;
+  }
+  body.garcom-menu-compact-active #grid-produtos-g .speed-add{display:none!important}
+  body.garcom-menu-compact-active #grid-produtos-g .prod-card-g small,
+  body.garcom-menu-compact-active #grid-produtos-g .speed-product small{
+    margin-top:1px!important;
+    font-size:.69rem!important;
+    line-height:1.2!important;
+  }
+  body.garcom-menu-compact-active #grid-produtos-g .menu-opt-actions{
+    position:absolute!important;
+    right:7px!important;
+    top:7px!important;
+    width:74px!important;
+    margin:0!important;
+    display:flex!important;
+    flex-direction:column!important;
+    align-items:stretch!important;
+    gap:4px!important;
+  }
+  body.garcom-menu-compact-active #grid-produtos-g .menu-opt-action{
+    min-height:27px!important;
+    padding:4px 5px!important;
+    border-radius:7px!important;
+    font-size:.61rem!important;
+    line-height:1.05!important;
+    white-space:normal!important;
+    text-align:center!important;
+  }
+  body.garcom-menu-compact-active #grid-produtos-g .sushi-card-meta{
+    margin-top:1px!important;
+    font-size:.68rem!important;
+    line-height:1.18!important;
+    display:block!important;
+    overflow:hidden!important;
+    text-overflow:ellipsis!important;
+    white-space:nowrap!important;
+  }
+  body.garcom-menu-compact-active #grid-produtos-g .sushi-info-actions{margin-top:3px!important}
+  body.garcom-menu-compact-active #grid-produtos-g .sushi-detail-link{
+    min-height:28px!important;
+    padding:4px 7px!important;
+    font-size:.64rem!important;
+  }
+
+  body.garcom-menu-compact-active .comanda-fixa-container{
+    left:0!important;right:0!important;bottom:0!important;
+    box-shadow:0 -3px 12px rgba(18,62,72,.14)!important;
+  }
+  body.garcom-menu-compact-active #comanda-toggle{
+    min-height:42px!important;
+    padding:8px 10px!important;
+    font-family:inherit!important;
+    font-size:.78rem!important;
+    line-height:1.15!important;
+  }
+  body.garcom-menu-compact-active .acoes-comanda-g{
+    display:grid!important;
+    grid-template-columns:1fr 1fr!important;
+    gap:6px!important;
+    padding:6px 8px!important;
+  }
+  body.garcom-menu-compact-active .acoes-comanda-g #resumo-envio-g{display:none!important}
+  body.garcom-menu-compact-active .acoes-comanda-g button{
+    min-height:42px!important;
+    padding:8px 6px!important;
+    font-size:.72rem!important;
+    box-shadow:none!important;
+  }
+  body.garcom-menu-compact-active .acoes-comanda-g .btn-enviar-g{
+    order:0!important;
+    grid-column:auto!important;
+  }
+  body.garcom-menu-compact-active .acoes-comanda-g .btn-limpar-g:only-of-type{grid-column:1/-1}
+
+  #garcom-category-overlay.open{
+    display:flex!important;
+    position:fixed;
+    inset:0;
+    z-index:6100;
+    align-items:flex-end;
+    justify-content:center;
+    padding:0;
+    background:rgba(10,40,48,.62);
+  }
+  #garcom-category-sheet{
+    width:100%;
+    max-height:72dvh;
+    overflow:hidden;
+    background:#fff;
+    border-radius:18px 18px 0 0;
+    box-shadow:0 -12px 36px rgba(0,0,0,.22);
+  }
+  .garcom-category-head{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:10px;
+    padding:12px 14px;
+    border-bottom:1px solid #d8e2df;
+    color:#123e48;
+  }
+  .garcom-category-head strong{font-family:Georgia,serif;font-size:1.05rem}
+  #garcom-category-close{border:0;border-radius:9px;background:#edf3f1;color:#123e48;padding:8px 10px;font-weight:850}
+  #garcom-category-list{
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:7px;
+    padding:10px 10px calc(14px + env(safe-area-inset-bottom));
+    max-height:calc(72dvh - 55px);
+    overflow-y:auto;
+  }
+  .garcom-category-option{
+    min-height:44px;
+    border:1px solid #d8e2df;
+    border-radius:10px;
+    background:#f8faf9;
+    color:#123e48;
+    padding:8px;
+    font-weight:800;
+    font-size:.75rem;
+    text-align:left;
+  }
+  .garcom-category-option.active{background:#0b5963;color:#fff;border-color:#0b5963}
+}
+
+@supports not (height:72dvh){
+  @media(max-width:700px){#garcom-category-sheet{max-height:72vh}#garcom-category-list{max-height:calc(72vh - 55px)}}
+}
