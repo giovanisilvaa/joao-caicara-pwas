@@ -1,4 +1,4 @@
-const CACHE_NAME = 'joao-caicara-pdv-v28-report-v29-live-v30-print-v31-menu-v32-half-v33-cancel-v34-staged-v35-transfer-v36-reports-v37-checkoutprint-v38-comanda-v39-visible-v40-native-v41-view-v42-sales-v43-cashsession-v44-sushi-v45-cashhub-v46';
+const CACHE_NAME = 'joao-caicara-pdv-v28-report-v29-live-v30-print-v31-menu-v32-half-v33-cancel-v34-staged-v35-transfer-v36-reports-v37-checkoutprint-v38-comanda-v39-visible-v40-native-v41-view-v42-sales-v43-cashsession-v44-sushi-v45-cashhub-v46-management-v47';
 const AUTH_SESSION_ASSET = '/auth-session-isolation.js?v=20';
 const MESA_ATOMIC_ASSET = '/mesa-atomic.js?v=38';
 const MESA_CONCURRENCY_ASSET = '/pdv/' + 'mesa-concurrency.js?v=40';
@@ -22,10 +22,11 @@ const RUNTIME_GUARD_ASSET = '/pdv/' + 'runtime-guard.js?v=40';
 const DAILY_SALES_REPORT_ASSET = '/pdv/' + 'daily-sales-report.js?v=29';
 const REPORT_DASHBOARD_ASSET = '/pdv/report-dashboard-v1.js?v=1';
 const CASH_HUB_ASSET = '/pdv/cash-hub-v1.js?v=1';
+const MANAGEMENT_HUB_ASSET = '/pdv/management-hub-v1.js?v=1';
 const PRINT_HEALTH_ASSET = '/pdv/' + 'pdv-print-health.js?v=1';
 const COMANDA_VISIBLE_ASSET = '/pdv/comanda-visible-v2.js?v=4';
 const LIVE_UPDATE_ASSET = '/pwa-live-update.js?v=1';
-const APP_SHELL = ['/pdv/', '/pdv/manifest.json', AUTH_SESSION_ASSET, MESA_ATOMIC_ASSET, '/pdv/access-control.js?v=31', '/pdv/admin-login.js?v=33', '/pdv/access-diagnostics.js?v=32', '/pdv/pdv-sync.js', PDV_MESAS_AUTH_ASSET, PDV_CARDAPIO_AUTH_ASSET, PDV_VENDAS_AUTH_ASSET, '/pdv/pdv-safety.js', '/pdv/pdv-operations.js', '/pdv/pdv-checkout-core.js', '/pdv/waiter-sales-report.js?v=28', '/pdv/service-fee-shifts.js?v=28', '/pdv/cash-reset.js?v=35', CASH_SESSION_ASSET, PRINT_HEALTH_ASSET, PDV_PRODUCTION_ASSET, MESA_CONCURRENCY_ASSET, ITEM_CANCELLATION_ASSET, STAGED_CHECKOUT_ASSET, ITEM_TRANSFER_ASSET, MENU_ORDER_OPTIONS_ASSET, SALAD_HALF_ASSET, MENU_UPDATE_ASSET, SUSHI_MENU_ASSET, SUSHI_CATALOG_ASSET, AUTO_PRODUCTION_PRINT_ASSET, CANCELLATION_PRINT_ASSET, AUTO_CLOSE_PRINT_ASSET, '/pdv/modern-hybrid.css', '/pdv/menu-admin-cta.css?v=34', '/pdv/fast-checkout.js', '/pdv/fast-checkout.css', '/pdv/fast-split.js', '/pdv/fast-split.css', RUNTIME_GUARD_ASSET, DAILY_SALES_REPORT_ASSET, REPORT_DASHBOARD_ASSET, CASH_HUB_ASSET, COMANDA_VISIBLE_ASSET, LIVE_UPDATE_ASSET, '/tradicao-caicara-logo.webp'];
+const APP_SHELL = ['/pdv/', '/pdv/manifest.json', AUTH_SESSION_ASSET, MESA_ATOMIC_ASSET, '/pdv/access-control.js?v=31', '/pdv/admin-login.js?v=33', '/pdv/access-diagnostics.js?v=32', '/pdv/pdv-sync.js', PDV_MESAS_AUTH_ASSET, PDV_CARDAPIO_AUTH_ASSET, PDV_VENDAS_AUTH_ASSET, '/pdv/pdv-safety.js', '/pdv/pdv-operations.js', '/pdv/pdv-checkout-core.js', '/pdv/waiter-sales-report.js?v=28', '/pdv/service-fee-shifts.js?v=28', '/pdv/cash-reset.js?v=35', CASH_SESSION_ASSET, PRINT_HEALTH_ASSET, PDV_PRODUCTION_ASSET, MESA_CONCURRENCY_ASSET, ITEM_CANCELLATION_ASSET, STAGED_CHECKOUT_ASSET, ITEM_TRANSFER_ASSET, MENU_ORDER_OPTIONS_ASSET, SALAD_HALF_ASSET, MENU_UPDATE_ASSET, SUSHI_MENU_ASSET, SUSHI_CATALOG_ASSET, AUTO_PRODUCTION_PRINT_ASSET, CANCELLATION_PRINT_ASSET, AUTO_CLOSE_PRINT_ASSET, '/pdv/modern-hybrid.css', '/pdv/menu-admin-cta.css?v=34', '/pdv/fast-checkout.js', '/pdv/fast-checkout.css', '/pdv/fast-split.js', '/pdv/fast-split.css', RUNTIME_GUARD_ASSET, DAILY_SALES_REPORT_ASSET, REPORT_DASHBOARD_ASSET, CASH_HUB_ASSET, MANAGEMENT_HUB_ASSET, COMANDA_VISIBLE_ASSET, LIVE_UPDATE_ASSET, '/tradicao-caicara-logo.webp'];
 const respostaHtmlComHotfix = async (response) => {
   let html = await response.text();
   if (!html.includes('/pdv/modern-hybrid.css')) html = html.replace('</head>', '<link rel="stylesheet" href="/pdv/modern-hybrid.css"></head>');
@@ -67,6 +68,7 @@ const respostaHtmlComHotfix = async (response) => {
   if (!html.includes('/pdv/daily-sales-report.js')) html = html.replace('</body>', '<script src="/pdv/daily-sales-report.js?v=29"></script></body>');
   if (!html.includes('/pdv/report-dashboard-v1.js')) html = html.replace('</body>', '<script src="/pdv/report-dashboard-v1.js?v=1"></script></body>');
   if (!html.includes('/pdv/cash-hub-v1.js')) html = html.replace('</body>', '<script src="/pdv/cash-hub-v1.js?v=1"></script></body>');
+  if (!html.includes('/pdv/management-hub-v1.js')) html = html.replace('</body>', '<script src="/pdv/management-hub-v1.js?v=1"></script></body>');
   if (!html.includes('/pwa-live-update.js')) html = html.replace('</body>', '<script src="/pwa-live-update.js?v=1"></script></body>');
   if (!html.includes('/pdv/comanda-visible-v2.js')) html = html.replace('</body>', '<script src="/pdv/comanda-visible-v2.js?v=4"></script></body>');
   const headers = new Headers(response.headers);
