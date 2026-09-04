@@ -1,63 +1,90 @@
 import { describe, expect, it } from 'vitest';
 import fs from 'node:fs';
 
-const hub = fs.readFileSync('client/public/pdv/management-hub-v1.js', 'utf8');
-const sw = fs.readFileSync('client/public/pdv/service-worker.js', 'utf8');
+const read = (path: string) => fs.readFileSync(path, 'utf8');
+const privacy = read('client/public/pdv/management-hub-v1.js');
+const sw = read('client/public/pdv/service-worker.js');
+const html = read('client/public/pdv/index.html');
 
-describe('central compacta de Gestão do PDV', () => {
-  it('cria um único acesso Gestão no resumo diário', () => {
-    expect(hub).toContain("botao.id = 'pdv-gestao-btn'");
-    expect(hub).toContain("botao.textContent = '☰ Gestão'");
-    expect(hub).toContain("painel.classList.add('pdv-gestao-compacto')");
-    expect(hub).toContain("titulo.appendChild(botao)");
+describe('modo operacional privado do PDV', () => {
+  it('substitui a antiga central Gestão por uma camada de privacidade operacional', () => {
+    expect(privacy).toContain("window.PDV_MANAGEMENT_HUB_RUNTIME === 'v2'");
+    expect(privacy).toContain("window.PDV_MANAGEMENT_HUB_RUNTIME = 'v2'");
+    expect(privacy).toContain('window.PdvPrivacidadeOperacional = Object.freeze');
+    expect(privacy).toContain("runtime: 'v2'");
+    expect(privacy).toContain('get financeiroVisivel() { return false; }');
   });
 
-  it('retira os três atalhos grandes da tela principal sem remover suas funções', () => {
-    expect(hub).toContain('#pdv-atalhos-gestao,');
-    expect(hub).toContain('#painel-diario > #btn-relatorio-garcons,');
-    expect(hub).toContain('#painel-diario > #rdu-btn,');
-    expect(hub).toContain('#painel-diario > #pdv-caixa-btn{');
-    expect(hub).toContain("abrirOriginal('rdu-btn', 'Relatórios')");
-    expect(hub).toContain("abrirOriginal('btn-relatorio-garcons', 'Vendas por Garçom')");
-    expect(hub).toContain("abrirOriginal('pdv-caixa-btn', 'Caixa')");
-    expect(hub).toContain('original.click()');
-    expect(hub).not.toContain('.remove()');
+  it('retira da interface os acessos e modais financeiros do PDV', () => {
+    const alvos = [
+      '.header-actions .btn-history[onclick*="abrirModalHistorico"]',
+      '#painel-diario .indicador-diario.vendas',
+      '#pdv-cash-session-totals',
+      '#pcsh-btn',
+      '#pdv-atalhos-gestao',
+      '#btn-relatorio-garcons',
+      '#rdu-btn',
+      '#pdv-caixa-btn',
+      '#pdv-gestao-btn',
+      '#pdv-gestao-overlay',
+      '#rdu-overlay',
+      '#relatorio-garcons-overlay',
+      '#pdv-caixa-overlay',
+      '#modal-historico'
+    ];
+    alvos.forEach(alvo => expect(privacy).toContain(alvo));
+    expect(privacy).toContain('display:none!important');
+    expect(privacy).toContain("elemento.setAttribute('aria-hidden', 'true')");
+    expect(privacy).toContain("elemento.setAttribute('tabindex', '-1')");
   });
 
-  it('mantém Mesas abertas visível e compacta o painel em uma linha', () => {
-    expect(hub).toContain("grid-template-columns:minmax(0,1fr) auto!important");
-    expect(hub).toContain('#painel-diario.pdv-gestao-compacto .indicador-diario.mesas');
-    expect(hub).toContain('display:inline-flex!important');
-    expect(hub).toContain('border-radius:999px!important');
-    expect(hub).not.toContain('.indicador-diario.mesas{display:none');
+  it('mantém Mesas abertas visível e compacta o resumo sem faturamento', () => {
+    expect(privacy).toContain("painel.classList.add('pdv-operacional-privado')");
+    expect(privacy).toContain('#painel-diario.pdv-operacional-privado .indicador-diario.mesas');
+    expect(privacy).toContain('display:inline-flex!important');
+    expect(privacy).toContain('border-radius:999px!important');
+    expect(privacy).not.toContain('.indicador-diario.mesas{display:none');
   });
 
-  it('centraliza Relatórios, Vendas por Garçom e Caixa em um modal leve', () => {
-    expect(hub).toContain("overlay.id = 'pdv-gestao-overlay'");
-    expect(hub).toContain('id="pdv-gestao-relatorios"');
-    expect(hub).toContain('id="pdv-gestao-garcons"');
-    expect(hub).toContain('id="pdv-gestao-caixa"');
-    expect(hub).toContain('Relatórios, vendas por garçom e caixa fora da área principal de atendimento.');
+  it('preserva somente o ciclo da sessão sem exibir valores financeiros', () => {
+    expect(privacy).toContain("botao.id = 'pdv-sessao-operacional-btn'");
+    expect(privacy).toContain('Sessão operacional');
+    expect(privacy).toContain('Este controle não exibe faturamento, formas de pagamento, fundo ou histórico.');
+    expect(privacy).toContain('window.PdvSessaoCaixa');
+    expect(privacy).toContain('await api.encerrar()');
+    expect(privacy).toContain('await api.abrir()');
+    expect(privacy).not.toContain('resumoFinal.totalVendas');
+    expect(privacy).not.toContain('especieEsperada');
   });
 
-  it('reflete o estado aberto do Caixa sem recriar a lógica financeira', () => {
-    expect(hub).toContain("originalCaixa?.classList.contains('aberto')");
-    expect(hub).toContain("'💰 Caixa · Aberto'");
-    expect(hub).toContain('Sessão aberta · movimento e histórico.');
+  it('exige reautenticação administrativa antes de abrir ou encerrar a sessão', () => {
+    expect(privacy).toContain("const ADMIN_EMAIL = 'adm@acesso.joaocaicara.app'");
+    expect(privacy).toContain('const DESBLOQUEIO_MS = 60 * 1000');
+    expect(privacy).toContain('EmailAuthProvider');
+    expect(privacy).toContain('provider.credential(ADMIN_EMAIL, senha)');
+    expect(privacy).toContain('await user.reauthenticateWithCredential(credencial)');
+    expect(privacy).toContain('desbloqueadoAte = Date.now() + DESBLOQUEIO_MS');
+    expect(privacy).not.toContain('signInWithEmailAndPassword');
+    expect(privacy).not.toContain('localStorage');
   });
 
-  it('é apenas uma camada visual e não acessa Firebase nem dados operacionais', () => {
-    expect(hub).not.toContain('firebase');
-    expect(hub).not.toContain('database.ref');
-    expect(hub).not.toContain('db.ref');
-    expect(hub).not.toContain('pedidosProducao');
-    expect(hub).not.toContain('vendas/');
-    expect(hub).not.toContain('mesas/');
-    expect(hub).not.toContain('window.print');
+  it('não altera mesas, pedidos, impressão, vendas ou Firebase Database', () => {
+    expect(privacy).not.toContain('database.ref');
+    expect(privacy).not.toContain('db.ref');
+    expect(privacy).not.toContain('pedidosProducao');
+    expect(privacy).not.toContain('mesa-atomic');
+    expect(privacy).not.toContain('window.print');
+    expect(privacy).not.toContain('.transaction(');
   });
 
-  it('publica a camada pelo service worker com cache novo do PDV', () => {
-    expect(sw).toContain('cashhub-v46-management-v47');
+  it('não esconde Auditoria e Backup nesta fase', () => {
+    expect(html).toContain('onclick="abrirModalAuditoria()"');
+    expect(html).toContain('onclick="abrirModalBackup()"');
+    expect(privacy).not.toContain('[onclick*="abrirModalAuditoria"]');
+    expect(privacy).not.toContain('[onclick*="abrirModalBackup"]');
+  });
+
+  it('continua sendo carregado pelo service worker já existente', () => {
     expect(sw).toContain("const MANAGEMENT_HUB_ASSET = '/pdv/management-hub-v1.js?v=1'");
     expect(sw).toContain('MANAGEMENT_HUB_ASSET');
     expect(sw).toContain("if (!html.includes('/pdv/management-hub-v1.js'))");
