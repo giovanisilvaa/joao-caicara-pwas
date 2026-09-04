@@ -1,27 +1,74 @@
-/* Central compacta de Gestão do PDV.
-   Reorganiza apenas a interface e reutiliza os botões/funções já existentes.
-   Não altera vendas, sessões, relatórios, mesas, pedidos ou Firebase. */
+/* Modo operacional privado do PDV.
+   Remove da interface do caixa os valores e relatórios gerenciais.
+   Preserva todas as rotinas originais no DOM/runtime e mantém apenas um
+   controle de sessão sem valores, protegido por reautenticação administrativa. */
 (() => {
   if (!location.pathname.startsWith('/pdv/')) return;
-  if (window.PDV_MANAGEMENT_HUB_RUNTIME === 'v1') return;
-  window.PDV_MANAGEMENT_HUB_RUNTIME = 'v1';
+  if (window.PDV_MANAGEMENT_HUB_RUNTIME === 'v2') return;
+  window.PDV_MANAGEMENT_HUB_RUNTIME = 'v2';
 
+  const ADMIN_EMAIL = 'adm@acesso.joaocaicara.app';
+  const DESBLOQUEIO_MS = 60 * 1000;
   let observer = null;
   let agendado = false;
+  let desbloqueadoAte = 0;
+  let timerDesbloqueio = null;
+
+  const SELETORES_PRIVADOS = [
+    '.header-actions .btn-history[onclick*="abrirModalHistorico"]',
+    '#painel-diario .indicador-diario.vendas',
+    '#pcst-toggle-vendas-diarias',
+    '#pcst-toggle-movimento',
+    '#pdv-cash-session',
+    '#pdv-cash-session-totals',
+    '#pcsh-btn',
+    '#pdv-atalhos-gestao',
+    '#btn-relatorio-garcons',
+    '#rdu-btn',
+    '#pdv-caixa-btn',
+    '#pdv-gestao-btn',
+    '#pdv-gestao-overlay',
+    '#rdu-overlay',
+    '#relatorio-garcons-overlay',
+    '#pdv-caixa-overlay',
+    '#modal-historico'
+  ];
 
   function instalarEstilo() {
-    if (document.getElementById('pdv-management-hub-style')) return;
+    if (document.getElementById('pdv-operational-privacy-style')) return;
     const style = document.createElement('style');
-    style.id = 'pdv-management-hub-style';
+    style.id = 'pdv-operational-privacy-style';
     style.textContent = `
-      #painel-diario.pdv-gestao-compacto{
+      .header-actions .btn-history[onclick*="abrirModalHistorico"],
+      #painel-diario .indicador-diario.vendas,
+      #pcst-toggle-vendas-diarias,
+      #pcst-toggle-movimento,
+      #pdv-cash-session,
+      #pdv-cash-session-totals,
+      #pcsh-btn,
+      #pdv-atalhos-gestao,
+      #btn-relatorio-garcons,
+      #rdu-btn,
+      #pdv-caixa-btn,
+      #pdv-gestao-btn,
+      #pdv-gestao-overlay,
+      #rdu-overlay,
+      #relatorio-garcons-overlay,
+      #pdv-caixa-overlay,
+      #modal-historico{
+        display:none!important;
+        visibility:hidden!important;
+        pointer-events:none!important;
+      }
+
+      #painel-diario.pdv-operacional-privado{
         grid-template-columns:minmax(0,1fr) auto!important;
         align-items:center!important;
         gap:8px!important;
         padding:6px 12px!important;
         min-height:0!important;
       }
-      #painel-diario.pdv-gestao-compacto .painel-diario-titulo{
+      #painel-diario.pdv-operacional-privado .painel-diario-titulo{
         grid-column:1!important;
         display:flex!important;
         align-items:center!important;
@@ -29,15 +76,15 @@
         gap:8px!important;
         min-width:0!important;
       }
-      #painel-diario.pdv-gestao-compacto .painel-diario-titulo strong{
+      #painel-diario.pdv-operacional-privado .painel-diario-titulo strong{
         font-size:1rem!important;
         white-space:nowrap;
       }
-      #painel-diario.pdv-gestao-compacto #painel-diario-data{
+      #painel-diario.pdv-operacional-privado #painel-diario-data{
         margin-left:auto!important;
         white-space:nowrap;
       }
-      #painel-diario.pdv-gestao-compacto .indicador-diario.mesas{
+      #painel-diario.pdv-operacional-privado .indicador-diario.mesas{
         grid-column:2!important;
         display:inline-flex!important;
         flex-direction:row!important;
@@ -52,249 +99,276 @@
         box-shadow:none!important;
         white-space:nowrap;
       }
-      #painel-diario.pdv-gestao-compacto .indicador-diario.mesas small{
+      #painel-diario.pdv-operacional-privado .indicador-diario.mesas small{
         margin:0!important;
         font-size:.67rem!important;
         line-height:1!important;
       }
-      #painel-diario.pdv-gestao-compacto .indicador-diario.mesas strong{
+      #painel-diario.pdv-operacional-privado .indicador-diario.mesas strong{
         margin:0!important;
         font-size:1.02rem!important;
         line-height:1!important;
       }
-      #pdv-gestao-btn{
-        flex:0 0 auto;
-        border:1px solid rgba(15,76,92,.18);
-        border-radius:10px;
-        min-height:34px;
-        padding:7px 11px;
-        background:#173d45;
+
+      #pdv-sessao-operacional-btn{
+        border:1px solid rgba(255,255,255,.2);
+        border-radius:9px;
+        padding:8px 11px;
+        background:rgba(255,255,255,.12);
         color:#fff;
         font-weight:900;
         cursor:pointer;
-        box-shadow:0 2px 0 rgba(23,61,69,.18);
+        white-space:nowrap;
       }
-      #pdv-gestao-btn:hover{filter:brightness(1.08)}
+      #pdv-sessao-operacional-btn:hover{background:rgba(255,255,255,.2)}
 
-      /* Os controles originais continuam no DOM e funcionais; apenas saem da tela principal. */
-      #pdv-atalhos-gestao,
-      #painel-diario > #btn-relatorio-garcons,
-      #painel-diario > #rdu-btn,
-      #painel-diario > #pdv-caixa-btn{
-        display:none!important;
-      }
-
-      #pdv-gestao-overlay{
+      #pdv-sessao-operacional-overlay{
         display:none;
         position:fixed;
         inset:0;
-        z-index:2250;
-        background:rgba(12,35,40,.84);
+        z-index:2350;
+        background:rgba(12,35,40,.86);
         align-items:center;
         justify-content:center;
         padding:16px;
       }
-      #pdv-gestao-modal{
-        width:min(560px,100%);
+      #pdv-sessao-operacional-modal{
+        width:min(440px,100%);
         background:#f7f5ef;
         border-radius:18px;
         padding:18px;
         box-shadow:0 18px 60px rgba(0,0,0,.35);
-      }
-      .pdv-gestao-head{
-        display:flex;
-        align-items:flex-start;
-        justify-content:space-between;
-        gap:12px;
-        margin-bottom:14px;
-      }
-      .pdv-gestao-head h2{
-        margin:0;
         color:#173d45;
-        font-family:Georgia,serif;
       }
-      .pdv-gestao-head p{
-        margin:4px 0 0;
-        color:#687678;
-        font-size:.82rem;
-        line-height:1.35;
-      }
-      #pdv-gestao-fechar{
-        border:0;
-        border-radius:9px;
-        padding:8px 12px;
-        background:#e2e8e6;
-        color:#173d45;
-        font-weight:900;
-        cursor:pointer;
-      }
-      .pdv-gestao-acoes{
-        display:grid;
-        grid-template-columns:1fr;
-        gap:9px;
-      }
-      .pdv-gestao-acao{
-        width:100%;
-        min-height:58px;
-        border:1px solid #d7e2df;
-        border-radius:13px;
-        background:#fff;
-        color:#173d45;
-        padding:11px 13px;
-        display:flex;
-        align-items:center;
-        justify-content:space-between;
-        gap:12px;
-        text-align:left;
-        cursor:pointer;
-        box-shadow:0 2px 0 rgba(23,61,69,.08);
-      }
-      .pdv-gestao-acao:hover{border-color:#9fbab4;background:#fbfdfc}
-      .pdv-gestao-acao:disabled{opacity:.55;cursor:not-allowed}
-      .pdv-gestao-acao strong{display:block;font-size:.95rem}
-      .pdv-gestao-acao small{display:block;margin-top:3px;color:#6c797b;font-size:.73rem;line-height:1.25}
-      .pdv-gestao-seta{font-size:1.15rem;color:#6b7a7c;flex:0 0 auto}
+      .pdv-sessao-op-head{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;margin-bottom:12px}
+      .pdv-sessao-op-head h2{margin:0;font-family:Georgia,serif;color:#173d45;font-size:1.3rem}
+      .pdv-sessao-op-head p{margin:4px 0 0;color:#687678;font-size:.78rem;line-height:1.35}
+      #pdv-sessao-operacional-fechar{border:0;border-radius:9px;padding:8px 11px;background:#e2e8e6;color:#173d45;font-weight:900;cursor:pointer}
+      .pdv-sessao-op-status{border:1px solid #d7e2df;border-radius:12px;background:#fff;padding:11px 12px;margin-bottom:12px}
+      .pdv-sessao-op-status small{display:block;color:#6c797b;font-size:.68rem;text-transform:uppercase;letter-spacing:.08em;font-weight:900}
+      .pdv-sessao-op-status strong{display:block;margin-top:3px;color:#0f4c5c;font-size:1rem}
+      .pdv-sessao-op-login{display:grid;gap:7px}
+      .pdv-sessao-op-login label{font-size:.72rem;font-weight:900;color:#536b70}
+      #pdv-sessao-operacional-senha{width:100%;border:1px solid #bccdc8;border-radius:9px;padding:10px;background:#fff;color:#173d45}
+      .pdv-sessao-op-msg{min-height:19px;font-size:.72rem;font-weight:800;color:#b6533a}
+      .pdv-sessao-op-acoes{display:grid;grid-template-columns:1fr;gap:8px;margin-top:5px}
+      .pdv-sessao-op-btn{border:0;border-radius:9px;padding:10px 12px;font-weight:900;cursor:pointer;background:#0f4c5c;color:#fff}
+      .pdv-sessao-op-btn.sec{background:#536b70}
+      .pdv-sessao-op-btn:disabled{opacity:.55;cursor:not-allowed}
+      #pdv-sessao-operacional-acao[hidden]{display:none!important}
+      .pdv-sessao-op-nota{display:block;margin-top:10px;color:#718083;font-size:.69rem;line-height:1.35}
 
       @media(max-width:760px){
-        #painel-diario.pdv-gestao-compacto{
-          grid-template-columns:minmax(0,1fr) auto!important;
-          padding:6px 8px!important;
-        }
-        #painel-diario.pdv-gestao-compacto #painel-diario-data{display:none!important}
-        #painel-diario.pdv-gestao-compacto .painel-diario-titulo strong{font-size:.9rem!important}
-        #painel-diario.pdv-gestao-compacto .indicador-diario.mesas small{display:none!important}
-        #pdv-gestao-btn{min-height:32px;padding:6px 9px;font-size:.76rem}
-        #pdv-gestao-modal{padding:14px}
+        #painel-diario.pdv-operacional-privado{padding:6px 8px!important}
+        #painel-diario.pdv-operacional-privado #painel-diario-data{display:none!important}
+        #painel-diario.pdv-operacional-privado .painel-diario-titulo strong{font-size:.9rem!important}
+        #painel-diario.pdv-operacional-privado .indicador-diario.mesas small{display:none!important}
+        #pdv-sessao-operacional-btn{padding:7px 9px;font-size:.74rem}
       }
     `;
     document.head.appendChild(style);
   }
 
-  function garantirModal() {
-    if (document.getElementById('pdv-gestao-overlay')) return;
+  function bloquearElemento(elemento) {
+    if (!elemento) return;
+    elemento.setAttribute('aria-hidden', 'true');
+    if (elemento.matches('button, [role="button"], a')) elemento.setAttribute('tabindex', '-1');
+    if (elemento.id && /overlay|modal-historico/.test(elemento.id)) elemento.style.display = 'none';
+  }
+
+  function garantirModalSessao() {
+    if (document.getElementById('pdv-sessao-operacional-overlay')) return;
     const overlay = document.createElement('div');
-    overlay.id = 'pdv-gestao-overlay';
+    overlay.id = 'pdv-sessao-operacional-overlay';
     overlay.setAttribute('aria-hidden', 'true');
     overlay.innerHTML = `
-      <div id="pdv-gestao-modal" role="dialog" aria-modal="true" aria-labelledby="pdv-gestao-titulo">
-        <div class="pdv-gestao-head">
+      <div id="pdv-sessao-operacional-modal" role="dialog" aria-modal="true" aria-labelledby="pdv-sessao-operacional-titulo">
+        <div class="pdv-sessao-op-head">
           <div>
-            <h2 id="pdv-gestao-titulo">Gestão</h2>
-            <p>Relatórios, vendas por garçom e caixa fora da área principal de atendimento.</p>
+            <h2 id="pdv-sessao-operacional-titulo">Sessão operacional</h2>
+            <p>Este controle não exibe faturamento, formas de pagamento, fundo ou histórico.</p>
           </div>
-          <button type="button" id="pdv-gestao-fechar">Fechar</button>
+          <button type="button" id="pdv-sessao-operacional-fechar">Fechar</button>
         </div>
-        <div class="pdv-gestao-acoes">
-          <button type="button" class="pdv-gestao-acao" id="pdv-gestao-relatorios">
-            <span><strong>📊 Relatórios</strong><small>Resumo financeiro, vendas e indicadores.</small></span>
-            <span class="pdv-gestao-seta">›</span>
-          </button>
-          <button type="button" class="pdv-gestao-acao" id="pdv-gestao-garcons">
-            <span><strong>👥 Vendas por Garçom</strong><small>Consulta e impressão do desempenho diário.</small></span>
-            <span class="pdv-gestao-seta">›</span>
-          </button>
-          <button type="button" class="pdv-gestao-acao" id="pdv-gestao-caixa">
-            <span><strong id="pdv-gestao-caixa-titulo">💰 Caixa</strong><small id="pdv-gestao-caixa-status">Sessão, movimento e histórico.</small></span>
-            <span class="pdv-gestao-seta">›</span>
-          </button>
+        <div class="pdv-sessao-op-status">
+          <small>Status</small>
+          <strong id="pdv-sessao-operacional-status">Carregando…</strong>
         </div>
+        <div class="pdv-sessao-op-login">
+          <label for="pdv-sessao-operacional-senha">Senha administrativa</label>
+          <input id="pdv-sessao-operacional-senha" type="password" autocomplete="current-password" placeholder="Digite a senha para desbloquear">
+          <div id="pdv-sessao-operacional-msg" class="pdv-sessao-op-msg" role="status" aria-live="polite"></div>
+        </div>
+        <div class="pdv-sessao-op-acoes">
+          <button type="button" class="pdv-sessao-op-btn" id="pdv-sessao-operacional-desbloquear">Desbloquear</button>
+          <button type="button" class="pdv-sessao-op-btn sec" id="pdv-sessao-operacional-acao" hidden>Gerenciar sessão</button>
+        </div>
+        <small class="pdv-sessao-op-nota">🔒 O desbloqueio dura no máximo 60 segundos e não altera o login atual do PDV.</small>
       </div>`;
     document.body.appendChild(overlay);
 
-    overlay.addEventListener('click', event => {
-      if (event.target === overlay) fechar();
+    overlay.addEventListener('click', event => { if (event.target === overlay) fecharSessao(); });
+    overlay.querySelector('#pdv-sessao-operacional-fechar')?.addEventListener('click', fecharSessao);
+    overlay.querySelector('#pdv-sessao-operacional-desbloquear')?.addEventListener('click', reautenticar);
+    overlay.querySelector('#pdv-sessao-operacional-acao')?.addEventListener('click', executarAcaoSessao);
+    overlay.querySelector('#pdv-sessao-operacional-senha')?.addEventListener('keydown', event => {
+      if (event.key === 'Enter') reautenticar();
     });
-    overlay.querySelector('#pdv-gestao-fechar')?.addEventListener('click', fechar);
-    overlay.querySelector('#pdv-gestao-relatorios')?.addEventListener('click', () => abrirOriginal('rdu-btn', 'Relatórios'));
-    overlay.querySelector('#pdv-gestao-garcons')?.addEventListener('click', () => abrirOriginal('btn-relatorio-garcons', 'Vendas por Garçom'));
-    overlay.querySelector('#pdv-gestao-caixa')?.addEventListener('click', () => abrirOriginal('pdv-caixa-btn', 'Caixa'));
   }
 
-  function garantirBotao() {
-    const painel = document.getElementById('painel-diario');
-    const titulo = painel?.querySelector('.painel-diario-titulo');
-    if (!painel || !titulo) return;
-    painel.classList.add('pdv-gestao-compacto');
-
-    let botao = document.getElementById('pdv-gestao-btn');
+  function garantirBotaoSessao() {
+    const acoes = document.querySelector('.header-actions');
+    if (!acoes) return;
+    let botao = document.getElementById('pdv-sessao-operacional-btn');
     if (!botao) {
       botao = document.createElement('button');
-      botao.id = 'pdv-gestao-btn';
+      botao.id = 'pdv-sessao-operacional-btn';
       botao.type = 'button';
-      botao.textContent = '☰ Gestão';
-      botao.title = 'Abrir Relatórios, Vendas por Garçom e Caixa';
-      botao.addEventListener('click', abrir);
-      titulo.appendChild(botao);
-    } else if (botao.parentElement !== titulo) {
-      titulo.appendChild(botao);
+      botao.addEventListener('click', abrirSessao);
+      const usuario = document.getElementById('usuario-logado-pdv');
+      if (usuario?.parentElement === acoes) acoes.insertBefore(botao, usuario);
+      else acoes.appendChild(botao);
     }
   }
 
-  function atualizarDisponibilidade() {
-    const mapa = [
-      ['pdv-gestao-relatorios', 'rdu-btn'],
-      ['pdv-gestao-garcons', 'btn-relatorio-garcons'],
-      ['pdv-gestao-caixa', 'pdv-caixa-btn']
-    ];
-    mapa.forEach(([novoId, originalId]) => {
-      const novo = document.getElementById(novoId);
-      if (novo) novo.disabled = !document.getElementById(originalId);
-    });
-
-    const originalCaixa = document.getElementById('pdv-caixa-btn');
-    const tituloCaixa = document.getElementById('pdv-gestao-caixa-titulo');
-    const statusCaixa = document.getElementById('pdv-gestao-caixa-status');
-    const aberto = Boolean(originalCaixa?.classList.contains('aberto') || /aberto/i.test(originalCaixa?.textContent || ''));
-    const novoTitulo = aberto ? '💰 Caixa · Aberto' : '💰 Caixa';
-    const novoStatus = aberto ? 'Sessão aberta · movimento e histórico.' : 'Sessão, movimento e histórico.';
-    if (tituloCaixa && tituloCaixa.textContent !== novoTitulo) tituloCaixa.textContent = novoTitulo;
-    if (statusCaixa && statusCaixa.textContent !== novoStatus) statusCaixa.textContent = novoStatus;
+  function sessaoAtual() {
+    try { return window.PdvSessaoCaixa?.atual?.() || null; } catch (_) { return null; }
   }
 
-  function reorganizar() {
+  function atualizarSessao() {
+    const sessao = sessaoAtual();
+    const aberta = String(sessao?.status || '').toLowerCase() === 'aberto';
+    const botao = document.getElementById('pdv-sessao-operacional-btn');
+    if (botao) {
+      const texto = aberta ? '🟢 Sessão' : '⚪ Sessão';
+      if (botao.textContent !== texto) botao.textContent = texto;
+      botao.title = aberta ? 'Sessão operacional aberta · acesso protegido' : 'Sessão operacional fechada · acesso protegido';
+    }
+    const status = document.getElementById('pdv-sessao-operacional-status');
+    if (status) status.textContent = aberta ? '🟢 Aberta' : '⚪ Fechada';
+    const acao = document.getElementById('pdv-sessao-operacional-acao');
+    if (acao) acao.textContent = aberta ? 'Encerrar sessão' : 'Abrir sessão';
+  }
+
+  function limparDesbloqueio() {
+    desbloqueadoAte = 0;
+    if (timerDesbloqueio) clearTimeout(timerDesbloqueio);
+    timerDesbloqueio = null;
+    const acao = document.getElementById('pdv-sessao-operacional-acao');
+    if (acao) acao.hidden = true;
+    const senha = document.getElementById('pdv-sessao-operacional-senha');
+    if (senha) senha.value = '';
+  }
+
+  function abrirSessao() {
+    garantirModalSessao();
+    limparDesbloqueio();
+    atualizarSessao();
+    const msg = document.getElementById('pdv-sessao-operacional-msg');
+    if (msg) msg.textContent = '';
+    const overlay = document.getElementById('pdv-sessao-operacional-overlay');
+    if (!overlay) return;
+    overlay.style.display = 'flex';
+    overlay.setAttribute('aria-hidden', 'false');
+    setTimeout(() => document.getElementById('pdv-sessao-operacional-senha')?.focus(), 30);
+  }
+
+  function fecharSessao() {
+    limparDesbloqueio();
+    const overlay = document.getElementById('pdv-sessao-operacional-overlay');
+    if (!overlay) return;
+    overlay.style.display = 'none';
+    overlay.setAttribute('aria-hidden', 'true');
+    document.getElementById('pdv-sessao-operacional-btn')?.focus();
+  }
+
+  async function reautenticar() {
+    const msg = document.getElementById('pdv-sessao-operacional-msg');
+    const senhaEl = document.getElementById('pdv-sessao-operacional-senha');
+    const desbloquear = document.getElementById('pdv-sessao-operacional-desbloquear');
+    const senha = String(senhaEl?.value || '');
+    if (!senha) {
+      if (msg) msg.textContent = 'Digite a senha administrativa.';
+      senhaEl?.focus();
+      return;
+    }
+
+    try {
+      const firebaseAuth = window.firebase?.auth?.();
+      const user = firebaseAuth?.currentUser || null;
+      const email = String(user?.email || '').toLowerCase();
+      const provider = window.firebase?.auth?.EmailAuthProvider;
+      if (!user || email !== ADMIN_EMAIL || !provider?.credential || typeof user.reauthenticateWithCredential !== 'function') {
+        throw new Error('Sessão administrativa indisponível');
+      }
+      if (desbloquear) { desbloquear.disabled = true; desbloquear.textContent = 'Verificando…'; }
+      if (msg) msg.textContent = '';
+      const credencial = provider.credential(ADMIN_EMAIL, senha);
+      await user.reauthenticateWithCredential(credencial);
+      desbloqueadoAte = Date.now() + DESBLOQUEIO_MS;
+      const acao = document.getElementById('pdv-sessao-operacional-acao');
+      if (acao) acao.hidden = false;
+      if (senhaEl) senhaEl.value = '';
+      if (msg) msg.textContent = 'Acesso administrativo liberado por até 60 segundos.';
+      timerDesbloqueio = setTimeout(() => {
+        limparDesbloqueio();
+        const aviso = document.getElementById('pdv-sessao-operacional-msg');
+        if (aviso) aviso.textContent = 'Acesso bloqueado novamente.';
+      }, DESBLOQUEIO_MS);
+    } catch (erro) {
+      console.warn('Falha ao reautenticar controle de sessão:', erro);
+      limparDesbloqueio();
+      if (msg) msg.textContent = 'Senha administrativa inválida ou sessão indisponível.';
+    } finally {
+      if (desbloquear) { desbloquear.disabled = false; desbloquear.textContent = 'Desbloquear'; }
+    }
+  }
+
+  async function executarAcaoSessao() {
+    if (Date.now() > desbloqueadoAte) {
+      limparDesbloqueio();
+      const msg = document.getElementById('pdv-sessao-operacional-msg');
+      if (msg) msg.textContent = 'O desbloqueio expirou. Digite a senha novamente.';
+      return;
+    }
+    const api = window.PdvSessaoCaixa;
+    if (!api || typeof api.abrir !== 'function' || typeof api.encerrar !== 'function') {
+      const msg = document.getElementById('pdv-sessao-operacional-msg');
+      if (msg) msg.textContent = 'Controle de sessão ainda está carregando. Tente novamente em instantes.';
+      return;
+    }
+
+    const aberta = String(sessaoAtual()?.status || '').toLowerCase() === 'aberto';
+    fecharSessao();
+    try {
+      if (aberta) await api.encerrar();
+      else await api.abrir();
+    } finally {
+      setTimeout(atualizarSessao, 100);
+    }
+  }
+
+  function aplicarPrivacidade() {
     agendado = false;
     instalarEstilo();
-    garantirModal();
-    garantirBotao();
-    atualizarDisponibilidade();
+    garantirModalSessao();
+    garantirBotaoSessao();
+    const painel = document.getElementById('painel-diario');
+    if (painel) painel.classList.add('pdv-operacional-privado');
+    SELETORES_PRIVADOS.forEach(seletor => {
+      document.querySelectorAll(seletor).forEach(bloquearElemento);
+    });
+    atualizarSessao();
   }
 
   function agendar() {
     if (agendado) return;
     agendado = true;
-    requestAnimationFrame(reorganizar);
-  }
-
-  function abrir() {
-    reorganizar();
-    const overlay = document.getElementById('pdv-gestao-overlay');
-    if (!overlay) return;
-    overlay.style.display = 'flex';
-    overlay.setAttribute('aria-hidden', 'false');
-    document.getElementById('pdv-gestao-fechar')?.focus();
-  }
-
-  function fechar(restaurarFoco = true) {
-    const overlay = document.getElementById('pdv-gestao-overlay');
-    if (!overlay) return;
-    overlay.style.display = 'none';
-    overlay.setAttribute('aria-hidden', 'true');
-    if (restaurarFoco) document.getElementById('pdv-gestao-btn')?.focus();
-  }
-
-  function abrirOriginal(id, nome) {
-    const original = document.getElementById(id);
-    if (!original) {
-      alert(`${nome} ainda está carregando. Tente novamente em um instante.`);
-      agendar();
-      return;
-    }
-    fechar(false);
-    requestAnimationFrame(() => original.click());
+    requestAnimationFrame(aplicarPrivacidade);
   }
 
   function iniciar() {
-    reorganizar();
+    aplicarPrivacidade();
     if (!observer) {
       observer = new MutationObserver(agendar);
       observer.observe(document.body, {
@@ -305,12 +379,19 @@
       });
     }
     document.addEventListener('keydown', event => {
-      if (event.key === 'Escape' && document.getElementById('pdv-gestao-overlay')?.style.display === 'flex') fechar();
+      if (event.key === 'Escape' && document.getElementById('pdv-sessao-operacional-overlay')?.style.display === 'flex') fecharSessao();
     });
   }
 
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', iniciar, { once: true });
   else iniciar();
 
-  window.PdvGestaoCentral = Object.freeze({ runtime: 'v1', abrir, fechar, reorganizar });
+  window.PdvPrivacidadeOperacional = Object.freeze({
+    runtime: 'v2',
+    aplicar: aplicarPrivacidade,
+    abrirSessao,
+    fecharSessao,
+    atualizarSessao,
+    get financeiroVisivel() { return false; }
+  });
 })();
