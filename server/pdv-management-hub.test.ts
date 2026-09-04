@@ -33,7 +33,7 @@ describe('central compacta de Gestão do PDV', () => {
   });
 
   it('centraliza Relatórios, Vendas por Garçom e Caixa em um modal leve', () => {
-    expect(hub).toContain('id="pdv-gestao-overlay"');
+    expect(hub).toContain("overlay.id = 'pdv-gestao-overlay'");
     expect(hub).toContain('id="pdv-gestao-relatorios"');
     expect(hub).toContain('id="pdv-gestao-garcons"');
     expect(hub).toContain('id="pdv-gestao-caixa"');
