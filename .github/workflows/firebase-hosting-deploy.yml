@@ -189,14 +189,20 @@ jobs:
           verificar_arquivo '/garcom/restricoes-operacionais.js' 'client/public/garcom/restricoes-operacionais.js'
           verificar_arquivo '/pdv/pdv-item-transfer.js' 'client/public/pdv/pdv-item-transfer.js'
           verificar_arquivo '/pdv/report-dashboard-v1.js' 'client/public/pdv/report-dashboard-v1.js'
+          verificar_arquivo '/gestao/gestao.js' 'client/public/gestao/gestao.js'
+          verificar_arquivo '/gestao/gestao.css' 'client/public/gestao/gestao.css'
           verificar_arquivo '/pdv/' 'client/public/pdv/index.html'
           verificar_arquivo '/garcom/' 'client/public/garcom/index.html'
+          verificar_arquivo '/gestao/' 'client/public/gestao/index.html'
 
           verificar_no_cache '/pdv/service-worker.js'
           verificar_no_cache '/garcom/service-worker.js'
           verificar_no_cache '/pwa-live-update.js'
           verificar_no_cache '/pdv/'
           verificar_no_cache '/garcom/'
+          verificar_no_cache '/gestao/'
+          verificar_no_cache '/gestao/gestao.js'
+          verificar_no_cache '/gestao/gestao.css'
 
       - name: Deploy Realtime Database rules
         run: npx firebase-tools@latest deploy --only database --project joaocaicaratradicao --non-interactive
