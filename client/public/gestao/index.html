@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <meta name="theme-color" content="#0F4C5C">
+  <title>João Caiçara — Gestão</title>
+  <link rel="icon" href="/tradicao-caicara-logo.webp">
+  <link rel="stylesheet" href="/gestao/gestao.css?v=1">
+</head>
+<body>
+  <div id="gestao-login" class="login-shell">
+    <section class="login-card" aria-labelledby="gestao-login-title">
+      <img src="/tradicao-caicara-logo.webp" alt="João Caiçara Tradição" class="login-logo">
+      <p class="eyebrow">PAINEL PRIVADO</p>
+      <h1 id="gestao-login-title">Gestão João Caiçara</h1>
+      <p class="login-copy">Acesso exclusivo à administração. Esta página consulta os dados oficiais do restaurante em modo somente leitura.</p>
+      <label for="gestao-login-user">Usuário</label>
+      <input id="gestao-login-user" value="adm" readonly autocomplete="username">
+      <label for="gestao-login-password">Senha</label>
+      <input id="gestao-login-password" type="password" inputmode="numeric" autocomplete="current-password" placeholder="Digite a senha administrativa">
+      <div id="gestao-login-msg" class="login-msg" role="status" aria-live="polite"></div>
+      <button id="gestao-login-submit" class="btn primary" type="button">Entrar</button>
+      <small class="security-note">🔒 A sessão fica isolada nesta aba e é bloqueada após 10 minutos sem uso.</small>
+    </section>
+  </div>
+
+  <main id="gestao-app" hidden>
+    <header class="topbar">
+      <div class="brand">
+        <img src="/tradicao-caicara-logo.webp" alt="" aria-hidden="true">
+        <div>
+          <span>João Caiçara</span>
+          <strong>Gestão</strong>
+        </div>
+      </div>
+      <div class="top-actions">
+        <span id="gestao-sync" class="status-pill">Conectando…</span>
+        <button id="gestao-sair" class="btn ghost" type="button">Sair</button>
+      </div>
+    </header>
+
+    <section class="page-head">
+      <div>
+        <p class="eyebrow">VISÃO ADMINISTRATIVA</p>
+        <h1>Resumo financeiro</h1>
+        <p>Dados oficiais do Firebase, sem ações de alteração.</p>
+      </div>
+      <span class="readonly-badge">🔒 Somente leitura</span>
+    </section>
+
+    <section class="toolbar" aria-label="Filtros do relatório">
+      <label>Data
+        <input type="date" id="gestao-data">
+      </label>
+      <button class="btn secondary" type="button" id="gestao-hoje">Hoje</button>
+      <button class="btn secondary" type="button" id="gestao-ontem">Ontem</button>
+      <button class="btn secondary" type="button" id="gestao-atualizar">Atualizar</button>
+      <span id="gestao-atualizado" class="updated-at">Aguardando dados…</span>
+    </section>
+
+    <section class="kpi-grid" aria-label="Indicadores financeiros">
+      <article class="kpi featured"><small>Faturamento bruto</small><strong id="kpi-total">R$ 0,00</strong></article>
+      <article class="kpi"><small>Vendas fechadas</small><strong id="kpi-vendas">0</strong></article>
+      <article class="kpi"><small>Ticket médio</small><strong id="kpi-ticket">R$ 0,00</strong></article>
+      <article class="kpi"><small>Produtos / subtotal</small><strong id="kpi-subtotal">R$ 0,00</strong></article>
+      <article class="kpi"><small>Taxa de serviço</small><strong id="kpi-taxa">R$ 0,00</strong></article>
+      <article class="kpi"><small>Conferência pagamentos</small><strong id="kpi-conferencia">OK</strong></article>
+    </section>
+
+    <section class="content-grid two">
+      <article class="panel">
+        <div class="panel-head"><div><p class="eyebrow">RECEBIMENTOS</p><h2>Formas de pagamento</h2></div></div>
+        <div class="payment-grid">
+          <div><span>Dinheiro líquido</span><strong id="pay-dinheiro">R$ 0,00</strong></div>
+          <div><span>PIX</span><strong id="pay-pix">R$ 0,00</strong></div>
+          <div><span>Crédito</span><strong id="pay-credito">R$ 0,00</strong></div>
+          <div><span>Débito</span><strong id="pay-debito">R$ 0,00</strong></div>
+          <div><span>Troco</span><strong id="pay-troco">R$ 0,00</strong></div>
+          <div><span>Dinheiro recebido</span><strong id="pay-dinheiro-recebido">R$ 0,00</strong></div>
+        </div>
+      </article>
+
+      <article class="panel">
+        <div class="panel-head"><div><p class="eyebrow">CAIXA</p><h2>Sessão atual</h2></div></div>
+        <div id="caixa-atual" class="cash-state empty">Carregando sessão do caixa…</div>
+      </article>
+    </section>
+
+    <section class="panel">
+      <div class="panel-head"><div><p class="eyebrow">EQUIPE</p><h2>Vendas por garçom</h2></div><span id="garcons-total" class="mini-total"></span></div>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Garçom</th><th class="num">Vendido</th><th class="num">Serviço</th><th class="num">Mesas</th><th class="num">Itens</th></tr></thead>
+          <tbody id="garcons-body"><tr><td colspan="5" class="empty-cell">Aguardando vendas…</td></tr></tbody>
+        </table>
+      </div>
+    </section>
+
+    <section class="panel">
+      <div class="panel-head"><div><p class="eyebrow">MOVIMENTO</p><h2>Vendas recentes da data</h2></div><span id="vendas-lista-total" class="mini-total"></span></div>
+      <div id="vendas-recentes" class="sales-list"><p class="empty-cell">Aguardando vendas…</p></div>
+    </section>
+
+    <footer class="page-footer">Painel administrativo externo · leitura protegida pelo Firebase Auth.</footer>
+  </main>
+
+  <script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-database-compat.js"></script>
+  <script>
+    firebase.initializeApp({
+      apiKey: "AIzaSyB7hHYHFZ3L-z-sPmgKbJI75eaWHlSGI3A",
+      authDomain: "joaocaicaratradicao.firebaseapp.com",
+      databaseURL: "https://joaocaicaratradicao-default-rtdb.firebaseio.com",
+      projectId: "joaocaicaratradicao",
+      storageBucket: "joaocaicaratradicao.firebasestorage.app",
+      messagingSenderId: "777982220663",
+      appId: "1:777982220663:web:0af4e9bcbaaec847122972"
+    });
+  </script>
+  <script src="/auth-session-isolation.js?v=20"></script>
+  <script src="/gestao/gestao.js?v=1"></script>
+</body>
+</html>
