@@ -53,6 +53,24 @@
         ]
       },
       {
+        "source": "/gestao/",
+        "headers": [
+          {
+            "key": "Cache-Control",
+            "value": "no-store, no-cache, must-revalidate, max-age=0"
+          }
+        ]
+      },
+      {
+        "source": "/gestao/**",
+        "headers": [
+          {
+            "key": "Cache-Control",
+            "value": "no-store, no-cache, must-revalidate, max-age=0"
+          }
+        ]
+      },
+      {
         "source": "/pdv/index.html",
         "headers": [
           {
@@ -69,12 +87,26 @@
             "value": "no-store, no-cache, must-revalidate, max-age=0"
           }
         ]
+      },
+      {
+        "source": "/gestao/index.html",
+        "headers": [
+          {
+            "key": "Cache-Control",
+            "value": "no-store, no-cache, must-revalidate, max-age=0"
+          }
+        ]
       }
     ],
     "redirects": [
       {
         "source": "/pdv/index.html",
         "destination": "/pdv/",
+        "type": 302
+      },
+      {
+        "source": "/gestao/index.html",
+        "destination": "/gestao/",
         "type": 302
       }
     ]
