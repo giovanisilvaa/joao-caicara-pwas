@@ -1,0 +1,25 @@
+name: PDV Operational Privacy CI
+
+on:
+  push:
+    branches:
+      - feat/pdv-operational-privacy-v1-20260904
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - name: Type check
+        run: pnpm check
+      - name: Tests
+        run: pnpm test
