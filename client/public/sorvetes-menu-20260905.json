@@ -1,0 +1,24 @@
+{
+  "version": "2026-09-05-v1",
+  "category": {
+    "key": "sorvetes",
+    "label": "🍨 Sorvetes"
+  },
+  "items": [
+    { "id": 400, "nome": "Ovomaltine", "preco": 18.5, "categoria": "sorvetes", "setor": "cozinha", "favorito": false, "ativo": true, "servePara2": false },
+    { "id": 401, "nome": "Pistache", "preco": 22, "categoria": "sorvetes", "setor": "cozinha", "favorito": false, "ativo": true, "servePara2": false },
+    { "id": 402, "nome": "Brigadeiro", "preco": 18.5, "categoria": "sorvetes", "setor": "cozinha", "favorito": false, "ativo": true, "servePara2": false },
+    { "id": 403, "nome": "Brownie", "preco": 18.5, "categoria": "sorvetes", "setor": "cozinha", "favorito": false, "ativo": true, "servePara2": false },
+    { "id": 404, "nome": "Speculoos", "preco": 18.5, "categoria": "sorvetes", "setor": "cozinha", "favorito": false, "ativo": true, "servePara2": false },
+    { "id": 405, "nome": "Dubai", "preco": 22, "categoria": "sorvetes", "setor": "cozinha", "favorito": false, "ativo": true, "servePara2": false },
+    { "id": 406, "nome": "Avelã", "preco": 16, "categoria": "sorvetes", "setor": "cozinha", "favorito": false, "ativo": true, "servePara2": false },
+    { "id": 407, "nome": "Maracujá", "preco": 16, "categoria": "sorvetes", "setor": "cozinha", "favorito": false, "ativo": true, "servePara2": false },
+    { "id": 408, "nome": "Morango", "preco": 16, "categoria": "sorvetes", "setor": "cozinha", "favorito": false, "ativo": true, "servePara2": false },
+    { "id": 409, "nome": "Açaí 90g", "preco": 16, "categoria": "sorvetes", "setor": "cozinha", "favorito": false, "ativo": true, "servePara2": false },
+    { "id": 410, "nome": "7 Belo", "preco": 11, "categoria": "sorvetes", "setor": "cozinha", "favorito": false, "ativo": true, "servePara2": false },
+    { "id": 411, "nome": "Doce de Leite Aviação", "preco": 11, "categoria": "sorvetes", "setor": "cozinha", "favorito": false, "ativo": true, "servePara2": false },
+    { "id": 412, "nome": "Framboesa", "preco": 11, "categoria": "sorvetes", "setor": "cozinha", "favorito": false, "ativo": true, "servePara2": false },
+    { "id": 413, "nome": "Limonada", "preco": 8.9, "categoria": "sorvetes", "setor": "cozinha", "favorito": false, "ativo": true, "servePara2": false },
+    { "id": 414, "nome": "Uva", "preco": 8.9, "categoria": "sorvetes", "setor": "cozinha", "favorito": false, "ativo": true, "servePara2": false }
+  ]
+}
