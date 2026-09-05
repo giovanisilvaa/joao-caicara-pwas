@@ -1,6 +1,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { aplicarSorvetesCardapio, validarSorvetesCardapio } from './sorvetes-cardapio-update.mjs';
 
 const catalogPath = fileURLToPath(new URL('../client/public/sushi-menu-20260903.json', import.meta.url));
 export const SUSHI_CATALOG = JSON.parse(fs.readFileSync(catalogPath, 'utf8'));
@@ -96,9 +97,12 @@ if (executadoDiretamente) {
   const atual = JSON.parse(fs.readFileSync(arquivo, 'utf8'));
   if (validarSomente) {
     validarSushiCardapio(atual);
+    validarSorvetesCardapio(atual);
     console.error(`Catálogo Sushi validado: ${SUSHI_ITEMS.length} itens.`);
+    console.error('Catálogo Sorvetes validado: 15 itens.');
   } else {
-    const atualizado = aplicarSushiCardapio(atual);
+    const comSushi = aplicarSushiCardapio(atual);
+    const atualizado = aplicarSorvetesCardapio(comSushi);
     process.stdout.write(JSON.stringify(atualizado));
   }
 }
