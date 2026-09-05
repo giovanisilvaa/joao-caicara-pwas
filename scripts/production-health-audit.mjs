@@ -1,5 +1,6 @@
 import fs from 'node:fs';
 import { SUSHI_ITEMS, validarSushiCardapio } from './sushi-cardapio-update.mjs';
+import { SORVETES_ITEMS, validarSorvetesCardapio } from './sorvetes-cardapio-update.mjs';
 
 const read = path => JSON.parse(fs.readFileSync(path, 'utf8'));
 const cardapio = read(process.argv[2]);
@@ -50,6 +51,12 @@ else {
     validarSushiCardapio(cardapio);
   } catch (falhaSushi) {
     erro(`cardapio sushi: ${falhaSushi?.message || falhaSushi}`);
+  }
+
+  try {
+    validarSorvetesCardapio(cardapio);
+  } catch (falhaSorvetes) {
+    erro(`cardapio sorvetes: ${falhaSorvetes?.message || falhaSorvetes}`);
   }
 
   for (const item of cardapio) {
@@ -147,6 +154,7 @@ for (const venda of vendasLista) {
 console.log('=== HEALTH AUDIT PRODUÇÃO — SOMENTE LEITURA ===');
 console.log(`cardapio_itens=${Array.isArray(cardapio) ? cardapio.length : 0}`);
 console.log(`sushi_itens=${Array.isArray(cardapio) ? cardapio.filter(item => item?.categoria === 'sushi').length : 0}/${SUSHI_ITEMS.length}`);
+console.log(`sorvetes_itens=${Array.isArray(cardapio) ? cardapio.filter(item => item?.categoria === 'sorvetes').length : 0}/${SORVETES_ITEMS.length}`);
 console.log(`mesas_abertas=${mesasAbertas}`);
 console.log(`itens_em_mesas_abertas=${itensAbertos}`);
 console.log(`itens_novos_aguardando_envio=${itensNovos}`);
