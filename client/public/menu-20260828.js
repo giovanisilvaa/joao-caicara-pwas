@@ -18,6 +18,24 @@
     { id:126, nome:'Filé Mignon com Fritas', preco:195, categoria:'carnes', setor:'cozinha', favorito:false, ativo:true, servePara2:true }
   ];
 
+  const SORVETES = [
+    { id:400, nome:'Ovomaltine', preco:18.5, categoria:'sorvetes', setor:'cozinha', favorito:false, ativo:true, servePara2:false },
+    { id:401, nome:'Pistache', preco:22, categoria:'sorvetes', setor:'cozinha', favorito:false, ativo:true, servePara2:false },
+    { id:402, nome:'Brigadeiro', preco:18.5, categoria:'sorvetes', setor:'cozinha', favorito:false, ativo:true, servePara2:false },
+    { id:403, nome:'Brownie', preco:18.5, categoria:'sorvetes', setor:'cozinha', favorito:false, ativo:true, servePara2:false },
+    { id:404, nome:'Speculoos', preco:18.5, categoria:'sorvetes', setor:'cozinha', favorito:false, ativo:true, servePara2:false },
+    { id:405, nome:'Dubai', preco:22, categoria:'sorvetes', setor:'cozinha', favorito:false, ativo:true, servePara2:false },
+    { id:406, nome:'Avelã', preco:16, categoria:'sorvetes', setor:'cozinha', favorito:false, ativo:true, servePara2:false },
+    { id:407, nome:'Maracujá', preco:16, categoria:'sorvetes', setor:'cozinha', favorito:false, ativo:true, servePara2:false },
+    { id:408, nome:'Morango', preco:16, categoria:'sorvetes', setor:'cozinha', favorito:false, ativo:true, servePara2:false },
+    { id:409, nome:'Açaí 90g', preco:16, categoria:'sorvetes', setor:'cozinha', favorito:false, ativo:true, servePara2:false },
+    { id:410, nome:'7 Belo', preco:11, categoria:'sorvetes', setor:'cozinha', favorito:false, ativo:true, servePara2:false },
+    { id:411, nome:'Doce de Leite Aviação', preco:11, categoria:'sorvetes', setor:'cozinha', favorito:false, ativo:true, servePara2:false },
+    { id:412, nome:'Framboesa', preco:11, categoria:'sorvetes', setor:'cozinha', favorito:false, ativo:true, servePara2:false },
+    { id:413, nome:'Limonada', preco:8.9, categoria:'sorvetes', setor:'cozinha', favorito:false, ativo:true, servePara2:false },
+    { id:414, nome:'Uva', preco:8.9, categoria:'sorvetes', setor:'cozinha', favorito:false, ativo:true, servePara2:false }
+  ];
+
   function itemId(lista, id) { return lista.find(item => Number(item?.id) === Number(id)); }
   function inserirAposCategoria(lista, categoria, registros) {
     let ultimo = -1;
@@ -25,6 +43,10 @@
     if (ultimo < 0) return;
     const ausentes = registros.filter(registro => !itemId(lista, registro.id));
     if (ausentes.length) lista.splice(ultimo + 1, 0, ...ausentes.map(item => ({ ...item })));
+  }
+  function inserirAusentesNoFim(lista, registros) {
+    const ausentes = registros.filter(registro => !itemId(lista, registro.id));
+    if (ausentes.length) lista.push(...ausentes.map(item => ({ ...item })));
   }
 
   function ajustarFallback(lista) {
@@ -48,6 +70,7 @@
     inserirAposCategoria(lista, 'saladas', NOVOS.filter(item => item.categoria === 'veganos_vegetarianos'));
     inserirAposCategoria(lista, 'peixes_camaroes', NOVOS.filter(item => item.id === 122 || item.id === 123));
     inserirAposCategoria(lista, 'carnes', NOVOS.filter(item => item.id >= 124));
+    inserirAusentesNoFim(lista, SORVETES);
   }
 
   function garantirCategoria(chave, label, depoisDe) {
@@ -131,10 +154,12 @@
 
     garantirCategoria('combos_praia', 'Combos Especiais Praia', 'aperitivos');
     garantirCategoria('veganos_vegetarianos', 'Veganos / Vegetarianos · Individuais', 'saladas');
+    garantirCategoria('sorvetes', '🍨 Sorvetes', 'kids');
 
     if (location.pathname.startsWith('/pdv/')) {
       criarTabPdv('combos_praia', 'Combos Especiais Praia', 'aperitivos');
       criarTabPdv('veganos_vegetarianos', 'Veganos / Vegetarianos · Individuais', 'saladas');
+      criarTabPdv('sorvetes', '🍨 Sorvetes', 'kids');
     } else if (location.pathname.startsWith('/garcom/')) {
       try {
         if (document.getElementById('tela-pedido')?.style.display === 'flex' && typeof renderizarTabsG === 'function') renderizarTabsG();
