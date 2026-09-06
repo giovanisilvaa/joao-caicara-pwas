@@ -14,9 +14,12 @@ describe("proteção de acesso direto ao PDV", () => {
     });
   });
 
-  it("força recarga quando o primeiro service worker assume o PDV", () => {
+  it("força recarga apenas quando o primeiro service worker assume o PDV", () => {
     const sw = read("client/public/pdv/service-worker.js");
     expect(sw).toContain("self.clients.claim()");
+    expect(sw).toContain("const haviaCachePdvAnterior = keys.some");
+    expect(sw).toContain("key.startsWith('joao-caicara-pdv-')");
+    expect(sw).toContain("if (haviaCachePdvAnterior) return");
     expect(sw).toContain("self.clients.matchAll({ type: 'window', includeUncontrolled: true })");
     expect(sw).toContain("client.navigate(client.url)");
   });
