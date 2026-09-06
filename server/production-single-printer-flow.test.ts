@@ -18,16 +18,18 @@ describe('fluxo unico de producao com uma impressora', () => {
     expect(production).toContain('ENVIAR PRODUÇÃO');
   });
 
-  it('sequencia especial caicara gera duas vias extras somente com as entradas quentes', () => {
+  it('sequencia especial caicara imprime uma via para sushi e uma via resumida de entradas quentes', () => {
     const production = read('client/public/pdv/pdv-production.js');
     expect(production).toContain('SEQUENCIA_ESPECIAL_ID = 300');
-    expect(production).toContain('sushiDetalhes');
-    expect(production).toContain("includes('entradas quentes')");
-    expect(production).toContain("titulo: 'ENTRADAS QUENTES - COZINHA'");
-    expect(production).toContain("titulo: 'ENTRADAS QUENTES - SUSHI'");
-    expect(production).toContain('expandirDocumentosEspeciais(base)');
+    expect(production).toContain('quantidadeSequencias(itens)');
+    expect(production).toContain("titulo: 'PEDIDO SUSHI'");
+    expect(production).toContain("viaEspecial: 'sequencia_especial_sushi'");
+    expect(production).toContain("nome: 'Sequência Especial Caiçara'");
     expect(production).toContain("viaEspecial: 'sequencia_especial_entradas_quentes'");
-    expect(production).toContain("{ qtd: 4, nome: 'Hot Roll Salmão' }");
+    expect(production).toContain("nome: 'ENTRADAS QUENTES'");
+    expect(production).toContain('demaisItens.length');
+    expect(production).not.toContain("titulo: 'ENTRADAS QUENTES - SUSHI'");
+    expect(production).not.toContain("{ qtd: 4, nome: 'Hot Roll Salmão' }");
   });
 
   it('pedidos do garcom entram em lote e usam uma unica chamada de impressao', () => {
