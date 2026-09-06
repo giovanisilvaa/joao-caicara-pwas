@@ -4,13 +4,6 @@
   const clone = valor => valor == null ? valor : JSON.parse(JSON.stringify(valor));
   const escapar = valor => String(valor ?? '').replace(/[&<>"']/g, caractere => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[caractere]));
   const SEQUENCIA_ESPECIAL_ID = 300;
-  const ENTRADAS_QUENTES_PADRAO = Object.freeze([
-    { qtd: 1, nome: 'Shimeji' },
-    { qtd: 1, nome: 'Harumaki queijo' },
-    { qtd: 1, nome: 'Guioza' },
-    { qtd: 1, nome: 'Bolinho de Salmão' },
-    { qtd: 4, nome: 'Hot Roll Salmão' }
-  ]);
 
   const normalizarTexto = valor => String(valor ?? '')
     .normalize('NFD')
@@ -22,61 +15,51 @@
     return Number(item?.id) === SEQUENCIA_ESPECIAL_ID || normalizarTexto(item?.nome) === 'sequencia especial caicara';
   }
 
-  function extrairEntradasQuentes(item) {
-    const detalhes = Array.isArray(item?.sushiDetalhes) ? item.sushiDetalhes : [];
-    const secao = detalhes.find(detalhe => normalizarTexto(detalhe?.titulo).includes('entradas quentes'));
-    const linhas = Array.isArray(secao?.linhas) ? secao.linhas : [];
-    const extraidas = linhas.map(linha => {
-      const texto = String(linha ?? '').trim();
-      const match = texto.match(/^(\d+(?:[.,]\d+)?)\s*(?:x\s*)?(.+)$/i);
-      if (!match) return null;
-      const qtd = Number(match[1].replace(',', '.'));
-      const nome = String(match[2] || '').trim();
-      if (!qtd || !nome) return null;
-      return { qtd, nome };
-    }).filter(Boolean);
-    return extraidas.length ? extraidas : ENTRADAS_QUENTES_PADRAO.map(itemPadrao => ({ ...itemPadrao }));
+  function quantidadeSequencias(itens) {
+    return (itens || []).reduce((total, item) => {
+      if (!ehSequenciaEspecial(item)) return total;
+      return total + Math.max(0, Number(item?.qtd ?? 1) || 0);
+    }, 0);
   }
 
-  function montarEntradasQuentes(itens) {
-    const agregado = new Map();
-    (itens || []).forEach(item => {
-      if (!ehSequenciaEspecial(item)) return;
-      const quantidadeSequencias = Math.max(0, Number(item?.qtd ?? 1) || 0);
-      if (!quantidadeSequencias) return;
-      extrairEntradasQuentes(item).forEach(entrada => {
-        const chave = normalizarTexto(entrada.nome);
-        const qtd = (Number(entrada.qtd) || 0) * quantidadeSequencias;
-        if (!chave || !qtd) return;
-        const atual = agregado.get(chave);
-        if (atual) atual.qtd += qtd;
-        else agregado.set(chave, { qtd, nome: entrada.nome });
-      });
-    });
-    return [...agregado.values()];
-  }
+  function criarDocumentosSequenciaEspecial(doc) {
+    if (!doc || doc.reimprimirTudo) return doc ? [doc] : [];
+    const itens = Array.isArray(doc.itens) ? doc.itens : [];
+    const quantidade = quantidadeSequencias(itens);
+    if (!quantidade) return [doc];
 
-  function criarViasEntradasQuentes(doc) {
-    if (!doc || doc.reimprimirTudo) return [];
-    const itens = montarEntradasQuentes(doc.itens || []);
-    if (!itens.length) return [];
+    const demaisItens = itens.filter(item => !ehSequenciaEspecial(item));
     const base = {
       numeroMesa: doc.numeroMesa ?? doc.mesa,
       cliente: doc.cliente || '',
-      criadoEm: doc.criadoEm || Date.now(),
-      viaEspecial: 'sequencia_especial_entradas_quentes'
+      criadoEm: doc.criadoEm || Date.now()
     };
-    return [
-      { ...base, setor: 'cozinha', titulo: 'ENTRADAS QUENTES - COZINHA', itens: clone(itens) },
-      { ...base, setor: 'cozinha', titulo: 'ENTRADAS QUENTES - SUSHI', itens: clone(itens) }
-    ];
+    const documentos = [];
+
+    if (demaisItens.length) documentos.push({ ...doc, itens: clone(demaisItens) });
+
+    documentos.push({
+      ...base,
+      setor: 'cozinha',
+      titulo: 'PEDIDO SUSHI',
+      viaEspecial: 'sequencia_especial_sushi',
+      itens: [{ qtd: quantidade, nome: 'Sequência Especial Caiçara' }]
+    });
+    documentos.push({
+      ...base,
+      setor: 'cozinha',
+      titulo: 'PEDIDO COZINHA',
+      viaEspecial: 'sequencia_especial_entradas_quentes',
+      itens: [{ qtd: quantidade, nome: 'ENTRADAS QUENTES' }]
+    });
+
+    return documentos;
   }
 
   function expandirDocumentosEspeciais(documentos) {
     const expandidos = [];
     (documentos || []).forEach(doc => {
-      expandidos.push(doc);
-      expandidos.push(...criarViasEntradasQuentes(doc));
+      expandidos.push(...criarDocumentosSequenciaEspecial(doc));
     });
     return expandidos;
   }
@@ -328,5 +311,5 @@
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', garantirInterfaceProducao, { once: true });
   else garantirInterfaceProducao();
 
-  window.PdvProducao = Object.freeze({ prepararImpressao, imprimirAgora, imprimirLote, instalarBotaoUnico, montarEntradasQuentes, expandirDocumentosEspeciais });
+  window.PdvProducao = Object.freeze({ prepararImpressao, imprimirAgora, imprimirLote, instalarBotaoUnico, quantidadeSequencias, expandirDocumentosEspeciais });
 })();
