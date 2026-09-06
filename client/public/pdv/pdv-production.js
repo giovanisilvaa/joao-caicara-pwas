@@ -3,6 +3,83 @@
   window.PDV_PRODUCTION_RUNTIME = 'v40';
   const clone = valor => valor == null ? valor : JSON.parse(JSON.stringify(valor));
   const escapar = valor => String(valor ?? '').replace(/[&<>"']/g, caractere => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[caractere]));
+  const SEQUENCIA_ESPECIAL_ID = 300;
+  const ENTRADAS_QUENTES_PADRAO = Object.freeze([
+    { qtd: 1, nome: 'Shimeji' },
+    { qtd: 1, nome: 'Harumaki queijo' },
+    { qtd: 1, nome: 'Guioza' },
+    { qtd: 1, nome: 'Bolinho de Salmão' },
+    { qtd: 4, nome: 'Hot Roll Salmão' }
+  ]);
+
+  const normalizarTexto = valor => String(valor ?? '')
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .trim()
+    .toLowerCase();
+
+  function ehSequenciaEspecial(item) {
+    return Number(item?.id) === SEQUENCIA_ESPECIAL_ID || normalizarTexto(item?.nome) === 'sequencia especial caicara';
+  }
+
+  function extrairEntradasQuentes(item) {
+    const detalhes = Array.isArray(item?.sushiDetalhes) ? item.sushiDetalhes : [];
+    const secao = detalhes.find(detalhe => normalizarTexto(detalhe?.titulo).includes('entradas quentes'));
+    const linhas = Array.isArray(secao?.linhas) ? secao.linhas : [];
+    const extraidas = linhas.map(linha => {
+      const texto = String(linha ?? '').trim();
+      const match = texto.match(/^(\d+(?:[.,]\d+)?)\s*(?:x\s*)?(.+)$/i);
+      if (!match) return null;
+      const qtd = Number(match[1].replace(',', '.'));
+      const nome = String(match[2] || '').trim();
+      if (!qtd || !nome) return null;
+      return { qtd, nome };
+    }).filter(Boolean);
+    return extraidas.length ? extraidas : ENTRADAS_QUENTES_PADRAO.map(itemPadrao => ({ ...itemPadrao }));
+  }
+
+  function montarEntradasQuentes(itens) {
+    const agregado = new Map();
+    (itens || []).forEach(item => {
+      if (!ehSequenciaEspecial(item)) return;
+      const quantidadeSequencias = Math.max(0, Number(item?.qtd ?? 1) || 0);
+      if (!quantidadeSequencias) return;
+      extrairEntradasQuentes(item).forEach(entrada => {
+        const chave = normalizarTexto(entrada.nome);
+        const qtd = (Number(entrada.qtd) || 0) * quantidadeSequencias;
+        if (!chave || !qtd) return;
+        const atual = agregado.get(chave);
+        if (atual) atual.qtd += qtd;
+        else agregado.set(chave, { qtd, nome: entrada.nome });
+      });
+    });
+    return [...agregado.values()];
+  }
+
+  function criarViasEntradasQuentes(doc) {
+    if (!doc || doc.reimprimirTudo) return [];
+    const itens = montarEntradasQuentes(doc.itens || []);
+    if (!itens.length) return [];
+    const base = {
+      numeroMesa: doc.numeroMesa ?? doc.mesa,
+      cliente: doc.cliente || '',
+      criadoEm: doc.criadoEm || Date.now(),
+      viaEspecial: 'sequencia_especial_entradas_quentes'
+    };
+    return [
+      { ...base, setor: 'cozinha', titulo: 'ENTRADAS QUENTES - COZINHA', itens: clone(itens) },
+      { ...base, setor: 'cozinha', titulo: 'ENTRADAS QUENTES - SUSHI', itens: clone(itens) }
+    ];
+  }
+
+  function expandirDocumentosEspeciais(documentos) {
+    const expandidos = [];
+    (documentos || []).forEach(doc => {
+      expandidos.push(doc);
+      expandidos.push(...criarViasEntradasQuentes(doc));
+    });
+    return expandidos;
+  }
 
   function htmlItens(itens) {
     return (itens || []).map(item => {
@@ -12,8 +89,8 @@
     }).join('');
   }
 
-  function prepararImpressao(setor, numeroMesa, cliente, itens, reimprimirTudo = false, criadoEm = Date.now()) {
-    document.getElementById('prod-titulo').innerText = `${setor === 'bar' ? 'PEDIDO BAR' : 'PEDIDO COZINHA'}${reimprimirTudo ? ' (REIMPRESSÃO)' : ''}`;
+  function prepararImpressao(setor, numeroMesa, cliente, itens, reimprimirTudo = false, criadoEm = Date.now(), tituloPersonalizado = '') {
+    document.getElementById('prod-titulo').innerText = tituloPersonalizado || `${setor === 'bar' ? 'PEDIDO BAR' : 'PEDIDO COZINHA'}${reimprimirTudo ? ' (REIMPRESSÃO)' : ''}`;
     document.getElementById('prod-mesa').innerText = numeroMesa;
     document.getElementById('prod-cliente').innerText = cliente || 'Balcão/Geral';
     document.getElementById('prod-data').innerText = new Date(criadoEm || Date.now()).toLocaleString('pt-BR');
@@ -58,11 +135,12 @@
   }
 
   function imprimirLote(documentos) {
-    const lista = (documentos || []).filter(doc => doc && Array.isArray(doc.itens) && doc.itens.length);
+    const base = (documentos || []).filter(doc => doc && Array.isArray(doc.itens) && doc.itens.length);
+    const lista = expandirDocumentosEspeciais(base);
     if (!lista.length) return;
     if (lista.length === 1) {
       const doc = lista[0];
-      prepararImpressao(doc.setor, doc.numeroMesa ?? doc.mesa, doc.cliente, doc.itens, Boolean(doc.reimprimirTudo), doc.criadoEm);
+      prepararImpressao(doc.setor, doc.numeroMesa ?? doc.mesa, doc.cliente, doc.itens, Boolean(doc.reimprimirTudo), doc.criadoEm, doc.titulo || '');
       imprimirAgora();
       return;
     }
@@ -70,7 +148,7 @@
     const container = garantirEstruturaLote();
     container.innerHTML = lista.map(doc => {
       const setor = doc.setor === 'bar' ? 'bar' : 'cozinha';
-      const titulo = `${setor === 'bar' ? 'PEDIDO BAR' : 'PEDIDO COZINHA'}${doc.reimprimirTudo ? ' (REIMPRESSÃO)' : ''}`;
+      const titulo = doc.titulo || `${setor === 'bar' ? 'PEDIDO BAR' : 'PEDIDO COZINHA'}${doc.reimprimirTudo ? ' (REIMPRESSÃO)' : ''}`;
       const mesa = doc.numeroMesa ?? doc.mesa ?? '-';
       const cliente = doc.cliente || 'Balcão/Geral';
       const data = new Date(doc.criadoEm || Date.now()).toLocaleString('pt-BR');
@@ -250,5 +328,5 @@
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', garantirInterfaceProducao, { once: true });
   else garantirInterfaceProducao();
 
-  window.PdvProducao = Object.freeze({ prepararImpressao, imprimirAgora, imprimirLote, instalarBotaoUnico });
+  window.PdvProducao = Object.freeze({ prepararImpressao, imprimirAgora, imprimirLote, instalarBotaoUnico, montarEntradasQuentes, expandirDocumentosEspeciais });
 })();
