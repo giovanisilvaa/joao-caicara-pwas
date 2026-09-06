@@ -9,6 +9,7 @@ export const SUSHI_CATALOG = JSON.parse(fs.readFileSync(catalogPath, 'utf8'));
 export const SUSHI_RODIZIO = JSON.parse(fs.readFileSync(rodizioPath, 'utf8'));
 export const SUSHI_ITEMS = [...SUSHI_CATALOG.items, ...SUSHI_RODIZIO.items];
 export const SUSHI_CATEGORY = SUSHI_CATALOG.category.key;
+export const SUSHI_RODIZIO_ID = 9301;
 
 const nomeNorm = valor => String(valor ?? '')
   .normalize('NFD')
@@ -21,10 +22,15 @@ function validarCatalogo() {
   if (!Array.isArray(SUSHI_ITEMS) || SUSHI_ITEMS.length !== 62) {
     throw new Error(`Catálogo Sushi deve possuir 62 itens; encontrado ${Array.isArray(SUSHI_ITEMS) ? SUSHI_ITEMS.length : 0}.`);
   }
+
+  const idsBase = SUSHI_CATALOG.items.map(item => Number(item.id));
+  if (idsBase.length !== 61 || idsBase.some((id, indice) => id !== 300 + indice)) {
+    throw new Error('Faixa legada do Sushi deve permanecer exatamente em 300–360.');
+  }
+
   const ids = SUSHI_ITEMS.map(item => Number(item.id));
   if (ids.some(id => !Number.isInteger(id))) throw new Error('Catálogo Sushi possui ID não inteiro.');
   if (new Set(ids).size !== ids.length) throw new Error('Catálogo Sushi possui IDs duplicados.');
-  if (Math.min(...ids) !== 300 || Math.max(...ids) !== 361) throw new Error('Faixa reservada do Sushi deve ser 300–361.');
 
   const nomes = SUSHI_ITEMS.map(item => nomeNorm(item.nome));
   if (new Set(nomes).size !== nomes.length) throw new Error('Catálogo Sushi possui nomes duplicados.');
@@ -36,7 +42,7 @@ function validarCatalogo() {
     if (!item.sushiGrupo) throw new Error(`Subcategoria ausente no item Sushi ${item.id}.`);
   }
 
-  const rodizio = SUSHI_ITEMS.find(item => Number(item.id) === 361);
+  const rodizio = SUSHI_ITEMS.find(item => Number(item.id) === SUSHI_RODIZIO_ID);
   if (!rodizio || rodizio.nome !== 'Rodízio' || Number(rodizio.preco) !== 149.9) {
     throw new Error('Rodízio de Sushi ausente ou com preço inválido.');
   }
@@ -56,7 +62,7 @@ export function validarSushiCardapio(lista) {
     const item = lista.find(registro => Number(registro?.id) === Number(esperado.id));
     if (!item) throw new Error(`Sushi ausente: ${esperado.id} — ${esperado.nome}.`);
     const campos = ['nome', 'preco', 'categoria', 'setor', 'sushiGrupo'];
-    if (Number(esperado.id) === 361) campos.push('servePara2', 'permiteMeioPrato');
+    if (Number(esperado.id) === SUSHI_RODIZIO_ID) campos.push('servePara2', 'permiteMeioPrato');
     for (const campo of campos) {
       if (item[campo] !== esperado[campo]) {
         throw new Error(`Sushi ${esperado.id} com ${campo} divergente (${JSON.stringify(item[campo])} != ${JSON.stringify(esperado[campo])}).`);
@@ -84,7 +90,7 @@ export function aplicarSushiCardapio(origem) {
     const porId = lista.find(item => Number(item?.id) === Number(esperado.id));
     if (porId) {
       if (nomeNorm(porId.nome) !== nomeNorm(esperado.nome)) {
-        throw new Error(`Colisão na faixa Sushi: ID ${esperado.id} já pertence a "${porId.nome}".`);
+        throw new Error(`Colisão no ID Sushi: ID ${esperado.id} já pertence a "${porId.nome}".`);
       }
       continue;
     }
