@@ -38,7 +38,7 @@
   }
 
   function permiteMeioPrato(produto) {
-    return Boolean(produto?.servePara2) || String(produto?.categoria || '').trim().toLowerCase() === 'festival';
+    return Boolean(produto?.servePara2) || produto?.permiteMeioPrato === true || String(produto?.categoria || '').trim().toLowerCase() === 'festival';
   }
 
   function identidadeGarcom() {
@@ -215,7 +215,7 @@
       personalizado.preco = precoMeio(produto);
       personalizado.meioPrato = true;
       personalizado.percentualPreco = 60;
-      personalizado.servePara2 = true;
+      personalizado.servePara2 = Boolean(produto?.servePara2);
     }
 
     if (observacao) {
