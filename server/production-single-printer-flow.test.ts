@@ -32,6 +32,17 @@ describe('fluxo unico de producao com uma impressora', () => {
     expect(production).not.toContain("{ qtd: 4, nome: 'Hot Roll Salmão' }");
   });
 
+  it('rodizio mantém a via atual e gera uma cópia adicional para o sushi', () => {
+    const production = read('client/public/pdv/pdv-production.js');
+    expect(production).toContain('RODIZIO_ID = 9301');
+    expect(production).toContain('item?.produtoOriginalId ?? item?.id');
+    expect(production).toContain('item?.nomeOriginal || item?.nome');
+    expect(production).toContain("viaEspecial: 'rodizio_sushi'");
+    expect(production).toContain("titulo: 'PEDIDO SUSHI'");
+    expect(production).toContain('itens: clone(itensRodizio)');
+    expect(production).toContain('expandidos.push(...criarViaRodizioSushi(documento))');
+  });
+
   it('pedidos do garcom entram em lote e usam uma unica chamada de impressao', () => {
     const auto = read('client/public/pdv/pdv-auto-production-print.js');
     expect(auto).toContain("pedido.origem !== 'garcom'");
@@ -64,7 +75,7 @@ describe('fluxo unico de producao com uma impressora', () => {
   it('service worker carrega reconexao de mesas, producao em lote e fila automatica', () => {
     const sw = read('client/public/pdv/service-worker.js');
     expect(sw).toContain('mesas-auth-reconnect.js?v=1');
-    expect(sw).toContain('pdv-production.js?v=40&flow=2');
+    expect(sw).toContain('pdv-production.js?v=40&flow=3');
     expect(sw).toContain('pdv-auto-production-print.js?v=3');
     expect(sw.indexOf('/pdv/pdv-sync.js')).toBeLessThan(sw.indexOf('/pdv/mesas-auth-reconnect.js'));
     expect(sw.indexOf('/pdv/pdv-production.js')).toBeLessThan(sw.indexOf('/pdv/pdv-auto-production-print.js'));

@@ -4,6 +4,7 @@
   const clone = valor => valor == null ? valor : JSON.parse(JSON.stringify(valor));
   const escapar = valor => String(valor ?? '').replace(/[&<>"']/g, caractere => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[caractere]));
   const SEQUENCIA_ESPECIAL_ID = 300;
+  const RODIZIO_ID = 9301;
 
   const normalizarTexto = valor => String(valor ?? '')
     .normalize('NFD')
@@ -13,6 +14,12 @@
 
   function ehSequenciaEspecial(item) {
     return Number(item?.id) === SEQUENCIA_ESPECIAL_ID || normalizarTexto(item?.nome) === 'sequencia especial caicara';
+  }
+
+  function ehRodizio(item) {
+    const idOriginal = Number(item?.produtoOriginalId ?? item?.id);
+    const nomeOriginal = normalizarTexto(item?.nomeOriginal || item?.nome);
+    return idOriginal === RODIZIO_ID || nomeOriginal === 'rodizio';
   }
 
   function quantidadeSequencias(itens) {
@@ -56,10 +63,29 @@
     return documentos;
   }
 
+  function criarViaRodizioSushi(doc) {
+    if (!doc || doc.reimprimirTudo || doc.viaEspecial === 'rodizio_sushi') return [];
+    const itensRodizio = (Array.isArray(doc.itens) ? doc.itens : []).filter(ehRodizio);
+    if (!itensRodizio.length) return [];
+    return [{
+      numeroMesa: doc.numeroMesa ?? doc.mesa,
+      cliente: doc.cliente || '',
+      criadoEm: doc.criadoEm || Date.now(),
+      setor: 'cozinha',
+      titulo: 'PEDIDO SUSHI',
+      viaEspecial: 'rodizio_sushi',
+      itens: clone(itensRodizio)
+    }];
+  }
+
   function expandirDocumentosEspeciais(documentos) {
     const expandidos = [];
     (documentos || []).forEach(doc => {
-      expandidos.push(...criarDocumentosSequenciaEspecial(doc));
+      const documentosSequencia = criarDocumentosSequenciaEspecial(doc);
+      documentosSequencia.forEach(documento => {
+        expandidos.push(documento);
+        expandidos.push(...criarViaRodizioSushi(documento));
+      });
     });
     return expandidos;
   }
