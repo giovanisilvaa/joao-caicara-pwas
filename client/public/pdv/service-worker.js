@@ -1,4 +1,4 @@
-const CACHE_NAME = 'joao-caicara-pdv-v28-report-v29-live-v30-print-v31-menu-v32-half-v33-cancel-v34-staged-v35-transfer-v36-reports-v37-checkoutprint-v38-comanda-v39-visible-v40-native-v41-view-v42-sales-v43-cashsession-v44-sushi-v45-cashhub-v46-management-v47-specialseq-v48';
+const CACHE_NAME = 'joao-caicara-pdv-v28-report-v29-live-v30-print-v31-menu-v32-half-v33-cancel-v34-staged-v35-transfer-v36-reports-v37-checkoutprint-v38-comanda-v39-visible-v40-native-v41-view-v42-sales-v43-cashsession-v44-sushi-v45-cashhub-v46-management-v47-specialseq-v48-rodiziosushi-v49';
 const AUTH_SESSION_ASSET = '/auth-session-isolation.js?v=20';
 const MESA_ATOMIC_ASSET = '/mesa-atomic.js?v=38';
 const MESA_CONCURRENCY_ASSET = '/pdv/' + 'mesa-concurrency.js?v=40';
@@ -10,7 +10,7 @@ const SALAD_HALF_ASSET = '/menu-salad-half.js?v=2';
 const MENU_UPDATE_ASSET = '/menu-20260828.js?v=1';
 const SUSHI_MENU_ASSET = '/menu-sushi-20260903.js?v=1';
 const SUSHI_CATALOG_ASSET = '/sushi-menu-20260903.json?v=1';
-const PDV_PRODUCTION_ASSET = '/pdv/' + 'pdv-production.js?v=40&flow=2';
+const PDV_PRODUCTION_ASSET = '/pdv/' + 'pdv-production.js?v=40&flow=3';
 const PDV_MESAS_AUTH_ASSET = '/pdv/' + 'mesas-auth-reconnect.js?v=1';
 const PDV_CARDAPIO_AUTH_ASSET = '/pdv/' + 'cardapio-auth-reconnect.js?v=1';
 const PDV_VENDAS_AUTH_ASSET = '/pdv/' + 'vendas-auth-reconnect.js?v=1';
@@ -50,7 +50,7 @@ const respostaHtmlComHotfix = async (response) => {
   if (!html.includes('/pdv/cash-reset.js')) html = html.replace('</body>', '<script src="/pdv/cash-reset.js?v=35"></script></body>');
   if (!html.includes('/pdv/cash-session-v1.js')) html = html.replace('</body>', '<script src="/pdv/cash-session-v1.js?v=1"></script></body>');
   if (!html.includes('/pdv/pdv-print-health.js')) html = html.replace('</body>', '<script src="/pdv/pdv-print-health.js?v=1"></script></body>');
-  if (!html.includes('/pdv/pdv-production.js')) html = html.replace('</body>', '<script src="/pdv/pdv-production.js?v=40&flow=2"></script></body>');
+  if (!html.includes('/pdv/pdv-production.js')) html = html.replace('</body>', '<script src="/pdv/pdv-production.js?v=40&flow=3"></script></body>');
   if (!html.includes('/pdv/mesa-concurrency.js')) html = html.replace('</body>', '<script src="/pdv/mesa-concurrency.js?v=40"></script></body>');
   if (!html.includes('/item-cancellation-v2.js')) html = html.replace('</body>', '<script src="/item-cancellation-v2.js?v=2"></script></body>');
   if (!html.includes('/staged-checkout-v1.js')) html = html.replace('</body>', '<script src="/staged-checkout-v1.js?v=1"></script></body>');
