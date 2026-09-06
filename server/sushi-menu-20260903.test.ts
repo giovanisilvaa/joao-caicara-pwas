@@ -41,12 +41,13 @@ describe('cardápio Sushi 2026-09-03', () => {
     expect(new Set(catalogo.items.map((item: any) => item.categoria))).toEqual(new Set(['sushi']));
   });
 
-  it('inclui o Rodízio a R$ 149,90 como item individual com meio prato explícito', async () => {
+  it('inclui o Rodízio a R$ 149,90 como item individual em ID reservado fora da faixa legada', async () => {
     const mod: any = await import('../scripts/sushi-cardapio-update.mjs');
     expect(mod.SUSHI_ITEMS).toHaveLength(62);
-    const rodizio = mod.SUSHI_ITEMS.find((item: any) => item.id === 361);
+    expect(mod.SUSHI_RODIZIO_ID).toBe(9301);
+    const rodizio = mod.SUSHI_ITEMS.find((item: any) => item.id === mod.SUSHI_RODIZIO_ID);
     expect(rodizio).toMatchObject({
-      id: 361,
+      id: 9301,
       nome: 'Rodízio',
       preco: 149.9,
       categoria: 'sushi',
@@ -70,7 +71,7 @@ describe('cardápio Sushi 2026-09-03', () => {
     expect(() => mod.validarSushiCardapio(atualizado)).not.toThrow();
 
     const colisao = base.concat([{ id: 300, nome: 'Outro produto', preco: 1, categoria: 'outros', setor: 'cozinha' }]);
-    expect(() => mod.aplicarSushiCardapio(colisao)).toThrow(/Colisão na faixa Sushi/);
+    expect(() => mod.aplicarSushiCardapio(colisao)).toThrow(/Colisão no ID Sushi/);
   });
 
   it('mantém a camada de Sushi apenas visual no navegador e não toca em mesas, pedidos ou vendas', () => {
