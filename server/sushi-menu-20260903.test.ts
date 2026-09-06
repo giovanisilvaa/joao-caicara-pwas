@@ -5,7 +5,7 @@ const read = (path: string) => fs.readFileSync(path, 'utf8');
 const catalogo = JSON.parse(read('client/public/sushi-menu-20260903.json'));
 
 describe('cardápio Sushi 2026-09-03', () => {
-  it('mantém 61 itens na faixa reservada 300–360 e todos seguem o fluxo da cozinha', () => {
+  it('mantém 61 itens base na faixa reservada 300–360 e todos seguem o fluxo da cozinha', () => {
     expect(catalogo.version).toBe('2026-09-03-v1');
     expect(catalogo.category).toEqual({ key: 'sushi', label: '🍣 Sushi' });
     expect(catalogo.items).toHaveLength(61);
@@ -41,6 +41,22 @@ describe('cardápio Sushi 2026-09-03', () => {
     expect(new Set(catalogo.items.map((item: any) => item.categoria))).toEqual(new Set(['sushi']));
   });
 
+  it('inclui o Rodízio a R$ 149,90 como item individual com meio prato explícito', async () => {
+    const mod: any = await import('../scripts/sushi-cardapio-update.mjs');
+    expect(mod.SUSHI_ITEMS).toHaveLength(62);
+    const rodizio = mod.SUSHI_ITEMS.find((item: any) => item.id === 361);
+    expect(rodizio).toMatchObject({
+      id: 361,
+      nome: 'Rodízio',
+      preco: 149.9,
+      categoria: 'sushi',
+      setor: 'cozinha',
+      servePara2: false,
+      permiteMeioPrato: true,
+      sushiGrupo: 'rodizio'
+    });
+  });
+
   it('aplica a migração sem alterar produtos existentes e rejeita colisões de ID', async () => {
     const mod: any = await import('../scripts/sushi-cardapio-update.mjs');
     const base = [
@@ -48,7 +64,7 @@ describe('cardápio Sushi 2026-09-03', () => {
       { id: 2, nome: 'Bebida legada', preco: 8, categoria: 'bebidas', setor: 'bar' }
     ];
     const atualizado = mod.aplicarSushiCardapio(base);
-    expect(atualizado).toHaveLength(base.length + 61);
+    expect(atualizado).toHaveLength(base.length + 62);
     expect(atualizado[0]).toEqual(base[0]);
     expect(atualizado[1]).toEqual(base[1]);
     expect(() => mod.validarSushiCardapio(atualizado)).not.toThrow();
