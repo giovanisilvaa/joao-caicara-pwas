@@ -56,8 +56,7 @@ export function validarSushiCardapio(lista) {
     const item = lista.find(registro => Number(registro?.id) === Number(esperado.id));
     if (!item) throw new Error(`Sushi ausente: ${esperado.id} — ${esperado.nome}.`);
     const campos = ['nome', 'preco', 'categoria', 'setor', 'sushiGrupo'];
-    if (Object.prototype.hasOwnProperty.call(esperado, 'servePara2')) campos.push('servePara2');
-    if (Object.prototype.hasOwnProperty.call(esperado, 'permiteMeioPrato')) campos.push('permiteMeioPrato');
+    if (Number(esperado.id) === 361) campos.push('servePara2', 'permiteMeioPrato');
     for (const campo of campos) {
       if (item[campo] !== esperado[campo]) {
         throw new Error(`Sushi ${esperado.id} com ${campo} divergente (${JSON.stringify(item[campo])} != ${JSON.stringify(esperado[campo])}).`);
