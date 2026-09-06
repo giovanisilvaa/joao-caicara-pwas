@@ -1,4 +1,4 @@
-const CACHE_NAME = 'joao-caicara-pdv-v28-report-v29-live-v30-print-v31-menu-v32-half-v33-cancel-v34-staged-v35-transfer-v36-reports-v37-checkoutprint-v38-comanda-v39-visible-v40-native-v41-view-v42-sales-v43-cashsession-v44-sushi-v45-cashhub-v46-management-v47-specialseq-v48-rodiziosushi-v49';
+const CACHE_NAME = 'joao-caicara-pdv-v28-report-v29-live-v30-print-v31-menu-v32-half-v33-cancel-v34-staged-v35-transfer-v36-reports-v37-checkoutprint-v38-comanda-v39-visible-v40-native-v41-view-v42-sales-v43-cashsession-v44-sushi-v45-cashhub-v46-management-v47-specialseq-v48-rodiziosushi-v49-idlefix-v50';
 const AUTH_SESSION_ASSET = '/auth-session-isolation.js?v=20';
 const MESA_ATOMIC_ASSET = '/mesa-atomic.js?v=38';
 const MESA_CONCURRENCY_ASSET = '/pdv/' + 'mesa-concurrency.js?v=40';
@@ -82,8 +82,14 @@ self.addEventListener('install', event => {
 self.addEventListener('activate', event => {
   event.waitUntil((async () => {
     const keys = await caches.keys();
+    const haviaCachePdvAnterior = keys.some(key => key !== CACHE_NAME && key.startsWith('joao-caicara-pdv-'));
     await Promise.all(keys.filter(key => key !== CACHE_NAME).map(key => caches.delete(key)));
     await self.clients.claim();
+
+    // Não interrompe um caixa já aberto quando uma nova versão é publicada.
+    // A navegação automática fica restrita à primeira instalação do PWA.
+    if (haviaCachePdvAnterior) return;
+
     const clientes = await self.clients.matchAll({ type: 'window', includeUncontrolled: true });
     await Promise.all(clientes.map(client => {
       const url = new URL(client.url);
