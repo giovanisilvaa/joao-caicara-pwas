@@ -2,6 +2,7 @@
 (() => {
   const atomic = () => window.MesaAtomic;
   const clone = valor => valor == null ? valor : JSON.parse(JSON.stringify(valor));
+  const limpezasFantasma = new Set();
 
   function identidadeAtual() {
     try {
@@ -35,31 +36,93 @@
     try { if (navigator.vibrate) navigator.vibrate(30); } catch (_) {}
   }
 
+  function mesaSemPedido(mesa) {
+    if (!atomic()) return false;
+    const normalizada = atomic().normalizarMesa(mesa);
+    const semItens = normalizada.itens.length === 0;
+    const semCliente = !String(normalizada.cliente || '').trim();
+    const semBloqueio = !atomic().bloqueioAtivo(normalizada);
+    return semItens && semCliente && semBloqueio;
+  }
+
+  function mesaFantasma(mesa) {
+    if (!mesaSemPedido(mesa)) return false;
+    const normalizada = atomic().normalizarMesa(mesa);
+    return Boolean(
+      normalizada.abertura ||
+      normalizada.garcomResponsavel?.nome ||
+      (Array.isArray(normalizada.garconsAtendimento) && normalizada.garconsAtendimento.length)
+    );
+  }
+
+  function bancoMesas() {
+    try { if (typeof db !== 'undefined' && db) return db; } catch (_) {}
+    return window.firebase?.database?.();
+  }
+
+  function limparMesaFantasma(numero) {
+    if (!numero || !atomic() || limpezasFantasma.has(numero)) return Promise.resolve(null);
+    const database = bancoMesas();
+    if (!database) return Promise.resolve(null);
+    limpezasFantasma.add(numero);
+
+    return new Promise(resolve => {
+      database.ref(`mesas/${numero}`).transaction(current => {
+        const atual = atomic().normalizarMesa(current);
+        if (!mesaFantasma(atual)) return;
+        return atomic().mesaVazia();
+      }, (erro, committed, snapshot) => {
+        limpezasFantasma.delete(numero);
+        const atual = atomic().normalizarMesa(snapshot?.val());
+        try { mesas[numero] = atual; } catch (_) {}
+        resolve({ erro, committed: Boolean(committed), mesa: atual });
+      }, false);
+    });
+  }
+
+  const renderizarMesasOriginal = window.renderizarMesasG;
+  if (typeof renderizarMesasOriginal === 'function') {
+    window.renderizarMesasG = function renderizarMesasSemFantasmas() {
+      if (atomic() && typeof mesas !== 'undefined' && mesas) {
+        Object.keys(mesas).forEach(chave => {
+          const numero = Number(chave);
+          if (!Number.isFinite(numero)) return;
+          const atual = atomic().normalizarMesa(mesas[numero]);
+          if (!mesaFantasma(atual)) return;
+          mesas[numero] = atomic().mesaVazia();
+          Promise.resolve(limparMesaFantasma(numero)).catch(() => {});
+        });
+      }
+      return renderizarMesasOriginal.apply(this, arguments);
+    };
+  }
+
   window.selecionarMesaG = async function selecionarMesaGAtomico(numero) {
     if (!atomic()) return;
     mesaSelecionada = numero;
     try {
-      const resultado = await atomic().abrirMesa(numero, { identidade: identidadeAtual(), origem: 'garcom' });
-      if (!resultado.committed) {
-        mesaSelecionada = null;
-        return alert(mensagemBloqueio(resultado.motivo));
+      const atual = atomic().normalizarMesa(mesas[numero] || atomic().mesaVazia());
+      if (mesaFantasma(atual)) {
+        const limpeza = await limparMesaFantasma(numero);
+        mesas[numero] = limpeza?.mesa || atomic().mesaVazia();
+      } else {
+        mesas[numero] = atual;
       }
-      mesas[numero] = resultado.mesa;
+
       document.getElementById('tela-mesas').style.display = 'none';
       document.getElementById('tela-pedido').style.display = 'flex';
       document.getElementById('btn-voltar').style.display = 'inline-block';
       document.getElementById('header-titulo').innerText = `Mesa ${numero}`;
-      document.getElementById('nome-cliente-g').value = resultado.mesa.cliente || '';
       renderizarTabsG();
       filtrarCardapioG('favoritos');
       renderizarComandaG();
-      if (typeof registrarAuditoriaGarcom === 'function' && resultado.mesa.origemAbertura === 'garcom') {
+      if (typeof registrarAuditoriaGarcom === 'function' && mesas[numero]?.origemAbertura === 'garcom') {
         Promise.resolve(registrarAuditoriaGarcom('acessar_mesa', { mesa: numero, garcom: identidadeAtual()?.nome || '' })).catch(() => {});
       }
     } catch (erro) {
-      console.error('Falha ao abrir mesa com transação:', erro);
+      console.error('Falha ao acessar mesa:', erro);
       mesaSelecionada = null;
-      alert('Não foi possível abrir a mesa no servidor. Verifique a conexão e tente novamente.');
+      alert('Não foi possível acessar a mesa. Verifique a conexão e tente novamente.');
     }
   };
 
@@ -99,17 +162,6 @@
     } catch (erro) {
       console.error('Falha ao alterar quantidade de forma atômica:', erro);
       alert('Não foi possível alterar a quantidade. Tente novamente.');
-    }
-  };
-
-  window.atualizarNomeClienteG = async function atualizarNomeClienteGAtomico() {
-    if (!mesaSelecionada || !atomic()) return;
-    const nome = document.getElementById('nome-cliente-g')?.value || '';
-    try {
-      const resultado = await atomic().atualizarCliente(mesaSelecionada, nome);
-      if (resultado.committed) mesas[mesaSelecionada] = resultado.mesa;
-    } catch (erro) {
-      console.warn('Falha ao atualizar cliente:', erro);
     }
   };
 
@@ -159,7 +211,7 @@
       const indices = reserva.meta.indices || [];
       const cliente = reserva.meta.cliente || '';
       const porSetor = { cozinha: [], bar: [] };
-      itens.forEach((item, pos) => {
+      itens.forEach(item => {
         const setor = item.setor === 'bar' ? 'bar' : 'cozinha';
         const copia = { ...item, envioId: reserva.envioId };
         delete copia.envioPendenteId;
@@ -319,5 +371,33 @@
     }
   };
 
-  window.GarcomConcorrencia = Object.freeze({ salvarObservacao });
+  const voltarParaMesasOriginal = window.voltarParaMesas;
+  if (typeof voltarParaMesasOriginal === 'function') {
+    window.voltarParaMesas = function voltarParaMesasComLimpezaSegura() {
+      const numero = mesaSelecionada;
+      const retorno = voltarParaMesasOriginal.apply(this, arguments);
+      if (numero) {
+        Promise.resolve(limparMesaFantasma(numero)).finally(() => {
+          try { renderizarMesasG(); } catch (_) {}
+        });
+      }
+      return retorno;
+    };
+  }
+
+  function removerControlesClienteGarcom() {
+    document.querySelector('.cliente-row')?.remove();
+    document.getElementById('garcom-menu-client')?.remove();
+    document.getElementById('tela-pedido')?.classList.remove('garcom-client-edit-open');
+  }
+
+  // O nome do cliente não faz parte do fluxo operacional do Garçom.
+  // Mantemos o campo no modelo para compatibilidade com PDV e históricos antigos.
+  window.atualizarNomeClienteG = function atualizarNomeClienteGDesativado() {};
+  removerControlesClienteGarcom();
+  setTimeout(removerControlesClienteGarcom, 0);
+  setTimeout(removerControlesClienteGarcom, 500);
+  setTimeout(() => { try { renderizarMesasG(); } catch (_) {} }, 250);
+
+  window.GarcomConcorrencia = Object.freeze({ salvarObservacao, limparMesaFantasma });
 })();
