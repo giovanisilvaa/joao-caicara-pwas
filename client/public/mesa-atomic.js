@@ -170,6 +170,44 @@
     });
   }
 
+  async function adicionarCobranca(numero, produto, quantidade = 1, { identidade = null, origem = 'garcom' } = {}) {
+    const qtd = Math.max(1, Math.floor(Number(quantidade) || 1));
+    return transacionar(numero, (mesa, ctx) => {
+      if (bloqueioAtivo(mesa)) return ctx.abortar('mesa_bloqueada');
+      if (!mesa.abertura) {
+        mesa.abertura = agora();
+        mesa.origemAbertura = origem;
+      }
+      registrarGarcom(mesa, identidade);
+      const idGarcom = identidadeValida(identidade);
+      const existente = mesa.itens.find(item =>
+        item.id === produto.id &&
+        Number(item.preco) === Number(produto.preco) &&
+        item.somenteCobranca === true &&
+        item.enviado === true
+      );
+      if (existente) {
+        existente.qtd = (Number(existente.qtd) || 0) + qtd;
+        if (idGarcom) existente.garcomUltimoLancamento = { ...idGarcom, em: agora() };
+        ctx.meta('itemOperacaoId', existente.itemOperacaoId);
+      } else {
+        const item = {
+          ...clone(produto),
+          qtd,
+          obs: '',
+          enviado: true,
+          rascunho: false,
+          somenteCobranca: true,
+          itemOperacaoId: novoId('item')
+        };
+        if (idGarcom) item.garcomLancamento = { ...idGarcom, em: agora() };
+        mesa.itens.push(item);
+        ctx.meta('itemOperacaoId', item.itemOperacaoId);
+      }
+      return mesa;
+    });
+  }
+
   async function alterarQuantidade(numero, itemOperacaoId, delta, fallbackIndex = -1) {
     return transacionar(numero, (mesa, ctx) => {
       if (bloqueioAtivo(mesa)) return ctx.abortar('mesa_bloqueada');
@@ -284,6 +322,7 @@
     novoId,
     abrirMesa,
     adicionarItem,
+    adicionarCobranca,
     alterarQuantidade,
     atualizarItem,
     atualizarCliente,
