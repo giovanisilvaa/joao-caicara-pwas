@@ -76,7 +76,7 @@ describe('fluxo unico de producao com uma impressora', () => {
     const sw = read('client/public/pdv/service-worker.js');
     expect(sw).toContain('mesas-auth-reconnect.js?v=1');
     expect(sw).toContain('pdv-production.js?v=40&flow=3');
-    expect(sw).toContain('pdv-auto-production-print.js?v=3');
+    expect(sw).toContain('pdv-auto-production-print.js?v=4');
     expect(sw.indexOf('/pdv/pdv-sync.js')).toBeLessThan(sw.indexOf('/pdv/mesas-auth-reconnect.js'));
     expect(sw.indexOf('/pdv/pdv-production.js')).toBeLessThan(sw.indexOf('/pdv/pdv-auto-production-print.js'));
   });

@@ -109,7 +109,9 @@
         numeroMesa: registro.pedido.mesa || '-',
         cliente: registro.pedido.cliente || '',
         itens: registro.pedido.itens || [],
-        criadoEm: registro.pedido.criadoEm || Date.now()
+        criadoEm: registro.pedido.criadoEm || Date.now(),
+        titulo: registro.pedido.titulo || '',
+        subSetor: registro.pedido.subSetor || ''
       }));
   }
 
