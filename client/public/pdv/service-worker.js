@@ -59,7 +59,7 @@ const respostaHtmlComHotfix = async (response) => {
   if (!html.includes('/menu-salad-half.js')) html = html.replace('</body>', '<script src="/menu-salad-half.js?v=2"></script></body>');
   if (!html.includes('/menu-20260828.js')) html = html.replace('</body>', '<script src="/menu-20260828.js?v=1"></script></body>');
   if (!html.includes('/menu-sushi-20260903.js')) html = html.replace('</body>', '<script src="/menu-sushi-20260903.js?v=1"></script></body>');
-  if (!html.includes('/pdv/pdv-auto-production-print.js')) html = html.replace('</body>', '<script src="/pdv/pdv-auto-production-print.js?v=3"></script></body>');
+  if (!html.includes('/pdv/pdv-auto-production-print.js')) html = html.replace('</body>', '<script src="/pdv/pdv-auto-production-print.js?v=4"></script></body>');
   if (!html.includes('/pdv/pdv-cancellation-print.js')) html = html.replace('</body>', '<script src="/pdv/pdv-cancellation-print.js?v=1"></script></body>');
   if (!html.includes('/pdv/pdv-auto-close-print.js')) html = html.replace('</body>', '<script src="/pdv/pdv-auto-close-print.js?v=3"></script></body>');
   if (!html.includes('/pdv/fast-checkout.js')) html = html.replace('</body>', '<script src="/pdv/fast-checkout.js"></script></body>');
