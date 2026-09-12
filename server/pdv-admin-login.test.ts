@@ -26,6 +26,11 @@ describe("login administrativo do PDV", () => {
     expect(login).toContain("aplicarPerfilAutenticado('administrador'");
     expect(login).toContain("firebase-auth-adm");
     expect(login).toContain("pdv-admin-sair");
+    expect(login).toContain("pdv-admin-login-close");
+    expect(login).toContain("Fechar PDV");
+    expect(login).toContain("document.exitFullscreen");
+    expect(login).toContain("window.close()");
+    expect(login).toContain("Alt+F4");
     expect(login).not.toContain("Acesso temporário");
     expect(login).not.toContain("fallback-temporario");
     expect(login).not.toContain("pdv-admin-login-fallback");
