@@ -181,6 +181,7 @@ jobs:
           verificar_arquivo '/garcom/waiter-speed.css' 'client/public/garcom/waiter-speed.css'
           verificar_arquivo '/menu-20260828.js' 'client/public/menu-20260828.js'
           verificar_arquivo '/menu-sushi-20260903.js' 'client/public/menu-sushi-20260903.js'
+          verificar_arquivo '/garcom/rodizio-seletivo-v1.js' 'client/public/garcom/rodizio-seletivo-v1.js'
           verificar_arquivo '/sushi-menu-20260903.json' 'client/public/sushi-menu-20260903.json'
           verificar_arquivo '/menu-salad-half.js' 'client/public/menu-salad-half.js'
           verificar_arquivo '/item-cancellation-v2.js' 'client/public/item-cancellation-v2.js'
