@@ -1,4 +1,4 @@
-const CACHE_NAME = 'joao-caicara-pdv-v28-report-v29-live-v30-print-v31-menu-v32-half-v33-cancel-v34-staged-v35-transfer-v36-reports-v37-checkoutprint-v38-comanda-v39-visible-v40-native-v41-view-v42-sales-v43-cashsession-v44-sushi-v45-cashhub-v46-management-v47-specialseq-v48-rodiziosushi-v49-idlefix-v50';
+const CACHE_NAME = 'joao-caicara-pdv-v28-report-v29-live-v30-print-v31-menu-v32-half-v33-cancel-v34-staged-v35-transfer-v36-reports-v37-checkoutprint-v38-comanda-v39-visible-v40-native-v41-view-v42-sales-v43-cashsession-v44-sushi-v45-cashhub-v46-management-v47-specialseq-v48-rodiziosushi-v49-idlefix-v50-rodiziotitle-v51';
 const AUTH_SESSION_ASSET = '/auth-session-isolation.js?v=20';
 const MESA_ATOMIC_ASSET = '/mesa-atomic.js?v=38';
 const MESA_CONCURRENCY_ASSET = '/pdv/' + 'mesa-concurrency.js?v=40';
@@ -15,7 +15,7 @@ const PDV_MESAS_AUTH_ASSET = '/pdv/' + 'mesas-auth-reconnect.js?v=1';
 const PDV_CARDAPIO_AUTH_ASSET = '/pdv/' + 'cardapio-auth-reconnect.js?v=1';
 const PDV_VENDAS_AUTH_ASSET = '/pdv/' + 'vendas-auth-reconnect.js?v=1';
 const CASH_SESSION_ASSET = '/pdv/' + 'cash-session-v1.js?v=1';
-const AUTO_PRODUCTION_PRINT_ASSET = '/pdv/' + 'pdv-auto-production-print.js?v=3';
+const AUTO_PRODUCTION_PRINT_ASSET = '/pdv/' + 'pdv-auto-production-print.js?v=4';
 const CANCELLATION_PRINT_ASSET = '/pdv/pdv-cancellation-print.js?v=1';
 const AUTO_CLOSE_PRINT_ASSET = '/pdv/' + 'pdv-auto-close-print.js?v=3';
 const RUNTIME_GUARD_ASSET = '/pdv/' + 'runtime-guard.js?v=40';
