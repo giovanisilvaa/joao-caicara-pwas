@@ -1,7 +1,7 @@
 /* Rodízio seletivo do Garçom — cobra por pessoa e envia somente os itens solicitados à produção. */
 (() => {
-  if (window.GARCOM_RODIZIO_SELETIVO_RUNTIME === 'v1') return;
-  window.GARCOM_RODIZIO_SELETIVO_RUNTIME = 'v1';
+  if (window.GARCOM_RODIZIO_SELETIVO_RUNTIME === 'v2') return;
+  window.GARCOM_RODIZIO_SELETIVO_RUNTIME = 'v2';
 
   const RODIZIO_ID = 9301;
   const STATUS_CONFERENCIA = 'aguardando_pagamento';
@@ -10,6 +10,7 @@
     { codigo: 'harumaki_queijo', nome: 'Harumaki Queijo', destino: 'cozinha' },
     { codigo: 'guioza', nome: 'Guioza', destino: 'cozinha' },
     { codigo: 'bolinho_salmao', nome: 'Bolinho de Salmão', destino: 'cozinha' },
+    { codigo: 'casquinha_siri', nome: 'Casquinha de Siri', destino: 'cozinha' },
     { codigo: 'hot_roll_salmao', nome: 'Hot Roll Salmão', destino: 'sushi' },
     { codigo: 'carpaccio_salmao', nome: 'Carpaccio Salmão', destino: 'sushi' },
     { codigo: 'ceviche_peixe_branco', nome: 'Ceviche de Peixe Branco', destino: 'sushi' },

@@ -25,6 +25,7 @@ describe('Rodízio seletivo do Garçom', () => {
       'Harumaki Queijo',
       'Guioza',
       'Bolinho de Salmão',
+      'Casquinha de Siri',
       'Hot Roll Salmão',
       'Carpaccio Salmão',
       'Ceviche de Peixe Branco',
@@ -44,7 +45,8 @@ describe('Rodízio seletivo do Garçom', () => {
     ]) {
       expect(fluxo).toContain(nome);
     }
-    expect(fluxo).toContain('preco: 0');
+    expect(fluxo).toContain("{ codigo: 'casquinha_siri', nome: 'Casquinha de Siri', destino: 'cozinha' }");
+        expect(fluxo).toContain('preco: 0');
     expect(fluxo).toContain("tipo: 'rodizio_itens'");
   });
 
@@ -78,9 +80,9 @@ describe('Rodízio seletivo do Garçom', () => {
     const sw = read('client/public/garcom/service-worker.js');
     const workflow = read('.github/workflows/firebase-hosting-deploy.yml');
 
-    expect(sw).toContain("RODIZIO_SELECT_ASSET = '/garcom/rodizio-seletivo-v1.js?v=1'");
-    expect(sw).toContain('rodizio-select-v37');
-    expect(sw).toContain('<script src="/garcom/rodizio-seletivo-v1.js?v=1"></script>');
+    expect(sw).toContain("RODIZIO_SELECT_ASSET = '/garcom/rodizio-seletivo-v1.js?v=2'");
+    expect(sw).toContain('rodizio-select-v37-casquinha-v38');
+    expect(sw).toContain('<script src="/garcom/rodizio-seletivo-v1.js?v=2"></script>');
     expect(workflow).toContain("verificar_arquivo '/garcom/rodizio-seletivo-v1.js' 'client/public/garcom/rodizio-seletivo-v1.js'");
   });
 });
