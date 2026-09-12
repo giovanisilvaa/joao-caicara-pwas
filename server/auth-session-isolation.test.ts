@@ -16,7 +16,7 @@ describe("isolamento de sessao entre PDV e Garcom", () => {
     const garcom = read("client/public/garcom/service-worker.js");
 
     expect(pdv.indexOf("/auth-session-isolation.js?v=20")).toBeGreaterThanOrEqual(0);
-    expect(pdv.indexOf("/auth-session-isolation.js?v=20")).toBeLessThan(pdv.indexOf("/pdv/admin-login.js?v=33"));
+    expect(pdv.indexOf("/auth-session-isolation.js?v=20")).toBeLessThan(pdv.indexOf("/pdv/admin-login.js?v=34"));
 
     expect(garcom.indexOf("/auth-session-isolation.js?v=20")).toBeGreaterThanOrEqual(0);
     expect(garcom.indexOf("/auth-session-isolation.js?v=20")).toBeLessThan(garcom.indexOf("/garcom/shared-login.js?v=17"));

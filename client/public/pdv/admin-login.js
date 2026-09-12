@@ -20,8 +20,9 @@
       #pdv-admin-login-card input{width:100%;padding:12px;border:1px solid #d8e2df;border-radius:10px;font-size:1rem;background:#fff}
       #pdv-admin-login-card input[readonly]{background:#f3f6f5;color:#52666b}
       #pdv-admin-login-msg{min-height:20px;margin-top:10px;font-size:.78rem;font-weight:700;color:#c05036}
-      #pdv-admin-login-actions{display:flex;margin-top:16px}
+      #pdv-admin-login-actions{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:16px}
       #pdv-admin-login-actions button{width:100%;border:0;border-radius:10px;padding:12px 10px;font-weight:800;cursor:pointer}
+      #pdv-admin-login-close{background:#e8eeec;color:#173d45}
       #pdv-admin-login-submit{background:#0f4c5c;color:#fff}
       #pdv-admin-login-card.is-loading #pdv-admin-login-submit{opacity:.65;pointer-events:none}
       #pdv-admin-sair{border:0;border-radius:999px;padding:6px 9px;font-size:.68rem;font-weight:800;cursor:pointer;background:rgba(255,255,255,.15);color:#fff}
@@ -56,6 +57,23 @@
     atualizarIndicador();
   }
 
+  async function fecharAplicativo() {
+    const msgEl = document.getElementById('pdv-admin-login-msg');
+    try {
+      if (document.fullscreenElement && typeof document.exitFullscreen === 'function') {
+        await document.exitFullscreen();
+      }
+    } catch (_) {}
+
+    try { window.close(); } catch (_) {}
+
+    setTimeout(() => {
+      if (!msgEl) return;
+      msgEl.style.color = '#173d45';
+      msgEl.textContent = 'Se a janela não fechar automaticamente, pressione Alt+F4.';
+    }, 180);
+  }
+
   function mensagemErro(erro) {
     const codigo = String(erro?.code || '');
     if (codigo.includes('wrong-password') || codigo.includes('invalid-credential') || codigo.includes('invalid-login-credentials') || codigo.includes('user-not-found')) return 'Usuário ou senha incorretos.';
@@ -86,6 +104,7 @@
         <input id="pdv-admin-login-password" type="password" inputmode="numeric" autocomplete="current-password" placeholder="Digite a senha do administrador">
         <div id="pdv-admin-login-msg" aria-live="polite"></div>
         <div id="pdv-admin-login-actions">
+          <button id="pdv-admin-login-close" type="button">Fechar PDV</button>
           <button id="pdv-admin-login-submit" type="button">Entrar</button>
         </div>
       </div>`;
@@ -95,6 +114,7 @@
     const msgEl = document.getElementById('pdv-admin-login-msg');
     const card = document.getElementById('pdv-admin-login-card');
     const submit = document.getElementById('pdv-admin-login-submit');
+    const fechar = document.getElementById('pdv-admin-login-close');
 
     async function enviar() {
       if (ESTADO.autenticando) return;
@@ -126,7 +146,8 @@
       }
     }
 
-    submit?.addEventListener('click', enviar);
+    fechar?.addEventListener('click', fecharAplicativo);
+        submit?.addEventListener('click', enviar);
     senhaEl?.addEventListener('keydown', event => { if (event.key === 'Enter') enviar(); });
     setTimeout(() => senhaEl?.focus(), 50);
   }
@@ -162,6 +183,7 @@
     emailInterno: EMAIL_ADMIN,
     mostrarLogin,
     sair,
+    fecharAplicativo,
     get autenticado() { return usuarioEhAdmin(auth()?.currentUser); },
     get uid() { return usuarioEhAdmin(auth()?.currentUser) ? auth().currentUser.uid : null; }
   });
