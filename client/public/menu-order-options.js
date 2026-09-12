@@ -5,6 +5,7 @@
 
   const HALF_RATIO = 0.60;
   const KIDS_CATEGORY = 'kids';
+  const RODIZIO_ID = 9301;
   const ehPdv = location.pathname.includes('/pdv/');
   const ehGarcom = location.pathname.includes('/garcom/');
   let modalEstado = null;
@@ -37,7 +38,12 @@
     return Math.round((Number(produto?.preco) || 0) * HALF_RATIO * 100) / 100;
   }
 
+  function ehRodizio(produto) {
+    return Number(produto?.produtoOriginalId ?? produto?.id) === RODIZIO_ID;
+  }
+
   function permiteMeioPrato(produto) {
+    if (ehRodizio(produto)) return false;
     return Boolean(produto?.servePara2) || produto?.permiteMeioPrato === true || String(produto?.categoria || '').trim().toLowerCase() === 'festival';
   }
 
@@ -280,6 +286,8 @@
     if (!produto) return;
 
     card.dataset.menuOptionsReady = '1';
+    // O Rodízio possui fluxo próprio: cobrança por pessoa e pedidos seletivos à produção.
+    if (ehRodizio(produto)) return;
     if (produto.categoria === KIDS_CATEGORY && !card.querySelector('.menu-opt-kids-badge')) {
       const badge = document.createElement('span');
       badge.className = 'menu-opt-kids-badge';
