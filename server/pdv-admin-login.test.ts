@@ -14,6 +14,8 @@ describe("login administrativo do PDV", () => {
     expect(adminLogin).toBeGreaterThan(access);
     expect(diagnostics).toBeGreaterThan(adminLogin);
     expect(sync).toBeGreaterThan(diagnostics);
+    expect(sw).toContain("/pdv/admin-login.js?v=34");
+    expect(sw).toContain("close-v52");
   });
 
   it("usa credencial digitada e perfil administrador sem criar conta nem liberar fallback", () => {
