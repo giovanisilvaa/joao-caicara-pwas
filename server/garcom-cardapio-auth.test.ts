@@ -38,10 +38,10 @@ describe("cardapio autenticado do garcom", () => {
     expect(sw).toContain("replaceAll('<script src=\"/garcom/cardapio-auth-reconnect.js?v=20\"></script>', '')");
   });
 
-  it("garcom pode ler cardapio mas somente admin pode editar", () => {
+  it("cardapio pode ser consultado publicamente mas somente admin pode editar", () => {
     const rules = JSON.parse(read("database.rules.json"));
     const cardapio = rules.rules.cardapio;
-    expect(String(cardapio[".read"])).toContain("garcom@acesso.joaocaicara.app");
+    expect(cardapio[".read"]).toBe(true);
     expect(String(cardapio[".write"])).toContain("adm@acesso.joaocaicara.app");
     expect(String(cardapio[".write"])).not.toContain("garcom@acesso.joaocaicara.app");
   });
