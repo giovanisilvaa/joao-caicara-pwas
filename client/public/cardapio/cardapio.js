@@ -25,6 +25,7 @@
     acompanhamentos: 'Acompanhamentos',
     combos_praia: 'Combos de Praia',
     veganos_vegetarianos: 'Veganos e Vegetarianos',
+    kids: 'Menu Infantil',
     sushi: 'Sushi',
     rodizio: 'Rodízio',
     sorvetes: 'Sorvetes e Sobremesas',
@@ -44,6 +45,10 @@
     46: '/cardapio/imagens/46-camarao-a-baiana.webp',
     47: '/cardapio/imagens/47-moqueca-camarao-grande.webp',
     48: '/cardapio/imagens/48-bobo-camarao-grande.webp',
+    111: '/cardapio/imagens/referencias/frango.webp',
+    112: '/cardapio/imagens/referencias/frutos-do-mar.webp',
+    113: '/cardapio/imagens/referencias/frutos-do-mar.webp',
+    114: '/cardapio/imagens/referencias/massa.webp',
     122: '/cardapio/imagens/122-baiacu-a-caicara.webp',
     9301: '/cardapio/imagens/9301-rodizio-sushi.webp'
   };
@@ -60,6 +65,7 @@
     acompanhamentos: '/cardapio/imagens/referencias/arroz.webp',
     combos_praia: '/cardapio/imagens/referencias/frutos-do-mar.webp',
     veganos_vegetarianos: '/cardapio/imagens/referencias/salada.webp',
+    kids: '/cardapio/imagens/referencias/frango.webp',
     sushi: '/cardapio/imagens/referencias/sushi.webp',
     rodizio: '/cardapio/imagens/referencias/sushi.webp',
     sorvetes: '/cardapio/imagens/referencias/sorvete.webp',

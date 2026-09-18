@@ -9,7 +9,7 @@ describe("cardapio digital publico", () => {
     expect(html).toContain("Cardápio exclusivo para consulta");
     expect(html).toContain('id="busca-cardapio"');
     expect(html).toContain('id="categorias"');
-    expect(html).toContain("/cardapio/cardapio.js?v=3");
+    expect(html).toContain("/cardapio/cardapio.js?v=4");
     expect(html).toContain("Imagens meramente ilustrativas");
     expect(html).not.toContain("SABORES DE UBATUBA");
     expect(html).not.toMatch(/abrir mesa|fechar conta|enviar pedido/i);
@@ -25,7 +25,7 @@ describe("cardapio digital publico", () => {
     [
       "aperitivos", "saladas", "peixe_epoca", "file_badejo", "salmao",
       "peixes_camaroes", "massas_risotos", "carnes", "frango",
-      "acompanhamentos", "combos_praia", "veganos_vegetarianos", "sushi",
+      "acompanhamentos", "combos_praia", "veganos_vegetarianos", "kids", "sushi",
       "rodizio", "sorvetes", "cervejas", "caipirinhas", "destilados",
       "aguas_refrigerantes", "sucos"
     ].forEach(categoria => expect(script).toContain(`${categoria}:`));
@@ -37,6 +37,8 @@ describe("cardapio digital publico", () => {
       expect(fs.existsSync(`client/public/cardapio/imagens/referencias/${imagem}.webp`)).toBe(true);
     });
     expect(script).toContain("/cardapio/imagens/9301-rodizio-sushi.webp");
+    expect(script).toContain("111: '/cardapio/imagens/referencias/frango.webp'");
+    expect(script).toContain("114: '/cardapio/imagens/referencias/massa.webp'");
     expect(fs.existsSync("client/public/cardapio/imagens/41-moqueca-de-peixe.webp")).toBe(true);
     expect(fs.existsSync("client/public/cardapio/imagens/9301-rodizio-sushi.webp")).toBe(true);
   });
