@@ -47,6 +47,28 @@
     122: '/cardapio/imagens/122-baiacu-a-caicara.webp',
     9301: '/cardapio/imagens/9301-rodizio-sushi.webp'
   };
+  const IMAGENS_POR_CATEGORIA = {
+    aperitivos: '/cardapio/imagens/referencias/frutos-do-mar.webp',
+    saladas: '/cardapio/imagens/referencias/salada.webp',
+    peixe_epoca: '/cardapio/imagens/referencias/frutos-do-mar.webp',
+    file_badejo: '/cardapio/imagens/referencias/frutos-do-mar.webp',
+    salmao: '/cardapio/imagens/referencias/frutos-do-mar.webp',
+    peixes_camaroes: '/cardapio/imagens/referencias/frutos-do-mar.webp',
+    massas_risotos: '/cardapio/imagens/referencias/massa.webp',
+    carnes: '/cardapio/imagens/referencias/carne.webp',
+    frango: '/cardapio/imagens/referencias/frango.webp',
+    acompanhamentos: '/cardapio/imagens/referencias/arroz.webp',
+    combos_praia: '/cardapio/imagens/referencias/frutos-do-mar.webp',
+    veganos_vegetarianos: '/cardapio/imagens/referencias/salada.webp',
+    sushi: '/cardapio/imagens/referencias/sushi.webp',
+    rodizio: '/cardapio/imagens/referencias/sushi.webp',
+    sorvetes: '/cardapio/imagens/referencias/sorvete.webp',
+    cervejas: '/cardapio/imagens/referencias/cerveja.webp',
+    caipirinhas: '/cardapio/imagens/referencias/caipirinha.webp',
+    destilados: '/cardapio/imagens/referencias/destilado.webp',
+    aguas_refrigerantes: '/cardapio/imagens/referencias/agua.webp',
+    sucos: '/cardapio/imagens/referencias/suco.webp'
+  };
   const elementos = {
     busca: document.getElementById('busca-cardapio'),
     categorias: document.getElementById('categorias'),
@@ -97,7 +119,14 @@
         preco: Number(item.preco),
         categoria: String(item.categoria || 'outros'),
         descricao: String(item.descricao || item.detalhes || '').trim(),
-        imagem: String(item.imagem || item.foto || item.imagemUrl || IMAGENS_POR_ID[Number(item.id)] || '').trim(),
+        imagem: String(
+          item.imagem ||
+          item.foto ||
+          item.imagemUrl ||
+          IMAGENS_POR_ID[Number(item.id)] ||
+          IMAGENS_POR_CATEGORIA[String(item.categoria || 'outros')] ||
+          ''
+        ).trim(),
         servePara2: item.servePara2 === true,
         individual: item.individual === true
       }));
