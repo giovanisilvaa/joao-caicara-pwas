@@ -71,6 +71,15 @@
         ]
       },
       {
+        "source": "/cardapio/**",
+        "headers": [
+          {
+            "key": "Cache-Control",
+            "value": "no-store, no-cache, must-revalidate, max-age=0"
+          }
+        ]
+      },
+      {
         "source": "/pdv/index.html",
         "headers": [
           {
@@ -107,6 +116,11 @@
       {
         "source": "/gestao/index.html",
         "destination": "/gestao/",
+        "type": 302
+      },
+      {
+        "source": "/cardapio/index.html",
+        "destination": "/cardapio/",
         "type": 302
       }
     ]

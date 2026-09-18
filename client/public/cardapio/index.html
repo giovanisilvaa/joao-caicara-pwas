@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <meta name="theme-color" content="#0f4c5c">
+  <meta name="description" content="Consulte o cardápio do Restaurante João Caiçara Tradição.">
+  <title>Cardápio — João Caiçara Tradição</title>
+  <link rel="icon" href="/tradicao-caicara-logo.webp">
+  <link rel="apple-touch-icon" href="/tradicao-caicara-logo.webp">
+  <link rel="stylesheet" href="/cardapio/cardapio.css?v=1">
+</head>
+<body>
+  <header class="hero">
+    <div class="hero__content">
+      <img class="hero__logo" src="/tradicao-caicara-logo.webp" alt="João Caiçara Tradição">
+      <div>
+        <p class="eyebrow">SABORES DE UBATUBA</p>
+        <h1>Cardápio</h1>
+        <p class="hero__copy">Escolha com calma. O pedido é feito diretamente com nossa equipe.</p>
+      </div>
+    </div>
+  </header>
+
+  <main>
+    <section class="menu-tools" aria-label="Busca e categorias do cardápio">
+      <label class="search" for="busca-cardapio">
+        <span class="sr-only">Buscar no cardápio</span>
+        <svg aria-hidden="true" viewBox="0 0 24 24" width="21" height="21"><path d="m21 21-4.35-4.35m2.35-5.15A7.5 7.5 0 1 1 4 11.5a7.5 7.5 0 0 1 15 0Z" fill="none" stroke="currentColor" stroke-linecap="round" stroke-width="2"/></svg>
+        <input id="busca-cardapio" type="search" placeholder="Buscar prato ou bebida" autocomplete="off">
+      </label>
+      <nav id="categorias" class="categories" aria-label="Categorias"></nav>
+    </section>
+
+    <div id="status" class="status" role="status" aria-live="polite">
+      <span class="spinner" aria-hidden="true"></span>
+      Carregando nosso cardápio…
+    </div>
+
+    <section id="conteudo-cardapio" class="menu-content" aria-label="Itens do cardápio" hidden></section>
+
+    <section id="estado-vazio" class="empty-state" hidden>
+      <h2>Nenhum item encontrado</h2>
+      <p>Tente buscar por outro nome ou escolha uma categoria diferente.</p>
+      <button id="limpar-filtros" type="button">Ver todo o cardápio</button>
+    </section>
+  </main>
+
+  <footer>
+    <img src="/tradicao-caicara-logo.webp" alt="" aria-hidden="true">
+    <p><strong>João Caiçara Tradição</strong><br>Cardápio exclusivo para consulta.</p>
+    <small>Preços e disponibilidade podem ser alterados sem aviso prévio.</small>
+  </footer>
+
+  <noscript>Ative o JavaScript do navegador para consultar o cardápio.</noscript>
+  <script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-database-compat.js"></script>
+  <script src="/cardapio/cardapio.js?v=1"></script>
+</body>
+</html>
