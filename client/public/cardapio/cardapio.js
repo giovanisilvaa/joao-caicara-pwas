@@ -36,6 +36,17 @@
   };
 
   const ORDEM = Object.keys(CATEGORIAS);
+  const IMAGENS_POR_ID = {
+    41: '/cardapio/imagens/41-moqueca-de-peixe.webp',
+    43: '/cardapio/imagens/43-azul-marinho.webp',
+    44: '/cardapio/imagens/44-camarao-na-moranga.webp',
+    45: '/cardapio/imagens/45-camarao-a-grega.webp',
+    46: '/cardapio/imagens/46-camarao-a-baiana.webp',
+    47: '/cardapio/imagens/47-moqueca-camarao-grande.webp',
+    48: '/cardapio/imagens/48-bobo-camarao-grande.webp',
+    122: '/cardapio/imagens/122-baiacu-a-caicara.webp',
+    9301: '/cardapio/imagens/9301-rodizio-sushi.webp'
+  };
   const elementos = {
     busca: document.getElementById('busca-cardapio'),
     categorias: document.getElementById('categorias'),
@@ -86,7 +97,7 @@
         preco: Number(item.preco),
         categoria: String(item.categoria || 'outros'),
         descricao: String(item.descricao || item.detalhes || '').trim(),
-        imagem: String(item.imagem || item.foto || item.imagemUrl || '').trim(),
+        imagem: String(item.imagem || item.foto || item.imagemUrl || IMAGENS_POR_ID[Number(item.id)] || '').trim(),
         servePara2: item.servePara2 === true,
         individual: item.individual === true
       }));

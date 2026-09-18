@@ -62,7 +62,6 @@ button { cursor: pointer; }
   background: #fff;
   box-shadow: 0 12px 32px rgba(0, 0, 0, .18);
 }
-.eyebrow { margin: 0 0 4px; color: #f3c1ae; font-size: .7rem; font-weight: 900; letter-spacing: .17em; }
 h1, h2 { font-family: Georgia, "Times New Roman", serif; }
 h1 { margin: 0; font-size: clamp(2.3rem, 9vw, 4rem); line-height: .95; }
 .hero__copy { max-width: 510px; margin: 10px 0 0; color: #dcebed; line-height: 1.5; }
@@ -156,7 +155,6 @@ noscript { display: block; padding: 18px; text-align: center; color: #9d3e2a; ba
   .hero__logo { width: 76px; height: 76px; border-radius: 17px; }
   .hero__content { gap: 13px; }
   h1 { font-size: 2.45rem; }
-  .eyebrow { font-size: .6rem; }
   .menu-item.has-image { grid-template-columns: 62px minmax(0, 1fr) auto; }
   .item-image { width: 62px; height: 62px; }
 }
