@@ -74,6 +74,20 @@ describe('cardápio Sushi 2026-09-03', () => {
     expect(() => mod.aplicarSushiCardapio(colisao)).toThrow(/Colisão no ID Sushi/);
   });
 
+  it('preserva o preço promocional do Rodízio definido pelo PDV', async () => {
+    const mod: any = await import('../scripts/sushi-cardapio-update.mjs');
+    const cardapio = mod.aplicarSushiCardapio([]);
+    const rodizio = cardapio.find((item: any) => item.id === mod.SUSHI_RODIZIO_ID);
+    rodizio.preco = 119.9;
+
+    expect(() => mod.validarSushiCardapio(cardapio)).not.toThrow();
+    const aposNovoDeploy = mod.aplicarSushiCardapio(cardapio);
+    expect(aposNovoDeploy.find((item: any) => item.id === mod.SUSHI_RODIZIO_ID).preco).toBe(119.9);
+
+    rodizio.preco = 0;
+    expect(() => mod.validarSushiCardapio(cardapio)).toThrow(/preço atual inválido/);
+  });
+
   it('mantém a camada de Sushi apenas visual no navegador e não toca em mesas, pedidos ou vendas', () => {
     const runtime = read('client/public/menu-sushi-20260903.js');
     expect(runtime).toContain("const CATEGORIA = 'sushi'");
@@ -112,8 +126,9 @@ describe('cardápio Sushi 2026-09-03', () => {
 
   it('inclui o Sushi no health audit de produção', () => {
     const audit = read('scripts/production-health-audit.mjs');
-    expect(audit).toContain("import { SUSHI_ITEMS, validarSushiCardapio } from './sushi-cardapio-update.mjs'");
+    expect(audit).toContain("import { SUSHI_ITEMS, SUSHI_RODIZIO_ID, validarSushiCardapio } from './sushi-cardapio-update.mjs'");
     expect(audit).toContain('validarSushiCardapio(cardapio)');
     expect(audit).toContain('sushi_itens=');
+    expect(audit).toContain('rodizio_preco_atual=');
   });
 });

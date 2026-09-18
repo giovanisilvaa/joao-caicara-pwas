@@ -88,6 +88,17 @@ describe('Production Health Audit — correlação de tickets', () => {
     expect(resultado.stdout).toContain('erros=0');
   });
 
+  it('aceita e informa promoção do Rodízio definida pelo PDV', () => {
+    const cardapio = catalogoComAdicoes();
+    const rodizio = cardapio.find(item => item.id === 9301)!;
+    rodizio.preco = 119.9;
+    const resultado = executar({ cardapio });
+
+    expect(resultado.status).toBe(0);
+    expect(resultado.stdout).toContain('rodizio_preco_atual=119.9');
+    expect(resultado.stdout).toContain('erros=0');
+  });
+
   it('reconhece ticket do Garçom quando envioId está nos itens', () => {
     const envioId = 'env-garcom-1';
     const resultado = executar({
