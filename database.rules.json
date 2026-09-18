@@ -17,7 +17,7 @@
       }
     },
     "cardapio": {
-      ".read": "auth != null && (auth.token.email === 'adm@acesso.joaocaicara.app' || auth.token.email === 'garcom@acesso.joaocaicara.app')",
+      ".read": true,
       ".write": "auth != null && auth.token.email === 'adm@acesso.joaocaicara.app' && newData.exists()"
     },
     "vendas": {

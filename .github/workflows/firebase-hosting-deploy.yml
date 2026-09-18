@@ -196,9 +196,12 @@ jobs:
           verificar_arquivo '/pdv/report-dashboard-v1.js' 'client/public/pdv/report-dashboard-v1.js'
           verificar_arquivo '/gestao/gestao.js' 'client/public/gestao/gestao.js'
           verificar_arquivo '/gestao/gestao.css' 'client/public/gestao/gestao.css'
+          verificar_arquivo '/cardapio/cardapio.js' 'client/public/cardapio/cardapio.js'
+          verificar_arquivo '/cardapio/cardapio.css' 'client/public/cardapio/cardapio.css'
           verificar_arquivo '/pdv/' 'client/public/pdv/index.html'
           verificar_arquivo '/garcom/' 'client/public/garcom/index.html'
           verificar_arquivo '/gestao/' 'client/public/gestao/index.html'
+          verificar_arquivo '/cardapio/' 'client/public/cardapio/index.html'
 
           verificar_no_cache '/pdv/service-worker.js'
           verificar_no_cache '/garcom/service-worker.js'
@@ -208,6 +211,29 @@ jobs:
           verificar_no_cache '/gestao/'
           verificar_no_cache '/gestao/gestao.js'
           verificar_no_cache '/gestao/gestao.css'
+          verificar_no_cache '/cardapio/'
+          verificar_no_cache '/cardapio/cardapio.js'
+          verificar_no_cache '/cardapio/cardapio.css'
 
       - name: Deploy Realtime Database rules
         run: npx firebase-tools@latest deploy --only database --project joaocaicaratradicao --non-interactive
+
+      - name: Verify public menu read access
+        shell: bash
+        run: |
+          set -euo pipefail
+          CARDAPIO_PUBLICO="$(mktemp)"
+          trap 'rm -f "$CARDAPIO_PUBLICO"' EXIT
+          curl --fail-with-body --silent --show-error \
+            'https://joaocaicaratradicao-default-rtdb.firebaseio.com/cardapio.json?shallow=true' \
+            -o "$CARDAPIO_PUBLICO"
+          CARDAPIO_PUBLICO="$CARDAPIO_PUBLICO" node - <<'NODE'
+          const fs = require('fs');
+          const caminho = process.env.CARDAPIO_PUBLICO;
+          const dados = JSON.parse(fs.readFileSync(caminho, 'utf8'));
+          if (!dados || typeof dados !== 'object' || Object.keys(dados).length === 0) {
+            console.error('O cardápio público não retornou itens após o deploy das regras.');
+            process.exit(1);
+          }
+          console.log(`Leitura pública do cardápio confirmada: ${Object.keys(dados).length} registros.`);
+          NODE

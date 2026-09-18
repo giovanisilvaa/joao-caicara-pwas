@@ -44,7 +44,7 @@ function validarCatalogo() {
 
   const rodizio = SUSHI_ITEMS.find(item => Number(item.id) === SUSHI_RODIZIO_ID);
   if (!rodizio || rodizio.nome !== 'Rodízio' || Number(rodizio.preco) !== 149.9) {
-    throw new Error('Rodízio de Sushi ausente ou com preço inválido.');
+    throw new Error('Rodízio de Sushi ausente ou sem o preço padrão de R$ 149,90 no catálogo inicial.');
   }
   if (rodizio.servePara2 !== false || rodizio.permiteMeioPrato !== true) {
     throw new Error('Rodízio deve ser individual e permitir meio prato explicitamente.');
@@ -61,8 +61,16 @@ export function validarSushiCardapio(lista) {
   for (const esperado of SUSHI_ITEMS) {
     const item = lista.find(registro => Number(registro?.id) === Number(esperado.id));
     if (!item) throw new Error(`Sushi ausente: ${esperado.id} — ${esperado.nome}.`);
-    const campos = ['nome', 'preco', 'categoria', 'setor', 'sushiGrupo'];
-    if (Number(esperado.id) === SUSHI_RODIZIO_ID) campos.push('servePara2', 'permiteMeioPrato');
+    const rodizioDinamico = Number(esperado.id) === SUSHI_RODIZIO_ID;
+    const campos = ['nome', 'categoria', 'setor', 'sushiGrupo'];
+    if (rodizioDinamico) {
+      campos.push('servePara2', 'permiteMeioPrato');
+      if (!Number.isFinite(Number(item.preco)) || Number(item.preco) <= 0) {
+        throw new Error(`Rodízio com preço atual inválido (${JSON.stringify(item.preco)}).`);
+      }
+    } else {
+      campos.push('preco');
+    }
     for (const campo of campos) {
       if (item[campo] !== esperado[campo]) {
         throw new Error(`Sushi ${esperado.id} com ${campo} divergente (${JSON.stringify(item[campo])} != ${JSON.stringify(esperado[campo])}).`);
@@ -92,6 +100,8 @@ export function aplicarSushiCardapio(origem) {
       if (nomeNorm(porId.nome) !== nomeNorm(esperado.nome)) {
         throw new Error(`Colisão no ID Sushi: ID ${esperado.id} já pertence a "${porId.nome}".`);
       }
+      // O preço atual do Rodízio pertence ao PDV. Promoções devem sobreviver a
+      // deploys e ser propagadas pelo Firebase ao Garçom e ao cardápio público.
       continue;
     }
 

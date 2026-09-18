@@ -3,7 +3,7 @@ import fs from "node:fs";
 
 const read = (path: string) => fs.readFileSync(path, "utf8");
 
-describe("sincronizacao autenticada do cardapio", () => {
+describe("sincronizacao do cardapio", () => {
   it("Garcom mantem listener autenticado permanente e recuperável", () => {
     const modulo = read("client/public/garcom/cardapio-auth-reconnect.js");
     const sw = read("client/public/garcom/service-worker.js");
@@ -23,12 +23,11 @@ describe("sincronizacao autenticada do cardapio", () => {
     expect(sw).toContain("cardapio-auth-reconnect.js?v=1");
   });
 
-  it("regras permitem leitura aos dois perfis e escrita apenas ao PDV", () => {
+  it("regras permitem consulta publica e escrita apenas ao PDV", () => {
     const rules = JSON.parse(read("database.rules.json"));
-    const readRule = String(rules.rules.cardapio?.[".read"] || "");
+    const readRule = rules.rules.cardapio?.[".read"];
     const writeRule = String(rules.rules.cardapio?.[".write"] || "");
-    expect(readRule).toContain("adm@acesso.joaocaicara.app");
-    expect(readRule).toContain("garcom@acesso.joaocaicara.app");
+    expect(readRule).toBe(true);
     expect(writeRule).toContain("adm@acesso.joaocaicara.app");
     expect(writeRule).not.toContain("garcom@acesso.joaocaicara.app");
   });
