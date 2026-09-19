@@ -7,10 +7,10 @@
     if (!window.MesaAtomic) return alert('A proteção de concorrência ainda está carregando. Tente novamente em um instante.');
 
     const origem = mesaAtualSelecionada;
-    const destinoStr = prompt(`Transferir Mesa ${origem} para qual mesa? (número de 1 a 25 ou 50 a 65)`);
+    const destinoStr = prompt(`Transferir Mesa ${origem} para qual mesa? (número de 1 a 49 ou 50 a 100)`);
     if (destinoStr === null) return;
     const destino = parseInt(destinoStr, 10);
-    const destinoValido = (destino >= 1 && destino <= 25) || (destino >= 50 && destino <= 65);
+    const destinoValido = (destino >= 1 && destino <= 49) || (destino >= 50 && destino <= 100);
     if (Number.isNaN(destino) || destino === origem || !destinoValido) return alert('Número de mesa inválido.');
 
     let lockOrigem = null;

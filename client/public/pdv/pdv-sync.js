@@ -78,8 +78,8 @@
       }
     };
 
-    renderFaixa('grid-salao', 1, 25);
-    renderFaixa('grid-deck', 50, 65);
+    renderFaixa('grid-salao', 1, 49);
+    renderFaixa('grid-deck', 50, 100);
   };
 
   gerarMesas();

@@ -501,7 +501,7 @@
         gridSalao.innerHTML = '';
         gridDeck.innerHTML = '';
 
-        for (let i = 1; i <= 25; i++) {
+        for (let i = 1; i <= 49; i++) {
             if (!mesas[i]) mesas[i] = mesaVazia();
             mesas[i] = normalizarMesa(mesas[i]);
             const ocupada = mesas[i].itens.length > 0;
@@ -511,7 +511,7 @@
             const resumo = ocupada ? `${mesas[i].itens.length} item(ns) · ${formatarMoeda(total)}` : 'Toque para abrir';
             gridSalao.innerHTML += `<button id="mesa-btn-g-${i}" class="mesa-btn ${ocupada ? 'occupied' : ''} ${novo ? 'novo-pedido' : ''}" aria-label="Mesa ${i}: ${estado}" title="Mesa ${i}: ${estado}" onclick="selecionarMesaG(${i})"><span class="mesa-btn__state">${estado}</span><strong class="mesa-btn__number">${i}</strong><span class="mesa-btn__meta">${resumo}</span></button>`;
         }
-        for (let i = 50; i <= 65; i++) {
+        for (let i = 50; i <= 100; i++) {
             if (!mesas[i]) mesas[i] = mesaVazia();
             mesas[i] = normalizarMesa(mesas[i]);
             const ocupada = mesas[i].itens.length > 0;
