@@ -33,8 +33,8 @@
       const resumo = mesas[numero].itens.length ? `${mesas[numero].itens.length} item(ns) · ${formatarMoeda(total)}${garcom}` : aberta ? `Comanda aberta${garcom}` : 'Toque para abrir';
       grid.insertAdjacentHTML('beforeend', `<button id="mesa-btn-g-${numero}" class="mesa-btn ${aberta ? 'occupied' : ''} ${novo ? 'novo-pedido' : ''}" aria-label="Mesa ${numero}: ${estado}" title="Mesa ${numero}: ${estado}" onclick="selecionarMesaG(${numero})"><span class="mesa-btn__state">${estado}</span><strong class="mesa-btn__number">${numero}</strong><span class="mesa-btn__meta">${resumo}</span></button>`);
     };
-    for (let i = 1; i <= 25; i++) render(i, gridSalao);
-    for (let i = 50; i <= 65; i++) render(i, gridDeck);
+    for (let i = 1; i <= 49; i++) render(i, gridSalao);
+    for (let i = 50; i <= 100; i++) render(i, gridDeck);
   };
 
   window.selecionarMesaG = async function selecionarMesaGSeguro(numero) {

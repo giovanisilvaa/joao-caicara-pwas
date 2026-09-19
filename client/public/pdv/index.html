@@ -298,10 +298,10 @@
     <div class="main-container no-print">
 
         <div class="tables-panel">
-            <div class="tables-section-title">Salão (1 - 25)</div>
+            <div class="tables-section-title">Salão (1 - 49)</div>
             <div class="tables-grid" id="grid-salao"></div>
 
-            <div class="tables-section-title" style="margin-top: 10px;">Deck / Praia (50 - 65)</div>
+            <div class="tables-section-title" style="margin-top: 10px;">Deck / Praia (50 - 100)</div>
             <div class="tables-grid" id="grid-deck"></div>
         </div>
 
@@ -1130,10 +1130,10 @@
         function gerarMesas() {
             const agora = Date.now();
 
-            // Salão (1 a 25)
+            // Salão (1 a 49)
             const gridSalao = document.getElementById('grid-salao');
             gridSalao.innerHTML = '';
-            for(let i = 1; i <= 25; i++) {
+            for(let i = 1; i <= 49; i++) {
                 if(!mesas[i]) mesas[i] = { itens: [], cliente: '', abertura: null };
                 mesas[i] = normalizarMesaPDV(mesas[i]);
 
@@ -1152,10 +1152,10 @@
                 gridSalao.innerHTML += `<button class="table-btn ${classeAtiva} ${classeOcupada} ${avisoTempo} ${classeNovo}" onclick="selecionarMesa(${i})" title="${temNovoPedido ? 'Pedido novo aguardando envio!' : ''}">${i}${temNovoPedido ? ' 🔔' : ''}</button>`;
             }
 
-            // Deck / Praia (50 a 65)
+            // Deck / Praia (50 a 100)
             const gridDeck = document.getElementById('grid-deck');
             gridDeck.innerHTML = '';
-            for(let i = 50; i <= 65; i++) {
+            for(let i = 50; i <= 100; i++) {
                 if(!mesas[i]) mesas[i] = { itens: [], cliente: '', abertura: null };
                 mesas[i] = normalizarMesaPDV(mesas[i]);
 
@@ -1486,14 +1486,14 @@
             const dadosMesa = mesas[mesaAtualSelecionada];
             if(dadosMesa.itens.length === 0) return alert('A comanda está vazia, não há nada para transferir!');
 
-            const destinoStr = prompt(`Transferir Mesa ${mesaAtualSelecionada} para qual mesa? (número de 1 a 25 ou 50 a 65)`);
+            const destinoStr = prompt(`Transferir Mesa ${mesaAtualSelecionada} para qual mesa? (número de 1 a 49 ou 50 a 100)`);
             if(destinoStr === null) return;
             const destino = parseInt(destinoStr);
 
             if(isNaN(destino) || destino === mesaAtualSelecionada) {
                 return alert('Número de mesa inválido.');
             }
-            if(!((destino >= 1 && destino <= 25) || (destino >= 50 && destino <= 65))) {
+            if(!((destino >= 1 && destino <= 49) || (destino >= 50 && destino <= 100))) {
                 return alert('Essa mesa não existe no salão nem no deck/praia.');
             }
 

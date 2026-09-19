@@ -9,7 +9,7 @@
 
   function atomic() { return window.MesaAtomic; }
   function mesaAtual() { try { return Number(mesaAtualSelecionada) || null; } catch (_) { return null; } }
-  function mesaValida(numero) { return (numero >= 1 && numero <= 25) || (numero >= 50 && numero <= 65); }
+  function mesaValida(numero) { return (numero >= 1 && numero <= 49) || (numero >= 50 && numero <= 100); }
   function contaFechada(mesa) { return mesa?.estadoConta === STATUS_FECHADA; }
   function usuarioAdmin() {
     try { return String(firebase.auth().currentUser?.email || '').toLowerCase() === ADMIN_EMAIL; }
