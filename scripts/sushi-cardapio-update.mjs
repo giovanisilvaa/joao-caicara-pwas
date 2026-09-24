@@ -18,6 +18,10 @@ const nomeNorm = valor => String(valor ?? '')
   .replace(/[^a-z0-9]+/g, ' ')
   .trim();
 
+// O cadastro do Rodízio pode receber o nome usado pelo PDV sem que o deploy
+// substitua a descrição, o preço atual ou uma promoção em andamento.
+const nomesRodizio = new Set(['rodizio', 'rodizio mulher']);
+
 function validarCatalogo() {
   if (!Array.isArray(SUSHI_ITEMS) || SUSHI_ITEMS.length !== 62) {
     throw new Error(`Catálogo Sushi deve possuir 62 itens; encontrado ${Array.isArray(SUSHI_ITEMS) ? SUSHI_ITEMS.length : 0}.`);
@@ -62,14 +66,17 @@ export function validarSushiCardapio(lista) {
     const item = lista.find(registro => Number(registro?.id) === Number(esperado.id));
     if (!item) throw new Error(`Sushi ausente: ${esperado.id} — ${esperado.nome}.`);
     const rodizioDinamico = Number(esperado.id) === SUSHI_RODIZIO_ID;
-    const campos = ['nome', 'categoria', 'setor', 'sushiGrupo'];
+    const campos = ['categoria', 'setor', 'sushiGrupo'];
     if (rodizioDinamico) {
+      if (!nomesRodizio.has(nomeNorm(item.nome))) {
+        throw new Error(`Rodízio com nome atual inválido (${JSON.stringify(item.nome)}).`);
+      }
       campos.push('servePara2', 'permiteMeioPrato');
       if (!Number.isFinite(Number(item.preco)) || Number(item.preco) <= 0) {
         throw new Error(`Rodízio com preço atual inválido (${JSON.stringify(item.preco)}).`);
       }
     } else {
-      campos.push('preco');
+      campos.push('nome', 'preco');
     }
     for (const campo of campos) {
       if (item[campo] !== esperado[campo]) {
@@ -97,7 +104,9 @@ export function aplicarSushiCardapio(origem) {
   for (const esperado of SUSHI_ITEMS) {
     const porId = lista.find(item => Number(item?.id) === Number(esperado.id));
     if (porId) {
-      if (nomeNorm(porId.nome) !== nomeNorm(esperado.nome)) {
+      if (Number(esperado.id) === SUSHI_RODIZIO_ID
+        ? !nomesRodizio.has(nomeNorm(porId.nome))
+        : nomeNorm(porId.nome) !== nomeNorm(esperado.nome)) {
         throw new Error(`Colisão no ID Sushi: ID ${esperado.id} já pertence a "${porId.nome}".`);
       }
       // O preço atual do Rodízio pertence ao PDV. Promoções devem sobreviver a
