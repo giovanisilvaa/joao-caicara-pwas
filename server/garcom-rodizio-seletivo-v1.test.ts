@@ -18,6 +18,18 @@ describe('Rodízio seletivo do Garçom', () => {
     expect(fluxo).toContain('precoUnitario');
   });
 
+  it('cobra cada DUPLINHA como uma unidade para duas pessoas e mantém os pedidos de sushi sem valor extra', () => {
+    const fluxo = read('client/public/garcom/rodizio-seletivo-v1.js');
+    expect(fluxo).toContain('DUPLINHA_ID = 9303');
+    expect(fluxo).toContain('RODIZIOS_IDS = Object.freeze([RODIZIO_ID, DUPLINHA_ID])');
+    expect(fluxo).toContain('produtoOriginalId: id');
+    expect(fluxo).toContain("id === DUPLINHA_ID ? 2 : 1");
+    expect(fluxo).toContain('rodizioOrigemId: id');
+    expect(fluxo).toContain('quantidadeCobrancasRodizio(mesa, id)');
+    expect(fluxo).toContain("'btn-rodizio-duplinha-itens'");
+    expect(fluxo).toContain('const contador = Array.from(modal.querySelectorAll');
+  });
+
   it('oferece todos os itens da Sequência Caiçara sem cobrar cada escolha', () => {
     const fluxo = read('client/public/garcom/rodizio-seletivo-v1.js');
     for (const nome of [
@@ -71,7 +83,7 @@ describe('Rodízio seletivo do Garçom', () => {
 
   it('impede o modal genérico de meio prato/observação de capturar o Rodízio', () => {
     const opcoes = read('client/public/menu-order-options.js');
-    expect(opcoes).toContain('const RODIZIO_ID = 9301');
+    expect(opcoes).toContain('const RODIZIO_IDS = [9301, 9303]');
     expect(opcoes).toContain('if (ehRodizio(produto)) return false');
     expect(opcoes).toContain('if (ehRodizio(produto)) return;');
   });
@@ -80,9 +92,9 @@ describe('Rodízio seletivo do Garçom', () => {
     const sw = read('client/public/garcom/service-worker.js');
     const workflow = read('.github/workflows/firebase-hosting-deploy.yml');
 
-    expect(sw).toContain("RODIZIO_SELECT_ASSET = '/garcom/rodizio-seletivo-v1.js?v=2'");
+    expect(sw).toContain("RODIZIO_SELECT_ASSET = '/garcom/rodizio-seletivo-v1.js?v=3'");
     expect(sw).toContain('rodizio-select-v37-casquinha-v38');
-    expect(sw).toContain('<script src="/garcom/rodizio-seletivo-v1.js?v=2"></script>');
+    expect(sw).toContain('<script src="/garcom/rodizio-seletivo-v1.js?v=3"></script>');
     expect(workflow).toContain("verificar_arquivo '/garcom/rodizio-seletivo-v1.js' 'client/public/garcom/rodizio-seletivo-v1.js'");
   });
 });

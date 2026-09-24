@@ -1,11 +1,11 @@
-const CACHE_NAME = 'joao-caicara-pdv-v28-report-v29-live-v30-print-v31-menu-v32-half-v33-cancel-v34-staged-v35-transfer-v36-reports-v37-checkoutprint-v38-comanda-v39-visible-v40-native-v41-view-v42-sales-v43-cashsession-v44-sushi-v45-cashhub-v46-management-v47-specialseq-v48-rodiziosushi-v49-idlefix-v50-rodiziotitle-v51-close-v52-tables-v53';
+const CACHE_NAME = 'joao-caicara-pdv-v28-report-v29-live-v30-print-v31-menu-v32-half-v33-cancel-v34-staged-v35-transfer-v36-reports-v37-checkoutprint-v38-comanda-v39-visible-v40-native-v41-view-v42-sales-v43-cashsession-v44-sushi-v45-cashhub-v46-management-v47-specialseq-v48-rodiziosushi-v49-idlefix-v50-rodiziotitle-v51-close-v52-tables-v53-duplinha-v54';
 const AUTH_SESSION_ASSET = '/auth-session-isolation.js?v=20';
 const MESA_ATOMIC_ASSET = '/mesa-atomic.js?v=38';
 const MESA_CONCURRENCY_ASSET = '/pdv/' + 'mesa-concurrency.js?v=40';
 const ITEM_CANCELLATION_ASSET = '/item-cancellation-v2.js?v=2';
 const STAGED_CHECKOUT_ASSET = '/staged-checkout-v1.js?v=1';
 const ITEM_TRANSFER_ASSET = '/pdv/pdv-item-transfer.js?v=1';
-const MENU_ORDER_OPTIONS_ASSET = '/menu-order-options.js?v=1';
+const MENU_ORDER_OPTIONS_ASSET = '/menu-order-options.js?v=2';
 const SALAD_HALF_ASSET = '/menu-salad-half.js?v=2';
 const MENU_UPDATE_ASSET = '/menu-20260828.js?v=1';
 const SUSHI_MENU_ASSET = '/menu-sushi-20260903.js?v=1';
@@ -55,7 +55,8 @@ const respostaHtmlComHotfix = async (response) => {
   if (!html.includes('/item-cancellation-v2.js')) html = html.replace('</body>', '<script src="/item-cancellation-v2.js?v=2"></script></body>');
   if (!html.includes('/staged-checkout-v1.js')) html = html.replace('</body>', '<script src="/staged-checkout-v1.js?v=1"></script></body>');
   if (!html.includes('/pdv/pdv-item-transfer.js')) html = html.replace('</body>', '<script src="/pdv/pdv-item-transfer.js?v=1"></script></body>');
-  if (!html.includes('/menu-order-options.js')) html = html.replace('</body>', '<script src="/menu-order-options.js?v=1"></script></body>');
+  html = html.replaceAll('<script src="/menu-order-options.js?v=1"></script>', '');
+  if (!html.includes('/menu-order-options.js?v=2')) html = html.replace('</body>', '<script src="/menu-order-options.js?v=2"></script></body>');
   if (!html.includes('/menu-salad-half.js')) html = html.replace('</body>', '<script src="/menu-salad-half.js?v=2"></script></body>');
   if (!html.includes('/menu-20260828.js')) html = html.replace('</body>', '<script src="/menu-20260828.js?v=1"></script></body>');
   if (!html.includes('/menu-sushi-20260903.js')) html = html.replace('</body>', '<script src="/menu-sushi-20260903.js?v=1"></script></body>');

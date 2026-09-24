@@ -5,7 +5,7 @@
 
   const HALF_RATIO = 0.60;
   const KIDS_CATEGORY = 'kids';
-  const RODIZIO_ID = 9301;
+  const RODIZIO_IDS = [9301, 9303];
   const ehPdv = location.pathname.includes('/pdv/');
   const ehGarcom = location.pathname.includes('/garcom/');
   let modalEstado = null;
@@ -39,7 +39,7 @@
   }
 
   function ehRodizio(produto) {
-    return Number(produto?.produtoOriginalId ?? produto?.id) === RODIZIO_ID;
+    return RODIZIO_IDS.includes(Number(produto?.produtoOriginalId ?? produto?.id));
   }
 
   function permiteMeioPrato(produto) {
