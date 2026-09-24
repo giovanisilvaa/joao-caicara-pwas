@@ -49,12 +49,12 @@ describe('kids, observacao e meio prato nos dois sistemas', () => {
     const pdv = read('client/public/pdv/service-worker.js');
     const garcom = read('client/public/garcom/service-worker.js');
 
-    expect(pdv).toContain("MENU_ORDER_OPTIONS_ASSET = '/menu-order-options.js?v=1'");
-    expect(garcom).toContain("MENU_ORDER_OPTIONS_ASSET = '/menu-order-options.js?v=1'");
-    expect(pdv.indexOf('menu-order-options.js?v=1')).toBeGreaterThan(pdv.indexOf('mesa-concurrency.js?v=40'));
-    expect(garcom.indexOf('menu-order-options.js?v=1')).toBeGreaterThan(garcom.indexOf('mesa-concurrency.js?v=36'));
-    expect(pdv).toContain('<script src="/menu-order-options.js?v=1"></script>');
-    expect(garcom).toContain('<script src="/menu-order-options.js?v=1"></script>');
+    expect(pdv).toContain("MENU_ORDER_OPTIONS_ASSET = '/menu-order-options.js?v=2'");
+    expect(garcom).toContain("MENU_ORDER_OPTIONS_ASSET = '/menu-order-options.js?v=2'");
+    expect(pdv.indexOf('menu-order-options.js?v=2')).toBeGreaterThan(pdv.indexOf('mesa-concurrency.js?v=40'));
+    expect(garcom.indexOf('menu-order-options.js?v=2')).toBeGreaterThan(garcom.indexOf('mesa-concurrency.js?v=36'));
+    expect(pdv).toContain('<script src="/menu-order-options.js?v=2"></script>');
+    expect(garcom).toContain('<script src="/menu-order-options.js?v=2"></script>');
   });
 
   it('mantem observacao impressa na producao', () => {
