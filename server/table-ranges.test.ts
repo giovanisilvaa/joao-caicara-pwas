@@ -10,6 +10,7 @@ describe("faixas de mesas do Salão e Deck/Praia", () => {
   const pdvSync = read("client/public/pdv/pdv-sync.js");
   const operations = read("client/public/pdv/pdv-operations.js");
   const itemTransfer = read("client/public/pdv/pdv-item-transfer.js");
+  const mesaWrite = String(JSON.parse(read("database.rules.json")).rules.mesas.$mesaId[".write"]);
 
   it("exibe exatamente 100 mesas únicas nos dois sistemas", () => {
     expect(garcom).toContain("for (let i = 1; i <= 49; i++)");
@@ -31,6 +32,18 @@ describe("faixas de mesas do Salão e Deck/Praia", () => {
     expect(operations).toContain("(destino >= 1 && destino <= 49) || (destino >= 50 && destino <= 100)");
     expect(itemTransfer).toContain("(numero >= 1 && numero <= 49) || (numero >= 50 && numero <= 100)");
     expect(operations).toContain("número de 1 a 49 ou 50 a 100");
+  });
+
+  it("permite gravação nas 100 mesas e bloqueia números fora da faixa", () => {
+    const regex = mesaWrite.match(/\$mesaId\.matches\(\/(.+)\/\)/)?.[1];
+    expect(regex).toBeTruthy();
+    const numerosPermitidos = new RegExp(regex!);
+    for (let numero = 1; numero <= 100; numero++) {
+      expect(numerosPermitidos.test(String(numero)), `mesa ${numero}`).toBe(true);
+    }
+    for (const numero of [0, 101, 150, -1, "01", "1a"]) {
+      expect(numerosPermitidos.test(String(numero)), `mesa ${numero}`).toBe(false);
+    }
   });
 
   it("força a atualização dos caches dos dois PWAs", () => {
