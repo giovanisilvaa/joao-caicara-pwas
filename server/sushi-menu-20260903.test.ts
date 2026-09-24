@@ -88,6 +88,21 @@ describe('cardápio Sushi 2026-09-03', () => {
     expect(() => mod.validarSushiCardapio(cardapio)).toThrow(/preço atual inválido/);
   });
 
+  it('aceita o nome atual do Rodízio sem substituir cadastro e rejeita outro produto no ID 9301', async () => {
+    const mod: any = await import('../scripts/sushi-cardapio-update.mjs');
+    const cardapio = mod.aplicarSushiCardapio([]);
+    const rodizio = cardapio.find((item: any) => item.id === mod.SUSHI_RODIZIO_ID);
+    rodizio.nome = 'Rodízio - MULHER';
+    rodizio.preco = 119.9;
+    expect(mod.aplicarSushiCardapio(cardapio)).toEqual(cardapio);
+
+    rodizio.nome = 'Outro produto';
+    expect(() => mod.aplicarSushiCardapio(cardapio)).toThrow(/Colisão no ID Sushi/);
+    rodizio.nome = 'Rodízio - MULHER';
+    rodizio.categoria = 'bebidas';
+    expect(() => mod.validarSushiCardapio(cardapio)).toThrow(/categoria divergente/);
+  });
+
   it('mantém a camada de Sushi apenas visual no navegador e não toca em mesas, pedidos ou vendas', () => {
     const runtime = read('client/public/menu-sushi-20260903.js');
     expect(runtime).toContain("const CATEGORIA = 'sushi'");
