@@ -34,7 +34,7 @@
         await carregarScript('/pdv/mesa-concurrency.js?v=40', 'mesa-concurrency');
       }
       if (window.PDV_PRODUCTION_RUNTIME !== VERSAO || !String(window.imprimirProducao || '').includes('imprimirProducaoSeguro')) {
-        await carregarScript('/pdv/pdv-production.js?v=40', 'pdv-production');
+        await carregarScript('/pdv/pdv-production.js?v=41', 'pdv-production');
       }
       document.documentElement.dataset.pdvRuntime = VERSAO;
       window.PDV_RUNTIME_OK = true;

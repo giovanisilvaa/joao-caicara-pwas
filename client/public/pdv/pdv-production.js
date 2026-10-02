@@ -22,6 +22,17 @@
     return idOriginal === RODIZIO_ID || nomeOriginal === 'rodizio';
   }
 
+  function agruparPorVia(itens) {
+    const grupos = new Map();
+    (itens || []).forEach(item => {
+      const titulo = String(item?.tituloProducao || '').trim();
+      const chave = titulo || '__padrao__';
+      if (!grupos.has(chave)) grupos.set(chave, { titulo, itens: [] });
+      grupos.get(chave).itens.push(item);
+    });
+    return [...grupos.values()];
+  }
+
   function quantidadeSequencias(itens) {
     return (itens || []).reduce((total, item) => {
       if (!ehSequenciaEspecial(item)) return total;
@@ -218,13 +229,16 @@
       [`mesas/${numeroMesa}/bloqueioOperacional/motivoLiberacao`]: 'envio_confirmado'
     };
     Object.entries(porSetor).forEach(([destino, lista]) => {
-      if (!lista.length) return;
-      const pedidoRef = db.ref('pedidosProducao').push();
-      atualizacoes[`pedidosProducao/${pedidoRef.key}`] = {
-        chave: pedidoRef.key, mesa: numeroMesa, cliente, setor: destino, itens: lista,
-        envioId: reserva.envioId,
-        status: 'recebido', origem: 'pdv', criadoEm, atualizadoEm: criadoEm
-      };
+      agruparPorVia(lista).forEach(grupo => {
+        if (!grupo.itens.length) return;
+        const pedidoRef = db.ref('pedidosProducao').push();
+        atualizacoes[`pedidosProducao/${pedidoRef.key}`] = {
+          chave: pedidoRef.key, mesa: numeroMesa, cliente, setor: destino, itens: grupo.itens,
+          ...(grupo.titulo ? { titulo: grupo.titulo } : {}),
+          envioId: reserva.envioId,
+          status: 'recebido', origem: 'pdv', criadoEm, atualizadoEm: criadoEm
+        };
+      });
     });
     indices.forEach(index => {
       atualizacoes[`mesas/${numeroMesa}/itens/${index}/enviado`] = true;
@@ -242,11 +256,13 @@
 
   async function imprimirSetores(numeroMesa, cliente, porSetor, criadoEm = Date.now()) {
     const documentos = [];
-    if (porSetor.cozinha?.length) documentos.push({ setor: 'cozinha', numeroMesa, cliente, itens: porSetor.cozinha, criadoEm });
-    if (porSetor.bar?.length) documentos.push({ setor: 'bar', numeroMesa, cliente, itens: porSetor.bar, criadoEm });
+    for (const [setor, itens] of Object.entries(porSetor)) {
+      agruparPorVia(itens).forEach(grupo => {
+        if (grupo.itens.length) documentos.push({ setor, numeroMesa, cliente, itens: grupo.itens, criadoEm, ...(grupo.titulo ? { titulo: grupo.titulo } : {}) });
+      });
+    }
     imprimirLote(documentos);
   }
-
   window.enviarProducaoCompletaPdv = async function enviarProducaoCompletaPdv() {
     if (!mesaAtualSelecionada) return alert('Selecione uma mesa!');
     if (!window.MesaAtomic) return alert('A proteção de concorrência ainda está carregando. Tente novamente em um instante.');

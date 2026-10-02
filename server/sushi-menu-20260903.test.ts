@@ -43,7 +43,7 @@ describe('cardápio Sushi 2026-09-03', () => {
 
   it('inclui o Rodízio a R$ 149,90 como item individual em ID reservado fora da faixa legada', async () => {
     const mod: any = await import('../scripts/sushi-cardapio-update.mjs');
-    expect(mod.SUSHI_ITEMS).toHaveLength(62);
+    expect(mod.SUSHI_ITEMS).toHaveLength(63);
     expect(mod.SUSHI_RODIZIO_ID).toBe(9301);
     const rodizio = mod.SUSHI_ITEMS.find((item: any) => item.id === mod.SUSHI_RODIZIO_ID);
     expect(rodizio).toMatchObject({
@@ -65,7 +65,7 @@ describe('cardápio Sushi 2026-09-03', () => {
       { id: 2, nome: 'Bebida legada', preco: 8, categoria: 'bebidas', setor: 'bar' }
     ];
     const atualizado = mod.aplicarSushiCardapio(base);
-    expect(atualizado).toHaveLength(base.length + 62);
+    expect(atualizado).toHaveLength(base.length + 63);
     expect(atualizado[0]).toEqual(base[0]);
     expect(atualizado[1]).toEqual(base[1]);
     expect(() => mod.validarSushiCardapio(atualizado)).not.toThrow();

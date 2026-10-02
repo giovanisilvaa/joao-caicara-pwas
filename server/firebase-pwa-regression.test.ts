@@ -114,7 +114,7 @@ describe("regressoes criticas Firebase e PWAs", () => {
     expect(fastCheckout).toBeGreaterThan(checkout);
     expect(runtimeGuard).toBeGreaterThan(concurrency);
     expect(sw).toContain("joao-caicara-pdv-v28");
-    expect(sw).toContain("pdv-production.js?v=40");
+    expect(sw).toContain("pdv-production.js?v=41");
     expect(sw).toContain("mesa-concurrency.js?v=40");
     expect(sw).toContain("runtime-guard.js?v=40");
     expect(sw).not.toContain("/pdv/hotfix-sync.js");
@@ -126,7 +126,7 @@ describe("regressoes criticas Firebase e PWAs", () => {
     expect(guard).toContain("PDV_CONCURRENCY_RUNTIME");
     expect(guard).toContain("imprimirProducaoSeguro");
     expect(guard).toContain("adicionarProdutoAtomico");
-    expect(guard).toContain("pdv-production.js?v=40");
+    expect(guard).toContain("pdv-production.js?v=41");
     expect(guard).toContain("mesa-concurrency.js?v=40");
   });
 

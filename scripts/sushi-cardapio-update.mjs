@@ -10,6 +10,7 @@ export const SUSHI_RODIZIO = JSON.parse(fs.readFileSync(rodizioPath, 'utf8'));
 export const SUSHI_ITEMS = [...SUSHI_CATALOG.items, ...SUSHI_RODIZIO.items];
 export const SUSHI_CATEGORY = SUSHI_CATALOG.category.key;
 export const SUSHI_RODIZIO_ID = 9301;
+export const SUSHI_FESTIVAL_ID = 9304;
 
 const nomeNorm = valor => String(valor ?? '')
   .normalize('NFD')
@@ -23,8 +24,8 @@ const nomeNorm = valor => String(valor ?? '')
 const nomesRodizio = new Set(['rodizio', 'rodizio mulher']);
 
 function validarCatalogo() {
-  if (!Array.isArray(SUSHI_ITEMS) || SUSHI_ITEMS.length !== 62) {
-    throw new Error(`Catálogo Sushi deve possuir 62 itens; encontrado ${Array.isArray(SUSHI_ITEMS) ? SUSHI_ITEMS.length : 0}.`);
+  if (!Array.isArray(SUSHI_ITEMS) || SUSHI_ITEMS.length !== 63) {
+    throw new Error(`Catálogo Sushi deve possuir 63 itens; encontrado ${Array.isArray(SUSHI_ITEMS) ? SUSHI_ITEMS.length : 0}.`);
   }
 
   const idsBase = SUSHI_CATALOG.items.map(item => Number(item.id));
@@ -52,6 +53,11 @@ function validarCatalogo() {
   }
   if (rodizio.servePara2 !== false || rodizio.permiteMeioPrato !== true) {
     throw new Error('Rodízio deve ser individual e permitir meio prato explicitamente.');
+  }
+  const festival = SUSHI_ITEMS.find(item => Number(item.id) === SUSHI_FESTIVAL_ID);
+  if (!festival || festival.nome !== 'Festival - Sushi' || Number(festival.preco) !== 109.9
+    || festival.tituloProducao !== 'Entradas Frias - Festival Sushi') {
+    throw new Error('Festival - Sushi ausente, com preço incorreto ou sem título de produção.');
   }
 }
 
@@ -82,6 +88,9 @@ export function validarSushiCardapio(lista) {
       if (item[campo] !== esperado[campo]) {
         throw new Error(`Sushi ${esperado.id} com ${campo} divergente (${JSON.stringify(item[campo])} != ${JSON.stringify(esperado[campo])}).`);
       }
+    }
+    if (Number(esperado.id) === SUSHI_FESTIVAL_ID && item.tituloProducao !== esperado.tituloProducao) {
+      throw new Error(`Sushi ${esperado.id} sem o título de produção esperado.`);
     }
   }
 

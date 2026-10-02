@@ -739,10 +739,20 @@
         atualizarStatusConexaoG('🟠 sincronizando', 'sync-pending');
         const porSetor = { cozinha: [], bar: [] };
         itensNovos.forEach(item => (item.setor === 'bar' ? porSetor.bar : porSetor.cozinha).push(item));
+        const agruparPorViaG = (itens) => {
+            const grupos = new Map();
+            itens.forEach(item => {
+                const titulo = String(item?.tituloProducao || '').trim();
+                const chave = titulo || '__padrao__';
+                if (!grupos.has(chave)) grupos.set(chave, { titulo, itens: [] });
+                grupos.get(chave).itens.push(item);
+            });
+            return [...grupos.values()];
+        };
         const agora = Date.now();
         const envioId = `envio_${agora}_${Math.random().toString(36).slice(2, 8)}`;
         itensNovos.forEach(item => { item.envioId = envioId; });
-        const pedidosEnviados = Object.entries(porSetor).filter(([, itens]) => itens.length).map(([setor, itens]) => ({ mesa: mesaSelecionada, cliente: dadosMesa.cliente || '', setor, itens: JSON.parse(JSON.stringify(itens)), status: 'recebido', origem: 'garcom', criadoEm: agora, atualizadoEm: agora }));
+        const pedidosEnviados = Object.entries(porSetor).flatMap(([setor, itens]) => agruparPorViaG(itens).filter(grupo => grupo.itens.length).map(grupo => ({ mesa: mesaSelecionada, cliente: dadosMesa.cliente || '', setor, itens: JSON.parse(JSON.stringify(grupo.itens)), ...(grupo.titulo ? { titulo: grupo.titulo } : {}), status: 'recebido', origem: 'garcom', criadoEm: agora, atualizadoEm: agora })));
         const refsCriadas = [];
         const gravacoes = pedidosEnviados.map((pedido) => {
             const ref = db.ref('pedidosProducao').push();

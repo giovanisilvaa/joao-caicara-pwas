@@ -83,7 +83,7 @@ describe('Production Health Audit — correlação de tickets', () => {
     expect(resultado.status).toBe(0);
     expect(resultado.stdout).toContain(`cardapio_itens=${catalogoComAdicoes().length}`);
     expect(resultado.stdout).not.toContain('esperado 125');
-    expect(resultado.stdout).toContain('sushi_itens=62/62');
+    expect(resultado.stdout).toContain('sushi_itens=63/63');
     expect(resultado.stdout).toContain('sorvetes_itens=15/15');
     expect(resultado.stdout).toContain('erros=0');
   });
