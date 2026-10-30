@@ -13,7 +13,7 @@ jobs:
   deploy:
     # This one-off data migration must not run unrelated application deployment
     # or legacy seeders. Other pushes and manual deployments keep their behavior.
-    if: ${{ github.event_name != 'push' || !contains(github.event.head_commit.message, '[cardapio-prices-20261030]') && !contains(github.event.head_commit.message, '[sushi-options-20261030]') }}
+    if: ${{ github.event_name != 'push' || !contains(github.event.head_commit.message, '[cardapio-prices-20261030]') && !contains(github.event.head_commit.message, '[sushi-options-20261030]') && !contains(github.event.head_commit.message, '[diagnostico-festival-20261030]') }}
     runs-on: ubuntu-latest
     steps:
       - name: Checkout

@@ -1,0 +1,53 @@
+name: Diagnostico Festival somente leitura
+on:
+  push:
+    branches: [main]
+    paths: [.github/workflows/diagnostico-festival-20261030.yml]
+permissions:
+  contents: read
+  id-token: write
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - uses: google-github-actions/auth@v2
+        with:
+          workload_identity_provider: projects/777982220663/locations/global/workloadIdentityPools/github-actions-jo-o-cai-ara/providers/github
+          service_account: firebase-adminsdk-fbsvc@joaocaicaratradicao.iam.gserviceaccount.com
+          create_credentials_file: true
+          export_environment_variables: true
+      - name: Read recent production orders without modifying data or printing customer details
+        shell: bash
+        run: |
+          set -euo pipefail
+          export FIREBASE_ACCESS_TOKEN="$(gcloud auth print-access-token)"
+          echo "::add-mask::${FIREBASE_ACCESS_TOKEN}"
+          node --input-type=module - <<'JS'
+          const base='https://joaocaicaratradicao-default-rtdb.firebaseio.com';
+          async function read(path) {
+            const response=await fetch(base+path,{headers:{Authorization:'Bearer '+process.env.FIREBASE_ACCESS_TOKEN},signal:AbortSignal.timeout(30000)});
+            if(!response.ok) throw new Error('Read HTTP '+response.status);
+            return response.json();
+          }
+          const orders=await read('/pedidosProducao.json?orderBy=%22%24key%22&limitToLast=150');
+          const rows=Object.entries(orders||{}).map(([key,p])=>({
+            key, criadoEm:p.criadoEm,mesa:p.mesa,tipo:p.tipo,origem:p.origem,modalidade:p.rodizioOrigemId,
+            titulo:p.titulo,subSetor:p.subSetor,status:p.status,itens:Array.isArray(p.itens)?p.itens.length:0,
+            impresso:!!(p.impressoEm||p.impressoNoPdv||p.impressaoPdv?.estado==='impresso'),
+            impressao:p.impressaoPdv?.estado,iniciadoEm:p.impressaoPdv?.iniciadoEm,
+            itemIds:(Array.isArray(p.itens)?p.itens:[]).map(x=>x.id).slice(0,30)
+          })).sort((a,b)=>(b.criadoEm||0)-(a.criadoEm||0));
+          const recent=rows.filter(p=>Date.now()-Number(p.criadoEm||0)<24*3600000);
+          console.log('SUMMARY',JSON.stringify({now:Date.now(),sample:rows.length,recent:recent.length,
+            pendingRecent:recent.filter(p=>!p.impresso).length,
+            festival:recent.filter(p=>p.modalidade===9304).length,
+            festivalPending:recent.filter(p=>p.modalidade===9304&&!p.impresso).length}));
+          console.log('ORDERS',JSON.stringify(rows.slice(0,60)));
+          const tables=await read('/mesas.json');
+          const festivalTables=Object.entries(tables||{}).flatMap(([mesa,t])=>(Array.isArray(t?.itens)?t.itens:[]).filter(x=>[9304,9323,9324,9302,9301,9303].includes(Number(x?.produtoOriginalId??x?.id))).map(x=>({mesa,id:x.produtoOriginalId??x.id,qtd:x.qtd,enviado:x.enviado,rascunho:x.rascunho,somenteCobranca:x.somenteCobranca,somenteCobrancaRodizio:x.somenteCobrancaRodizio})));
+          console.log('MODALITIES_IN_OPEN_TABLES',JSON.stringify(festivalTables));
+          JS
