@@ -1,11 +1,20 @@
 /* Rodízio seletivo do Garçom — cobra por pessoa e envia somente os itens solicitados à produção. */
 (() => {
-  if (window.GARCOM_RODIZIO_SELETIVO_RUNTIME === 'v3') return;
-  window.GARCOM_RODIZIO_SELETIVO_RUNTIME = 'v3';
+  if (window.GARCOM_RODIZIO_SELETIVO_RUNTIME === 'v4') return;
+  window.GARCOM_RODIZIO_SELETIVO_RUNTIME = 'v4';
 
   const RODIZIO_ID = 9301;
   const DUPLINHA_ID = 9303;
-  const RODIZIOS_IDS = Object.freeze([RODIZIO_ID, DUPLINHA_ID]);
+  const MULHER_ID = 9323;
+  const MULHER_LEGADO_ID = 9324;
+  const RODIZIOS_IDS = Object.freeze([RODIZIO_ID, 9302, DUPLINHA_ID, 9304, MULHER_ID]);
+  const idModalidade = id => Number(id) === MULHER_LEGADO_ID ? MULHER_ID : Number(id);
+  const nomeModalidade = id => produtoRodizio(id)?.nome || ({
+    9301: 'Rodízio NORMAL', 9302: 'Rodìzio - HOMEM', 9303: 'Rodízio - DUPLINHA',
+    9304: 'Festival - Sushi', 9323: 'Rodízio - MULHER'
+  })[idModalidade(id)] || 'Rodízio';
+  const botaoModalidadeId = id => id === RODIZIO_ID ? 'btn-rodizio-itens'
+    : id === DUPLINHA_ID ? 'btn-rodizio-duplinha-itens' : `btn-rodizio-${id}-itens`;
   const STATUS_CONFERENCIA = 'aguardando_pagamento';
   const ITENS_RODIZIO = Object.freeze([
     { codigo: 'shimeji', nome: 'Shimeji', destino: 'cozinha' },
@@ -49,7 +58,7 @@
   }
 
   function produtoRodizio(id = RODIZIO_ID) {
-    return produtosAtuais().find(item => Number(item?.id) === id && item.ativo !== false && item.disponivel !== false) || null;
+    return produtosAtuais().find(item => Number(item?.id) === idModalidade(id) && item.ativo !== false && item.disponivel !== false) || null;
   }
 
   function numeroMesaAtual() {
@@ -61,7 +70,7 @@
   }
 
   function idOriginal(item) {
-    return Number(item?.produtoOriginalId ?? item?.id);
+    return idModalidade(item?.produtoOriginalId ?? item?.id);
   }
 
   function quantidadePessoasRodizio(mesa, id = RODIZIO_ID) {
@@ -162,7 +171,7 @@
     const mesa = mesaAtual(numero);
     if (contaPendente(mesa)) return alert('A conta está fechada e aguardando pagamento. Reabra a conta antes de alterar o Rodízio.');
     if (!produto) return alert('O Rodízio não está disponível no cardápio neste momento.');
-    const id = Number(produto.id);
+    const id = idModalidade(produto.id);
     if (!RODIZIOS_IDS.includes(id) || !produtoRodizio(id)) return alert('O Rodízio não está disponível no cardápio neste momento.');
     rodizioSelecionadoId = id;
     modalModo = 'adesao';
@@ -170,7 +179,7 @@
     modal.querySelector('#rodizio-titulo').textContent = `Adicionar ${produto.nome}`;
     modal.querySelector('#rodizio-subtitulo').textContent = `${moeda(produto.preco)} por ${id === DUPLINHA_ID ? 'duplinha (2 pessoas)' : 'pessoa'}`;
     modal.querySelector('#rodizio-conteudo').innerHTML = `
-      <div class="rodizio-note">Informe ${id === DUPLINHA_ID ? 'quantas duplinhas (2 pessoas cada)' : 'quantas pessoas'} irão consumir este rodízio. Os pratos serão pedidos separadamente, conforme os clientes solicitarem.</div>
+      <div class="rodizio-note">Informe ${id === DUPLINHA_ID ? 'quantas duplinhas (2 pessoas cada)' : 'quantas pessoas'} irão consumir esta modalidade. Os pratos serão pedidos separadamente, conforme os clientes solicitarem.</div>
       <label class="rodizio-pessoas"><strong>${id === DUPLINHA_ID ? 'Duplinhas:' : 'Pessoas no rodízio:'}</strong><input id="rodizio-pessoas" type="number" min="1" max="30" step="1" value="1" inputmode="numeric"></label>`;
     modal.querySelector('.rodizio-confirm').textContent = 'Adicionar à comanda';
     modal.classList.add('open');
@@ -193,12 +202,13 @@
     const modal = garantirModal();
     if (modalModo !== 'itens') return;
     modal.querySelector('#rodizio-conteudo').innerHTML = `
-      <div class="rodizio-note">Selecione somente o que a mesa pediu agora. Você pode abrir esta tela novamente quantas vezes for necessário durante o rodízio.</div>
+      <div class="rodizio-note">Selecione somente o que a mesa pediu agora. Você pode abrir esta tela novamente quantas vezes for necessário durante o atendimento.</div>
       <div class="rodizio-grupo">Cozinha</div>${linhasGrupo('cozinha')}
       <div class="rodizio-grupo">Sushi</div>${linhasGrupo('sushi')}`;
   }
 
   function abrirItens(id = RODIZIO_ID) {
+    id = idModalidade(id);
     if (!RODIZIOS_IDS.includes(id)) return;
     const numero = numeroMesaAtual();
     const mesa = mesaAtual(numero);
@@ -209,8 +219,8 @@
     modalModo = 'itens';
     selecao = Object.fromEntries(ITENS_RODIZIO.map(item => [item.codigo, 0]));
     const modal = garantirModal();
-    modal.querySelector('#rodizio-titulo').textContent = `Itens do ${id === DUPLINHA_ID ? 'Rodízio - DUPLINHA' : 'Rodízio'}`;
-    modal.querySelector('#rodizio-subtitulo').textContent = `Mesa ${numero} · ${pessoas} pessoa${pessoas === 1 ? '' : 's'} no rodízio`;
+    modal.querySelector('#rodizio-titulo').textContent = `Itens: ${nomeModalidade(id)}`;
+    modal.querySelector('#rodizio-subtitulo').textContent = `Mesa ${numero} · ${pessoas} pessoa${pessoas === 1 ? '' : 's'} · ${nomeModalidade(id)}`;
     modal.querySelector('.rodizio-confirm').textContent = 'Enviar para produção';
     renderizarSelecao();
     modal.classList.add('open');
@@ -289,10 +299,11 @@
           cliente: mesa.cliente || '',
           setor: 'cozinha',
           subSetor: destino,
-          titulo: destino === 'sushi' ? 'PEDIDO SUSHI' : 'PEDIDO COZINHA',
+          titulo: `${destino === 'sushi' ? 'PEDIDO SUSHI' : 'PEDIDO COZINHA'} · ${nomeModalidade(id)}`,
           tipo: 'rodizio_itens',
           rodizio: true,
           rodizioOrigemId: id,
+          rodizioOrigemNome: nomeModalidade(id),
           rodizioPessoas: pessoas,
           itens: lista.map(item => ({
             id: `rodizio_${item.codigo}`,
@@ -358,7 +369,7 @@
     garantirEstilo();
     const area = document.querySelector('.acoes-comanda-g');
     if (!area) return null;
-    const botaoId = id === DUPLINHA_ID ? 'btn-rodizio-duplinha-itens' : 'btn-rodizio-itens';
+    const botaoId = botaoModalidadeId(id);
     let botao = document.getElementById(botaoId);
     if (!botao) {
       botao = document.createElement('button');
@@ -376,7 +387,7 @@
 
   function decorarCardRodizio() {
     document.querySelectorAll('#grid-produtos-g .prod-card-g').forEach(card => {
-      if (!RODIZIOS_IDS.includes(idProdutoDoCard(card)) || card.querySelector('.rodizio-card-badge')) return;
+      if (!RODIZIOS_IDS.includes(idModalidade(idProdutoDoCard(card))) || card.querySelector('.rodizio-card-badge')) return;
       const badge = document.createElement('small');
       badge.className = 'rodizio-card-badge';
       badge.textContent = 'Cobrança por pessoa · itens pedidos separadamente';
@@ -394,7 +405,7 @@
       botao.classList.toggle('open', unidades > 0 && !contaPendente(mesa));
       const rotulo = id === DUPLINHA_ID
         ? `🍣 DUPLINHA: pedir itens (${unidades})`
-        : `🍣 Rodízio: pedir itens (${unidades})`;
+        : `🍣 ${nomeModalidade(id)}: pedir itens (${unidades})`;
       if (botao.textContent !== rotulo) botao.textContent = rotulo;
     });
     decorarCardRodizio();
@@ -408,7 +419,7 @@
 
   document.addEventListener('click', event => {
     const card = event.target.closest('#grid-produtos-g .prod-card-g');
-    if (!card || !RODIZIOS_IDS.includes(idProdutoDoCard(card))) return;
+    if (!card || !RODIZIOS_IDS.includes(idModalidade(idProdutoDoCard(card)))) return;
     if (event.target.closest('[data-sushi-detail]')) return;
     event.preventDefault();
     event.stopPropagation();

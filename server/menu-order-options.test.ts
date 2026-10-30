@@ -50,11 +50,11 @@ describe('kids, observacao e meio prato nos dois sistemas', () => {
     const garcom = read('client/public/garcom/service-worker.js');
 
     expect(pdv).toContain("MENU_ORDER_OPTIONS_ASSET = '/menu-order-options.js?v=2'");
-    expect(garcom).toContain("MENU_ORDER_OPTIONS_ASSET = '/menu-order-options.js?v=2'");
+    expect(garcom).toContain("MENU_ORDER_OPTIONS_ASSET = '/menu-order-options.js?v=3'");
     expect(pdv.indexOf('menu-order-options.js?v=2')).toBeGreaterThan(pdv.indexOf('mesa-concurrency.js?v=40'));
-    expect(garcom.indexOf('menu-order-options.js?v=2')).toBeGreaterThan(garcom.indexOf('mesa-concurrency.js?v=36'));
+    expect(garcom.indexOf('menu-order-options.js?v=3')).toBeGreaterThan(garcom.indexOf('mesa-concurrency.js?v=36'));
     expect(pdv).toContain('<script src="/menu-order-options.js?v=2"></script>');
-    expect(garcom).toContain('<script src="/menu-order-options.js?v=2"></script>');
+    expect(garcom).toContain('<script src="/menu-order-options.js?v=3"></script>');
   });
 
   it('mantem observacao impressa na producao', () => {

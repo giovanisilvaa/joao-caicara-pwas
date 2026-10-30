@@ -5,9 +5,10 @@
 
   const HALF_RATIO = 0.60;
   const KIDS_CATEGORY = 'kids';
-  const RODIZIO_IDS = [9301, 9303];
   const ehPdv = location.pathname.includes('/pdv/');
   const ehGarcom = location.pathname.includes('/garcom/');
+  // No PDV, preservar as opções existentes; o fluxo seletivo pertence ao Garçom.
+  const RODIZIO_IDS = [9301, 9303, ...(ehGarcom ? [9302, 9304, 9323, 9324] : [])];
   let modalEstado = null;
   let decoracaoAgendada = false;
 

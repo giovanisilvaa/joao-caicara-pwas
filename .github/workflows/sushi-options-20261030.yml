@@ -1,0 +1,81 @@
+name: Publicar opcoes Sushi e unificar Rodizio MULHER
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'scripts/sushi-options-20261030/**'
+      - '.github/workflows/sushi-options-20261030.yml'
+      - 'client/public/garcom/rodizio-seletivo-v1.js'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  id-token: write
+
+concurrency:
+  group: sushi-options-20261030
+  cancel-in-progress: false
+
+jobs:
+  publish:
+    if: ${{ github.event_name != 'push' || contains(github.event.head_commit.message, '[sushi-options-20261030]') }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - name: Test all modalities, production orders and safe unification
+        run: node --test scripts/sushi-options-20261030/update.test.mjs
+      - name: Authenticate with existing Firebase service account
+        uses: google-github-actions/auth@v2
+        with:
+          workload_identity_provider: projects/777982220663/locations/global/workloadIdentityPools/github-actions-jo-o-cai-ara/providers/github
+          service_account: firebase-adminsdk-fbsvc@joaocaicaratradicao.iam.gserviceaccount.com
+          create_credentials_file: true
+          export_environment_variables: true
+      - name: Validate menu and prepare backup without writing
+        shell: bash
+        run: |
+          set -euo pipefail
+          export FIREBASE_ACCESS_TOKEN="$(gcloud auth print-access-token)"
+          echo "::add-mask::${FIREBASE_ACCESS_TOKEN}"
+          node scripts/sushi-options-20261030/update.mjs prepare "${RUNNER_TEMP}/sushi-options"
+      - name: Preserve backup before publishing
+        uses: actions/upload-artifact@v4
+        with:
+          name: cardapio-before-sushi-options-${{ github.run_id }}-${{ github.run_attempt }}
+          path: ${{ runner.temp }}/sushi-options/
+          retention-days: 30
+          if-no-files-found: error
+      - name: Publish Hosting only, without legacy seeders or security changes
+        run: npx firebase-tools@latest deploy --only hosting --project joaocaicaratradicao --non-interactive
+      - name: Verify published runtime and PWA before changing the menu
+        shell: bash
+        run: |
+          set -euo pipefail
+          for FILE in garcom/rodizio-seletivo-v1.js garcom/service-worker.js menu-order-options.js; do
+            MATCHED=false
+            for ATTEMPT in $(seq 1 12); do
+              if curl --fail --silent --show-error \
+                "https://joaocaicaratradicao.web.app/${FILE}?verify=${GITHUB_SHA}-${ATTEMPT}" \
+                -o "${RUNNER_TEMP}/published.js" && cmp -s "client/public/${FILE}" "${RUNNER_TEMP}/published.js"; then
+                MATCHED=true
+                break
+              fi
+              sleep 5
+            done
+            if [ "$MATCHED" != true ]; then
+              echo "::error::Published file does not match: ${FILE}; menu unification not applied."
+              exit 1
+            fi
+            echo "Published and verified: ${FILE}"
+          done
+      - name: Unify MULHER conditionally and verify without touching orders or sales
+        shell: bash
+        run: |
+          set -euo pipefail
+          export FIREBASE_ACCESS_TOKEN="$(gcloud auth print-access-token)"
+          echo "::add-mask::${FIREBASE_ACCESS_TOKEN}"
+          node scripts/sushi-options-20261030/update.mjs apply "${RUNNER_TEMP}/sushi-options"
