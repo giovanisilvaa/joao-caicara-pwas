@@ -1,0 +1,625 @@
+[
+  {
+    "id": 115,
+    "nome": "Mandioca + Batata + Camarão",
+    "categoria": "combos_praia",
+    "anterior": 110,
+    "novo": 120
+  },
+  {
+    "id": 116,
+    "nome": "Mandioca + Batata + Peixe",
+    "categoria": "combos_praia",
+    "anterior": 95,
+    "novo": 105
+  },
+  {
+    "id": 117,
+    "nome": "Mandioca + Batata + Carne",
+    "categoria": "combos_praia",
+    "anterior": 95,
+    "novo": 105
+  },
+  {
+    "id": 23,
+    "nome": "Maionese de Legumes",
+    "categoria": "saladas",
+    "anterior": 65,
+    "novo": 75
+  },
+  {
+    "id": 118,
+    "nome": "Risoto de Palmito e Champignon",
+    "categoria": "veganos_vegetarianos",
+    "anterior": 65,
+    "novo": 85
+  },
+  {
+    "id": 119,
+    "nome": "Risoto de Shimeji",
+    "categoria": "veganos_vegetarianos",
+    "anterior": 69,
+    "novo": 85
+  },
+  {
+    "id": 120,
+    "nome": "Espaguete ao Molho Branco com Palmito",
+    "categoria": "veganos_vegetarianos",
+    "anterior": 65,
+    "novo": 85
+  },
+  {
+    "id": 121,
+    "nome": "Espaguete com Champignon, Alcaparras e Cebola Roxa, Puxado no Azeite",
+    "categoria": "veganos_vegetarianos",
+    "anterior": 69,
+    "novo": 89
+  },
+  {
+    "id": 24,
+    "nome": "Peixe do Dia à Camponesa",
+    "categoria": "peixe_epoca",
+    "anterior": 165,
+    "novo": 175
+  },
+  {
+    "id": 27,
+    "nome": "Peixe do Dia com Legumes",
+    "categoria": "peixe_epoca",
+    "anterior": 145,
+    "novo": 165
+  },
+  {
+    "id": 28,
+    "nome": "Peixe do Dia com Molho de Camarão",
+    "categoria": "peixe_epoca",
+    "anterior": 165,
+    "novo": 175
+  },
+  {
+    "id": 29,
+    "nome": "Peixe do Dia com Molho Rosé e Fritas",
+    "categoria": "peixe_epoca",
+    "anterior": 135,
+    "novo": 145
+  },
+  {
+    "id": 30,
+    "nome": "Badejo à Camponesa",
+    "categoria": "file_badejo",
+    "anterior": 245,
+    "novo": 255
+  },
+  {
+    "id": 31,
+    "nome": "Badejo à Moda do Chefe",
+    "categoria": "file_badejo",
+    "anterior": 245,
+    "novo": 255
+  },
+  {
+    "id": 32,
+    "nome": "Badejo à La Meunière",
+    "categoria": "file_badejo",
+    "anterior": 245,
+    "novo": 255
+  },
+  {
+    "id": 33,
+    "nome": "Badejo ao Gratin",
+    "categoria": "file_badejo",
+    "anterior": 245,
+    "novo": 255
+  },
+  {
+    "id": 34,
+    "nome": "Badejo com Legumes",
+    "categoria": "file_badejo",
+    "anterior": 245,
+    "novo": 255
+  },
+  {
+    "id": 35,
+    "nome": "Badejo com Molho de Camarão",
+    "categoria": "file_badejo",
+    "anterior": 245,
+    "novo": 255
+  },
+  {
+    "id": 36,
+    "nome": "Salmão com Legumes",
+    "categoria": "salmao",
+    "anterior": 235,
+    "novo": 245
+  },
+  {
+    "id": 37,
+    "nome": "Salmão à Marinheira",
+    "categoria": "salmao",
+    "anterior": 235,
+    "novo": 245
+  },
+  {
+    "id": 39,
+    "nome": "Peixe com Fritas e Molho Rosé",
+    "categoria": "peixes_camaroes",
+    "anterior": 125,
+    "novo": 135
+  },
+  {
+    "id": 40,
+    "nome": "Filé de Peixe com Legumes",
+    "categoria": "peixes_camaroes",
+    "anterior": 135,
+    "novo": 145
+  },
+  {
+    "id": 41,
+    "nome": "Moqueca de Peixe",
+    "categoria": "peixes_camaroes",
+    "anterior": 220,
+    "novo": 230
+  },
+  {
+    "id": 42,
+    "nome": "Caldeirada",
+    "categoria": "peixes_camaroes",
+    "anterior": 285,
+    "novo": 295
+  },
+  {
+    "id": 43,
+    "nome": "Azul Marinho",
+    "categoria": "peixes_camaroes",
+    "anterior": 265,
+    "novo": 275
+  },
+  {
+    "id": 45,
+    "nome": "Camarão à Grega",
+    "categoria": "peixes_camaroes",
+    "anterior": 260,
+    "novo": 280
+  },
+  {
+    "id": 46,
+    "nome": "Camarão à Baiana",
+    "categoria": "peixes_camaroes",
+    "anterior": 260,
+    "novo": 280
+  },
+  {
+    "id": 47,
+    "nome": "Moqueca de Camarão Grande",
+    "categoria": "peixes_camaroes",
+    "anterior": 260,
+    "novo": 280
+  },
+  {
+    "id": 48,
+    "nome": "Bobó de Camarão Grande",
+    "categoria": "peixes_camaroes",
+    "anterior": 260,
+    "novo": 280
+  },
+  {
+    "id": 122,
+    "nome": "Baiacu à Caiçara",
+    "categoria": "peixes_camaroes",
+    "anterior": 240,
+    "novo": 255
+  },
+  {
+    "id": 123,
+    "nome": "Baiacu à La Meunière",
+    "categoria": "peixes_camaroes",
+    "anterior": 240,
+    "novo": 255
+  },
+  {
+    "id": 49,
+    "nome": "Lambe-Lambe",
+    "categoria": "massas_risotos",
+    "anterior": 165,
+    "novo": 175
+  },
+  {
+    "id": 50,
+    "nome": "Bobó de Camarão Pequeno",
+    "categoria": "massas_risotos",
+    "anterior": 165,
+    "novo": 175
+  },
+  {
+    "id": 52,
+    "nome": "Risoto de Camarão Grande",
+    "categoria": "massas_risotos",
+    "anterior": 260,
+    "novo": 280
+  },
+  {
+    "id": 53,
+    "nome": "Risoto de Camarão Pequeno",
+    "categoria": "massas_risotos",
+    "anterior": 165,
+    "novo": 175
+  },
+  {
+    "id": 54,
+    "nome": "Risoto à Moda",
+    "categoria": "massas_risotos",
+    "anterior": 235,
+    "novo": 245
+  },
+  {
+    "id": 55,
+    "nome": "Polvo à Baiana",
+    "categoria": "massas_risotos",
+    "anterior": 255,
+    "novo": 275
+  },
+  {
+    "id": 56,
+    "nome": "Polvo à Provençal",
+    "categoria": "massas_risotos",
+    "anterior": 255,
+    "novo": 275
+  },
+  {
+    "id": 57,
+    "nome": "Lula à Provençal",
+    "categoria": "massas_risotos",
+    "anterior": 195,
+    "novo": 210
+  },
+  {
+    "id": 58,
+    "nome": "Contra Filé com Legumes",
+    "categoria": "carnes",
+    "anterior": 155,
+    "novo": 175
+  },
+  {
+    "id": 59,
+    "nome": "Contra Filé com Fritas",
+    "categoria": "carnes",
+    "anterior": 175,
+    "novo": 165
+  },
+  {
+    "id": 60,
+    "nome": "Churrasco à Brasileira",
+    "categoria": "carnes",
+    "anterior": 175,
+    "novo": 195
+  },
+  {
+    "id": 61,
+    "nome": "Contra Filé à Parmegiana",
+    "categoria": "carnes",
+    "anterior": 165,
+    "novo": 175
+  },
+  {
+    "id": 62,
+    "nome": "Filé de Frango à Parmegiana",
+    "categoria": "frango",
+    "anterior": 145,
+    "novo": 155
+  },
+  {
+    "id": 63,
+    "nome": "Filé de Frango com Creme de Milho",
+    "categoria": "frango",
+    "anterior": 125,
+    "novo": 135
+  },
+  {
+    "id": 64,
+    "nome": "Filé de Frango com Fritas",
+    "categoria": "frango",
+    "anterior": 125,
+    "novo": 135
+  },
+  {
+    "id": 71,
+    "nome": "Legumes",
+    "categoria": "acompanhamentos",
+    "anterior": 38,
+    "novo": 48
+  },
+  {
+    "id": 300,
+    "nome": "Sequência Especial Caiçara",
+    "categoria": "sushi",
+    "anterior": 165,
+    "novo": 185
+  },
+  {
+    "id": 301,
+    "nome": "Combinado Individual · 20 peças",
+    "categoria": "sushi",
+    "anterior": 89,
+    "novo": 95
+  },
+  {
+    "id": 302,
+    "nome": "Combinado Pé na Areia · 44 peças",
+    "categoria": "sushi",
+    "anterior": 220,
+    "novo": 245
+  },
+  {
+    "id": 303,
+    "nome": "Combinado Beira a Mar · 64 peças",
+    "categoria": "sushi",
+    "anterior": 340,
+    "novo": 380
+  },
+  {
+    "id": 304,
+    "nome": "Combinado Mix de Peixes · 42 peças",
+    "categoria": "sushi",
+    "anterior": 245,
+    "novo": 265
+  },
+  {
+    "id": 305,
+    "nome": "Sashimi Salmão · 5 fatias",
+    "categoria": "sushi",
+    "anterior": 35,
+    "novo": 42
+  },
+  {
+    "id": 306,
+    "nome": "Sashimi Atum · 5 fatias",
+    "categoria": "sushi",
+    "anterior": 35,
+    "novo": 42
+  },
+  {
+    "id": 307,
+    "nome": "Sashimi Peixe Branco · 5 fatias",
+    "categoria": "sushi",
+    "anterior": 32,
+    "novo": 38
+  },
+  {
+    "id": 308,
+    "nome": "Sashimi Polvo · 5 fatias",
+    "categoria": "sushi",
+    "anterior": 50,
+    "novo": 65
+  },
+  {
+    "id": 309,
+    "nome": "Uramaki Salmão Filadélfia · 8 un.",
+    "categoria": "sushi",
+    "anterior": 35,
+    "novo": 45
+  },
+  {
+    "id": 310,
+    "nome": "Uramaki Salmão Grelhado · 8 un.",
+    "categoria": "sushi",
+    "anterior": 35,
+    "novo": 45
+  },
+  {
+    "id": 311,
+    "nome": "Uramaki Camarão Empanado · 8 un.",
+    "categoria": "sushi",
+    "anterior": 45,
+    "novo": 52
+  },
+  {
+    "id": 312,
+    "nome": "Uramaki Atum e Cebolinha · 8 un.",
+    "categoria": "sushi",
+    "anterior": 38,
+    "novo": 48
+  },
+  {
+    "id": 313,
+    "nome": "Uramaki Califórnia · 8 un.",
+    "categoria": "sushi",
+    "anterior": 30,
+    "novo": 40
+  },
+  {
+    "id": 314,
+    "nome": "Uramaki Salmão c/ Crispy de Couve · 8 un.",
+    "categoria": "sushi",
+    "anterior": 42,
+    "novo": 48
+  },
+  {
+    "id": 315,
+    "nome": "Uramaki Salmão Especial Roll · 8 un.",
+    "categoria": "sushi",
+    "anterior": 45,
+    "novo": 52
+  },
+  {
+    "id": 316,
+    "nome": "Hossomaki Salmão · 8 un.",
+    "categoria": "sushi",
+    "anterior": 28,
+    "novo": 35
+  },
+  {
+    "id": 317,
+    "nome": "Hossomaki Atum · 8 un.",
+    "categoria": "sushi",
+    "anterior": 32,
+    "novo": 38
+  },
+  {
+    "id": 318,
+    "nome": "Hossomaki Kani · 8 un.",
+    "categoria": "sushi",
+    "anterior": 25,
+    "novo": 30
+  },
+  {
+    "id": 319,
+    "nome": "Hossomaki Pepino · 8 un.",
+    "categoria": "sushi",
+    "anterior": 25,
+    "novo": 30
+  },
+  {
+    "id": 320,
+    "nome": "Joy Salmão · 4 un.",
+    "categoria": "sushi",
+    "anterior": 28,
+    "novo": 32
+  },
+  {
+    "id": 321,
+    "nome": "Joy Salmão c/ Geleia · 4 un.",
+    "categoria": "sushi",
+    "anterior": 28,
+    "novo": 32
+  },
+  {
+    "id": 322,
+    "nome": "Joy Salmão c/ Shimeji Maçaricado · 4 un.",
+    "categoria": "sushi",
+    "anterior": 28,
+    "novo": 32
+  },
+  {
+    "id": 324,
+    "nome": "Niguiri Salmão · 4 un.",
+    "categoria": "sushi",
+    "anterior": 28,
+    "novo": 32
+  },
+  {
+    "id": 325,
+    "nome": "Niguiri Peixe Branco · 4 un.",
+    "categoria": "sushi",
+    "anterior": 28,
+    "novo": 32
+  },
+  {
+    "id": 326,
+    "nome": "Niguiri Atum · 4 un.",
+    "categoria": "sushi",
+    "anterior": 32,
+    "novo": 36
+  },
+  {
+    "id": 333,
+    "nome": "Temaki Salmão Hot",
+    "categoria": "sushi",
+    "anterior": 45,
+    "novo": 55
+  },
+  {
+    "id": 334,
+    "nome": "Temaki Shimeji · cream e cebolinha",
+    "categoria": "sushi",
+    "anterior": 35,
+    "novo": 45
+  },
+  {
+    "id": 335,
+    "nome": "Temaki Salmão/Shimeji · cream e cebolinha",
+    "categoria": "sushi",
+    "anterior": 42,
+    "novo": 48
+  },
+  {
+    "id": 336,
+    "nome": "Temaki Camarão Empanado",
+    "categoria": "sushi",
+    "anterior": 45,
+    "novo": 48
+  },
+  {
+    "id": 337,
+    "nome": "Temaki Camarão Alho e Óleo",
+    "categoria": "sushi",
+    "anterior": 45,
+    "novo": 48
+  },
+  {
+    "id": 338,
+    "nome": "Temaki Peixe Branco c/ Cebolinha",
+    "categoria": "sushi",
+    "anterior": 42,
+    "novo": 48
+  },
+  {
+    "id": 339,
+    "nome": "Hot Roll Salmão · 8 un.",
+    "categoria": "sushi",
+    "anterior": 42,
+    "novo": 48
+  },
+  {
+    "id": 340,
+    "nome": "Hot Roll Salmão c/ Crispy de Couve · 8 un.",
+    "categoria": "sushi",
+    "anterior": 48,
+    "novo": 52
+  },
+  {
+    "id": 341,
+    "nome": "Hot Roll Shimeji · 8 un.",
+    "categoria": "sushi",
+    "anterior": 38,
+    "novo": 42
+  },
+  {
+    "id": 342,
+    "nome": "Hot Roll Banana c/ Avelã · 8 un.",
+    "categoria": "sushi",
+    "anterior": 42,
+    "novo": 45
+  },
+  {
+    "id": 343,
+    "nome": "Hot Roll Morango c/ Avelã · 8 un.",
+    "categoria": "sushi",
+    "anterior": 45,
+    "novo": 52
+  },
+  {
+    "id": 344,
+    "nome": "Entrada · Ceviche Salmão",
+    "categoria": "sushi",
+    "anterior": 65,
+    "novo": 62
+  },
+  {
+    "id": 356,
+    "nome": "Yakisoba Frango",
+    "categoria": "sushi",
+    "anterior": 52,
+    "novo": 55
+  },
+  {
+    "id": 357,
+    "nome": "Yakisoba Carne",
+    "categoria": "sushi",
+    "anterior": 52,
+    "novo": 55
+  },
+  {
+    "id": 358,
+    "nome": "Yakisoba Misto Frango e Carne",
+    "categoria": "sushi",
+    "anterior": 55,
+    "novo": 60
+  },
+  {
+    "id": 359,
+    "nome": "Yakisoba Camarão",
+    "categoria": "sushi",
+    "anterior": 65,
+    "novo": 75
+  }
+]
