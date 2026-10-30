@@ -1,0 +1,56 @@
+name: Atualizar somente precos do cardapio 2026-10-30
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'scripts/prices-20261030/**'
+      - '.github/workflows/cardapio-prices-20261030.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  id-token: write
+
+concurrency:
+  group: cardapio-prices-20261030
+  cancel-in-progress: false
+
+jobs:
+  prices:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - name: Test price-only transformation and concurrent-edit protection
+        run: node --test scripts/prices-20261030/update.test.mjs
+      - name: Authenticate with existing Firebase service account
+        uses: google-github-actions/auth@v2
+        with:
+          workload_identity_provider: projects/777982220663/locations/global/workloadIdentityPools/github-actions-jo-o-cai-ara/providers/github
+          service_account: firebase-adminsdk-fbsvc@joaocaicaratradicao.iam.gserviceaccount.com
+          create_credentials_file: true
+          export_environment_variables: true
+      - name: Read current menu, check identities and prepare backup
+        shell: bash
+        run: |
+          set -euo pipefail
+          export FIREBASE_ACCESS_TOKEN="$(gcloud auth print-access-token)"
+          echo "::add-mask::${FIREBASE_ACCESS_TOKEN}"
+          node scripts/prices-20261030/update.mjs prepare "${RUNNER_TEMP}/menu-prices"
+      - name: Preserve menu backup before writing
+        uses: actions/upload-artifact@v4
+        with:
+          name: cardapio-before-prices-${{ github.run_id }}-${{ github.run_attempt }}
+          path: ${{ runner.temp }}/menu-prices/
+          retention-days: 30
+          if-no-files-found: error
+      - name: Apply conditional update and verify all 89 prices
+        shell: bash
+        run: |
+          set -euo pipefail
+          export FIREBASE_ACCESS_TOKEN="$(gcloud auth print-access-token)"
+          echo "::add-mask::${FIREBASE_ACCESS_TOKEN}"
+          node scripts/prices-20261030/update.mjs apply "${RUNNER_TEMP}/menu-prices"
