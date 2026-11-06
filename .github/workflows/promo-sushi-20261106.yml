@@ -1,0 +1,69 @@
+name: Promocao Sushi 06-11-2026
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/promo-sushi-20261106.yml'
+      - 'scripts/promo-sushi-20261106.mjs'
+  workflow_dispatch:
+permissions:
+  contents: read
+  id-token: write
+concurrency:
+  group: promo-sushi-20261106
+  cancel-in-progress: false
+jobs:
+  prices:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - name: Verify discount, expiry and preservation
+        run: |
+          node --input-type=module - <<'JS'
+          import assert from 'node:assert/strict';
+          import {targets,transform,start,end} from './scripts/promo-sushi-20261106.mjs';
+          const source=targets.map(([id,nome,preco])=>({id,nome,preco,categoria:'sushi',ativo:true}));
+          source.push({id:9301,preco:149.9});
+          const before=structuredClone(source);
+          const applied=transform(source,start);
+          assert.equal(applied.count,5);
+          assert.deepEqual(source,before);
+          assert.deepEqual(applied.result.map(x=>x.preco),[148,76,196,304,212,149.9]);
+          assert.equal(transform(applied.result,end-1).count,0);
+          assert.deepEqual(transform(applied.result,end).result,source);
+          assert.equal(transform(source,end).count,0);
+          const conflict=structuredClone(source);conflict[0].preco=190;
+          assert.throws(()=>transform(conflict,start));
+          assert.throws(()=>transform(source,start-1));
+          assert.deepEqual(applied.result.map(x=>({...x,preco:0})),source.map(x=>({...x,preco:0})));
+          console.log('Promoção e retorno à meia-noite de Brasília testados.');
+          JS
+      - uses: google-github-actions/auth@v2
+        with:
+          workload_identity_provider: projects/777982220663/locations/global/workloadIdentityPools/github-actions-jo-o-cai-ara/providers/github
+          service_account: firebase-adminsdk-fbsvc@joaocaicaratradicao.iam.gserviceaccount.com
+          create_credentials_file: true
+          export_environment_variables: true
+      - name: Prepare current menu backup and conditional price update
+        shell: bash
+        run: |
+          set -euo pipefail
+          export FIREBASE_ACCESS_TOKEN="$(gcloud auth print-access-token)"
+          echo "::add-mask::${FIREBASE_ACCESS_TOKEN}"
+          node scripts/promo-sushi-20261106.mjs prepare "${RUNNER_TEMP}/promo-sushi"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: menu-before-promo-${{ github.run_id }}-${{ github.run_attempt }}
+          path: ${{ runner.temp }}/promo-sushi/
+          retention-days: 30
+          if-no-files-found: error
+      - name: Apply only five prices and verify
+        shell: bash
+        run: |
+          set -euo pipefail
+          export FIREBASE_ACCESS_TOKEN="$(gcloud auth print-access-token)"
+          echo "::add-mask::${FIREBASE_ACCESS_TOKEN}"
+          node scripts/promo-sushi-20261106.mjs apply "${RUNNER_TEMP}/promo-sushi"
