@@ -7,8 +7,8 @@ describe('painel externo de gestao somente leitura', () => {
   it('publica uma rota administrativa separada do PDV', () => {
     const html = read('client/public/gestao/index.html');
     expect(html).toContain('<title>João Caiçara — Gestão</title>');
-    expect(html).toContain('/gestao/gestao.css?v=1');
-    expect(html).toContain('/gestao/gestao.js?v=1');
+    expect(html).toMatch(/\/gestao\/gestao\.css\?v=\d+"/);
+    expect(html).toMatch(/\/gestao\/gestao\.js\?v=\d+"/);
     expect(html).toContain('/auth-session-isolation.js?v=20');
     expect(html).toContain('🔒 Somente leitura');
   });

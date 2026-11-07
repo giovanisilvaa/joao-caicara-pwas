@@ -289,11 +289,62 @@
       <div class="cash-row"><span>Aberto em</span><strong>${escapar(formatarDataHora(sessao.abertoEm))}</strong></div>`;
   }
 
+  function vendasNoPeriodo(lista, inicio, fim) {
+    return lista.filter(venda => {
+      const data = chaveVenda(venda);
+      return data && data >= inicio && data <= fim;
+    });
+  }
+
+  function renderizarRelatorio() {
+    const inicio = document.getElementById('relatorio-inicio')?.value;
+    const fim = document.getElementById('relatorio-fim')?.value;
+    const conteudo = document.getElementById('relatorio-conteudo');
+    const imprimir = document.getElementById('relatorio-imprimir');
+    if (!conteudo || !imprimir) return;
+    conteudo.innerHTML = '';
+    imprimir.disabled = true;
+    if (!inicio || !fim || inicio > fim) {
+      setTexto('relatorio-status', 'Escolha um período válido.');
+      return;
+    }
+    if (!conectado) {
+      setTexto('relatorio-status', 'Vendas indisponíveis. Aguarde a sincronização.');
+      return;
+    }
+    const lista = vendasNoPeriodo(vendas, inicio, fim);
+    const resumo = resumir(lista);
+    setTexto('relatorio-status', `${formatarData(inicio)} a ${formatarData(fim)} · ${lista.length} comanda(s)`);
+    const indicadores = [
+      ['Total vendido', moeda(resumo.total)], ['Ticket médio', moeda(resumo.ticketMedio)],
+      ['Taxa de serviço', moeda(resumo.taxa)], ['Dinheiro líquido', moeda(resumo.dinheiroLiquido)],
+      ['Pix', moeda(resumo.pix)], ['Débito', moeda(resumo.debito)], ['Crédito', moeda(resumo.credito)]
+    ];
+    const linhas = lista.slice().sort((a, b) =>
+      chaveVenda(b).localeCompare(chaveVenda(a)) || numero(b.criadoEm) - numero(a.criadoEm)
+    ).map(venda => `<tr><td>${escapar(formatarData(chaveVenda(venda)))}</td><td>${escapar(venda.mesa ?? '—')}</td><td class="num">${moeda(venda.total)}</td></tr>`).join('');
+    conteudo.innerHTML = `
+      <dl class="relatorio-indicadores">${indicadores.map(([nome, valor]) => `<div><dt>${nome}</dt><dd>${valor}</dd></div>`).join('')}</dl>
+      ${Math.abs(resumo.diferencaPagamentos) >= 0.01 ? `<p>Diferença entre recebimentos registrados e total vendido: ${moeda(resumo.diferencaPagamentos)}</p>` : ''}
+      <div class="table-wrap"><table>
+        <thead><tr><th scope="col">Data</th><th scope="col">Mesa</th><th scope="col" class="num">Valor</th></tr></thead>
+        <tbody>${linhas || '<tr><td colspan="3">Nenhuma venda no período.</td></tr>'}</tbody>
+      </table></div>`;
+    imprimir.disabled = !lista.length;
+  }
+
+  function definirPeriodoRelatorio(inicio, fim) {
+    document.getElementById('relatorio-inicio').value = inicio;
+    document.getElementById('relatorio-fim').value = fim;
+    renderizarRelatorio();
+  }
+
   function renderizarTudo() {
     const lista = vendasDaData();
     renderizarResumo(lista);
     renderizarGarcons(lista);
     renderizarVendasRecentes(lista);
+    renderizarRelatorio();
     renderizarCaixa();
     setTexto('gestao-atualizado', `Atualizado às ${new Intl.DateTimeFormat('pt-BR', { hour: '2-digit', minute: '2-digit', second: '2-digit' }).format(new Date())}`);
   }
@@ -319,6 +370,8 @@
     sessaoRef = null;
     listenersAtivos = false;
     vendas = [];
+    conectado = false;
+    renderizarRelatorio();
     sessaoCaixaAtual = null;
   }
 
@@ -339,6 +392,7 @@
       console.error('Falha ao ler vendas na Gestão:', erro);
       conectado = false;
       atualizarStatus('🔴 Falha nas vendas', 'error');
+      renderizarRelatorio();
     });
 
     sessaoRef = database.ref('sessoesCaixa/atual');
@@ -426,6 +480,20 @@
   }
 
   function instalarEventos() {
+    for (const id of ['relatorio-inicio', 'relatorio-fim']) {
+      document.getElementById(id)?.addEventListener('change', renderizarRelatorio);
+    }
+    document.getElementById('relatorio-hoje')?.addEventListener('click', () => definirPeriodoRelatorio(hoje(), hoje()));
+    document.getElementById('relatorio-mes')?.addEventListener('click', () => {
+      const fim = hoje();
+      definirPeriodoRelatorio(fim.slice(0, 7) + '-01', fim);
+    });
+    document.getElementById('relatorio-imprimir')?.addEventListener('click', () => {
+      if (!usuarioEhAdmin(auth()?.currentUser) || !conectado) return;
+      document.body.classList.add('gestao-imprimir-relatorio');
+      try { window.print(); }
+      finally { document.body.classList.remove('gestao-imprimir-relatorio'); }
+    });
     document.getElementById('gestao-login-submit')?.addEventListener('click', entrar);
     document.getElementById('gestao-login-password')?.addEventListener('keydown', event => { if (event.key === 'Enter') entrar(); });
     document.getElementById('gestao-sair')?.addEventListener('click', () => sair());
@@ -441,6 +509,7 @@
   async function iniciar() {
     const data = document.getElementById('gestao-data');
     if (data) data.value = hoje();
+    if (document.getElementById('relatorio-inicio')) definirPeriodoRelatorio(hoje(), hoje());
     instalarEventos();
     if (window.FirebaseAuthSessionIsolationReady?.then) await window.FirebaseAuthSessionIsolationReady;
     const firebaseAuth = auth();
