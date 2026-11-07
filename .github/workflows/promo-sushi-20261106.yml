@@ -67,3 +67,5 @@ jobs:
           export FIREBASE_ACCESS_TOKEN="$(gcloud auth print-access-token)"
           echo "::add-mask::${FIREBASE_ACCESS_TOKEN}"
           node scripts/promo-sushi-20261106.mjs apply "${RUNNER_TEMP}/promo-sushi"
+
+# Encerramento da promoção de 06/11/2026: restaurar valores normais após 07/11/2026 00:00 America/Sao_Paulo.
