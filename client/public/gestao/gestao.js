@@ -490,9 +490,7 @@
     });
     document.getElementById('relatorio-imprimir')?.addEventListener('click', () => {
       if (!usuarioEhAdmin(auth()?.currentUser) || !conectado) return;
-      document.body.classList.add('gestao-imprimir-relatorio');
-      try { window.print(); }
-      finally { document.body.classList.remove('gestao-imprimir-relatorio'); }
+      window.print();
     });
     document.getElementById('gestao-login-submit')?.addEventListener('click', entrar);
     document.getElementById('gestao-login-password')?.addEventListener('keydown', event => { if (event.key === 'Enter') entrar(); });

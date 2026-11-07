@@ -59,18 +59,18 @@ button{cursor:pointer}
 .relatorio-indicadores dd { margin: 4px 0 0; font-weight: 700; }
 
 @media print {
-  body.gestao-imprimir-relatorio { background: white; color: black; }
-  body.gestao-imprimir-relatorio > :not(#gestao-app),
-  body.gestao-imprimir-relatorio #gestao-app > :not(#gestao-relatorio),
-  body.gestao-imprimir-relatorio .relatorio-filtros { display: none !important; }
-  body.gestao-imprimir-relatorio #gestao-app,
-  body.gestao-imprimir-relatorio #gestao-relatorio,
-  body.gestao-imprimir-relatorio .table-wrap {
+  body { background: white; color: black; }
+  body > :not(#gestao-app),
+  body #gestao-app > :not(#gestao-relatorio),
+  body .relatorio-filtros { display: none !important; }
+  body #gestao-app,
+  body #gestao-relatorio,
+  body .table-wrap {
     display: block;
     width: auto;
     max-width: none;
     overflow: visible;
     box-shadow: none;
   }
-  body.gestao-imprimir-relatorio tr { break-inside: avoid; }
+  body tr { break-inside: avoid; }
 }
