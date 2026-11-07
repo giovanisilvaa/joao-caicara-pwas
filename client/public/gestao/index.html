@@ -6,7 +6,7 @@
   <meta name="theme-color" content="#0F4C5C">
   <title>João Caiçara — Gestão</title>
   <link rel="icon" href="/tradicao-caicara-logo.webp">
-  <link rel="stylesheet" href="/gestao/gestao.css?v=1">
+  <link rel="stylesheet" href="/gestao/gestao.css?v=2">
 </head>
 <body>
   <div id="gestao-login" class="login-shell">
@@ -102,6 +102,19 @@
       <div id="vendas-recentes" class="sales-list"><p class="empty-cell">Aguardando vendas…</p></div>
     </section>
 
+    <section class="panel" id="gestao-relatorio" aria-labelledby="relatorio-titulo">
+      <h2 id="relatorio-titulo">Relatório de vendas</h2>
+      <div class="relatorio-filtros">
+        <label>Início <input type="date" id="relatorio-inicio" required></label>
+        <label>Fim <input type="date" id="relatorio-fim" required></label>
+        <button type="button" id="relatorio-hoje">Hoje</button>
+        <button type="button" id="relatorio-mes">Este mês</button>
+        <button type="button" id="relatorio-imprimir" disabled>Imprimir / Salvar em PDF</button>
+      </div>
+      <p id="relatorio-status" role="status">Aguardando vendas…</p>
+      <div id="relatorio-conteudo"></div>
+    </section>
+
     <footer class="page-footer">Painel administrativo externo · leitura protegida pelo Firebase Auth.</footer>
   </main>
 
@@ -120,6 +133,6 @@
     });
   </script>
   <script src="/auth-session-isolation.js?v=20"></script>
-  <script src="/gestao/gestao.js?v=1"></script>
+  <script src="/gestao/gestao.js?v=2"></script>
 </body>
 </html>
