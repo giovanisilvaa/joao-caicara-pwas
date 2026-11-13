@@ -16,7 +16,7 @@ jobs:
     if: ${{ github.event_name != 'push' || !contains(github.event.head_commit.message, '[cardapio-prices-20261030]') && !contains(github.event.head_commit.message, '[sushi-options-20261030]') && !contains(github.event.head_commit.message, '[diagnostico-festival-20261030]') && !contains(github.event.head_commit.message, '[promo-sushi-20261106]') }}
     runs-on: ubuntu-latest
     env:
-      GESTAO_HOSTING_ONLY: ${{ github.event_name == 'push' && contains(github.event.head_commit.message, '[gestao-hosting-only]') }}
+      GESTAO_HOSTING_ONLY: ${{ github.event_name == 'push' && (contains(github.event.head_commit.message, '[gestao-hosting-only]') || contains(github.event.head_commit.message, '[sushi-semanal]')) }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -41,16 +41,19 @@ jobs:
       - name: Tests
         run: pnpm test
 
-      - name: Verify Gestão-only publication scope
+      - name: Verify Hosting-only publication scope
         if: env.GESTAO_HOSTING_ONLY == 'true'
         shell: bash
         run: |
           set -euo pipefail
-          git diff --exit-code bd8f324bab2131c967f58a7be16ce92aff48b6b6 HEAD -- firebase.json client/public \
+          git diff --exit-code 3f17361139c800f298c62da8625d98359eddc3f2 HEAD -- firebase.json client/public \
             ':(exclude)client/public/gestao/index.html' \
             ':(exclude)client/public/gestao/gestao.js' \
-            ':(exclude)client/public/gestao/gestao.css'
-          for path in pdv/service-worker.js garcom/service-worker.js menu-order-options.js cardapio/cardapio.js; do
+            ':(exclude)client/public/gestao/gestao.css' \
+            ':(exclude)client/public/cardapio/index.html' \
+            ':(exclude)client/public/cardapio/cardapio.js' \
+            ':(exclude)client/public/cardapio/cardapio.css'
+          for path in pdv/service-worker.js garcom/service-worker.js menu-order-options.js; do
             curl --fail --silent --show-error --max-time 30 \
               "https://joaocaicaratradicao.web.app/${path}?verify=${GITHUB_SHA}" \
               -o "${RUNNER_TEMP}/gestao-live-file"

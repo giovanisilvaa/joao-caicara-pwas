@@ -171,8 +171,11 @@
     }
   }
 
+  const precosSushiSexta = { 300: 148, 301: 76, 302: 196, 303: 304, 304: 212 };
+
   function cardItem(item) {
     const imagem = imagemSegura(item.imagem);
+    const promocaoSexta = item.categoria === 'sushi' && item.preco === precosSushiSexta[item.id];
     const tags = [
       item.servePara2 ? 'Serve 2 pessoas' : '',
       item.individual ? 'Individual' : ''
@@ -181,6 +184,7 @@
       <article class="menu-item${imagem ? ' has-image' : ''}">
         ${imagem ? `<img class="item-image" src="${escapar(imagem)}" alt="" loading="lazy" onerror="this.hidden=true;this.parentElement.classList.remove('has-image')">` : ''}
         <div class="item-info">
+          ${promocaoSexta ? '<span class="item-tag item-tag-promo">Sexta do Sushi · 20% OFF</span>' : ''}
           <h3 class="item-name">${escapar(item.nome)}</h3>
           ${item.descricao ? `<p class="item-description">${escapar(item.descricao)}</p>` : ''}
           ${tags.length ? `<div class="item-tags">${tags.map(tag => `<span class="item-tag">${tag}</span>`).join('')}</div>` : ''}

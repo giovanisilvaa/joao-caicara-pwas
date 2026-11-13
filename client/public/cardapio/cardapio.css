@@ -162,3 +162,5 @@ noscript { display: block; padding: 18px; text-align: center; color: #9d3e2a; ba
   html { scroll-behavior: auto; }
   .spinner { animation: none; }
 }
+
+.item-tag-promo { background: #fff0e4; color: #842d19; }

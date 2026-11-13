@@ -9,7 +9,7 @@ describe("cardapio digital publico", () => {
     expect(html).toContain("Cardápio exclusivo para consulta");
     expect(html).toContain('id="busca-cardapio"');
     expect(html).toContain('id="categorias"');
-    expect(html).toContain("/cardapio/cardapio.js?v=4");
+    expect(html).toContain("/cardapio/cardapio.js?v=5");
     expect(html).toContain("Imagens meramente ilustrativas");
     expect(html).not.toContain("SABORES DE UBATUBA");
     expect(html).not.toMatch(/abrir mesa|fechar conta|enviar pedido/i);

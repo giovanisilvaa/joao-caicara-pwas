@@ -1,10 +1,13 @@
-name: Promocao Sushi 06-11-2026
+name: Promoção Sushi de sexta-feira
 on:
   push:
     branches: [main]
     paths:
       - '.github/workflows/promo-sushi-20261106.yml'
       - 'scripts/promo-sushi-20261106.mjs'
+  schedule:
+    - cron: '0,12,27,42 0,1 * * 5,6'
+      timezone: America/Sao_Paulo
   workflow_dispatch:
 permissions:
   contents: read
@@ -15,6 +18,8 @@ concurrency:
 jobs:
   prices:
     runs-on: ubuntu-latest
+    env:
+      PROMO_SUSHI_WEEKLY: "true"
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -39,6 +44,12 @@ jobs:
           assert.throws(()=>transform(conflict,start));
           assert.throws(()=>transform(source,start-1));
           assert.deepEqual(applied.result.map(x=>({...x,preco:0})),source.map(x=>({...x,preco:0})));
+          assert.equal(transform(source,start-1,true).count,0);
+          assert.equal(transform(source,start,true).count,5);
+          assert.equal(transform(applied.result,end-1,true).count,0);
+          assert.deepEqual(transform(applied.result,end,true).result,source);
+          assert.equal(transform(source,start+7*86400000,true).count,5);
+          assert.throws(()=>transform(conflict,start,true));
           console.log('Promoção e retorno à meia-noite de Brasília testados.');
           JS
       - uses: google-github-actions/auth@v2
@@ -67,5 +78,3 @@ jobs:
           export FIREBASE_ACCESS_TOKEN="$(gcloud auth print-access-token)"
           echo "::add-mask::${FIREBASE_ACCESS_TOKEN}"
           node scripts/promo-sushi-20261106.mjs apply "${RUNNER_TEMP}/promo-sushi"
-
-# Encerramento da promoção de 06/11/2026: restaurar valores normais após 07/11/2026 00:00 America/Sao_Paulo.
